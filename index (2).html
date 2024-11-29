@@ -1,0 +1,231 @@
+<html>
+<head>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"></link>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .table-header {
+            background-color: #ffff00;
+        }
+        .table-header th {
+            border: 1px solid black;
+        }
+        .table-cell {
+            border: 1px solid black;
+            text-align: center;
+        }
+        .total-cell {
+            background-color: #d9d9d9;
+        }
+        .highlight {
+            background-color: #ffff00;
+        }
+        input[type="text"] {
+            width: 100%;
+            text-align: center;
+            border: none;
+            background-color: transparent;
+        }
+    </style>
+    <script>
+        function calculateUnits() {
+            const currentReadings = document.querySelectorAll('.current-reading');
+            const previousReadings = document.querySelectorAll('.previous-reading');
+            const units = document.querySelectorAll('.unit');
+
+            currentReadings.forEach((current, index) => {
+                const previous = previousReadings[index];
+                const unit = units[index];
+                const currentValue = parseFloat(current.value) || 0;
+                const previousValue = parseFloat(previous.value) || 0;
+                unit.textContent = currentValue - previousValue;
+            });
+
+            calculateBill();
+        }
+
+        function unit10() {
+            const unit10Value = parseFloat(document.getElementById('unit10Value').value) || 0;
+            const currentReadings = document.querySelectorAll('.current-reading');
+            currentReadings.forEach(current => {
+                current.value = (parseFloat(current.value) || 0) + unit10Value;
+            });
+            calculateUnits();
+        }
+
+        function calculateBill() {
+            const units = document.querySelectorAll('.unit');
+            const unit10Value = parseFloat(document.getElementById('unit10Value').value) || 0;
+            const bills = document.querySelectorAll('.bill');
+            let totalBill = 0;
+
+            units.forEach((unit, index) => {
+                const unitValue = parseFloat(unit.textContent) || 0;
+                const billValue = unitValue * unit10Value;
+                bills[index].textContent = billValue;
+                totalBill += billValue;
+            });
+
+            document.getElementById('totalBill').value = totalBill;
+            calculateDifference();
+        }
+
+        function calculateDifference() {
+            const totalBill = parseFloat(document.getElementById('totalBill').value) || 0;
+            const bottomLeftBill = parseFloat(document.getElementById('bottomLeftBill').value) || 0;
+            const difference = bottomLeftBill - totalBill;
+            document.getElementById('difference').textContent = difference;
+
+            const differencePerPerson = difference / 8;
+            const differenceCells = document.querySelectorAll('.difference');
+            differenceCells.forEach(cell => {
+                cell.textContent = differencePerPerson.toFixed(2);
+            });
+
+            calculateTotal();
+        }
+
+        function calculateTotal() {
+            const bills = document.querySelectorAll('.bill');
+            const differences = document.querySelectorAll('.difference');
+            const totals = document.querySelectorAll('.total');
+
+            bills.forEach((bill, index) => {
+                const billValue = parseFloat(bill.textContent) || 0;
+                const differenceValue = parseFloat(differences[index].textContent) || 0;
+                totals[index].textContent = (billValue + differenceValue).toFixed(2);
+            });
+
+            let totalAmount = 0;
+            totals.forEach(total => {
+                totalAmount += parseFloat(total.textContent) || 0;
+            });
+
+            document.getElementById('totalAmount').textContent = totalAmount.toFixed(2);
+        }
+
+        function printData() {
+            window.print();
+        }
+    </script>
+</head>
+<body class="bg-blue-200 p-2 sm:p-4">
+    <div class="max-w-full sm:max-w-4xl mx-auto bg-white p-2 sm:p-4 relative">
+        <div class="text-center text-xl sm:text-2xl font-bold mb-2 sm:mb-4">
+            <input type="text" class="text-center w-24 sm:w-32 border-none bg-transparent" value="November"> electricity bill
+        </div>
+        <div class="absolute top-0 right-0 flex items-center space-x-2 p-2">
+            <input type="text" id="unit10Value" value="10" class="w-12 sm:w-16 text-center border border-gray-300 rounded" oninput="calculateBill()">
+        </div>
+        <div class="absolute top-0 left-0 flex items-center space-x-2 p-2 hidden">
+            <input type="text" id="totalBill" class="text-xl sm:text-2xl border-none bg-transparent" value="3190" oninput="calculateDifference()">
+        </div>
+        <div class="absolute top-0 left-0 flex flex-col items-center space-y-1 p-2 text-xs sm:text-sm">
+            <input type="text" class="font-bold text-center" value="02.12.2024">
+            <div class="text-red-600 text-xl sm:text-2xl">भरणे</div>
+        </div>
+        <table class="w-full border-collapse mt-4 text-xs sm:text-base">
+            <thead>
+                <tr class="table-header">
+                    <th class="table-cell"></th>
+                    <th class="table-cell">1<br>पाटील</th>
+                    <th class="table-cell">2<br>कुसुरकर</th>
+                    <th class="table-cell">3<br>घटे</th>
+                    <th class="table-cell">4<br>सोलंकर</th>
+                    <th class="table-cell">5<br>माने</th>
+                    <th class="table-cell">6<br>माळी</th>
+                    <th class="table-cell">7<br>कांबळे</th>
+                    <th class="table-cell">8<br>जाधव</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="table-cell highlight">चालू रीडिंग</td>
+                    <td class="table-cell"><input type="text" class="current-reading" value="200" oninput="calculateUnits()"></td>
+                    <td class="table-cell"><input type="text" class="current-reading" value="202" oninput="calculateUnits()"></td>
+                    <td class="table-cell"><input type="text" class="current-reading" value="502" oninput="calculateUnits()"></td>
+                    <td class="table-cell"><input type="text" class="current-reading" value="303" oninput="calculateUnits()"></td>
+                    <td class="table-cell"><input type="text" class="current-reading" value="487" oninput="calculateUnits()"></td>
+                    <td class="table-cell"><input type="text" class="current-reading" value="150" oninput="calculateUnits()"></td>
+                    <td class="table-cell"><input type="text" class="current-reading" value="402" oninput="calculateUnits()"></td>
+                    <td class="table-cell"><input type="text" class="current-reading" value="411" oninput="calculateUnits()"></td>
+                </tr>
+                <tr>
+                    <td class="table-cell highlight">मागील रीडिंग</td>
+                    <td class="table-cell"><input type="text" class="previous-reading" value="194" oninput="calculateUnits()"></td>
+                    <td class="table-cell"><input type="text" class="previous-reading" value="174" oninput="calculateUnits()"></td>
+                    <td class="table-cell"><input type="text" class="previous-reading" value="467" oninput="calculateUnits()"></td>
+                    <td class="table-cell"><input type="text" class="previous-reading" value="278" oninput="calculateUnits()"></td>
+                    <td class="table-cell"><input type="text" class="previous-reading" value="439" oninput="calculateUnits()"></td>
+                    <td class="table-cell"><input type="text" class="previous-reading" value="132" oninput="calculateUnits()"></td>
+                    <td class="table-cell"><input type="text" class="previous-reading" value="354" oninput="calculateUnits()"></td>
+                    <td class="table-cell"><input type="text" class="previous-reading" value="409" oninput="calculateUnits()"></td>
+                </tr>
+                <tr>
+                    <td class="table-cell highlight">युनिट</td>
+                    <td class="table-cell unit">6</td>
+                    <td class="table-cell unit">28</td>
+                    <td class="table-cell unit">35</td>
+                    <td class="table-cell unit">25</td>
+                    <td class="table-cell unit">48</td>
+                    <td class="table-cell unit">18</td>
+                    <td class="table-cell unit">48</td>
+                    <td class="table-cell unit">2</td>
+                </tr>
+                <tr>
+                    <td class="table-cell highlight">विजबिल</td>
+                    <td class="table-cell bill">60</td>
+                    <td class="table-cell bill">280</td>
+                    <td class="table-cell bill">350</td>
+                    <td class="table-cell bill">250</td>
+                    <td class="table-cell bill">480</td>
+                    <td class="table-cell bill">90</td>
+                    <td class="table-cell bill">480</td>
+                    <td class="table-cell bill">20</td>
+                </tr>
+                <tr>
+                    <td class="table-cell highlight">मोटारबिल</td>
+                    <td class="table-cell difference">0.00</td>
+                    <td class="table-cell difference">0.00</td>
+                    <td class="table-cell difference">0.00</td>
+                    <td class="table-cell difference">0.00</td>
+                    <td class="table-cell difference">0.00</td>
+                    <td class="table-cell difference">0.00</td>
+                    <td class="table-cell difference">0.00</td>
+                    <td class="table-cell difference">0.00</td>
+                </tr>
+                <tr>
+                    <td class="table-cell highlight">एकूण</td>
+                    <td class="table-cell total">60</td>
+                    <td class="table-cell total">280</td>
+                    <td class="table-cell total">350</td>
+                    <td class="table-cell total">250</td>
+                    <td class="table-cell total">480</td>
+                    <td class="table-cell total">90</td>
+                    <td class="table-cell total">480</td>
+                    <td class="table-cell total">20</td>
+                </tr>
+                <tr>
+                    <td class="table-cell total-cell font-bold">TOTAL =</td>
+                    <td colspan="8" class="table-cell total-cell font-bold" id="totalAmount">3190</td>
+                </tr>
+            </tbody>
+        </table>
+        <div class="flex justify-between items-center mt-4">
+            <div class="text-center text-xs sm:text-sm">
+                <div class="font-bold">TOTAL BILL</div>
+                <input type="text" id="bottomLeftBill" class="text-xs sm:text-sm border-none bg-transparent" value="3190" oninput="calculateDifference()">
+            </div>
+            <div class="text-center hidden">
+                <div class="font-bold">Difference</div>
+                <div id="difference" class="text-xl sm:text-2xl">0</div>
+            </div>
+            <div class="text-center">
+                <button onclick="printData()" class="bg-green-500 text-white px-4 py-2 rounded">Print</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
