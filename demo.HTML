@@ -1,0 +1,1927 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Pocket Money Management System</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-light: #818cf8;
+            --deposit: #10b981;
+            --withdraw: #ef4444;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --gray: #64748b;
+            --border: #e2e8f0;
+            --total: #f59e0b;
+            --delete: #dc2626;
+            --edit: #3b82f6;
+            --download: #8b5cf6;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f1f5f9;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .auth-container {
+            max-width: 400px;
+            margin: 80px auto;
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .auth-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .auth-header h2 {
+            color: var(--primary);
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        
+        .auth-header p {
+            color: var(--gray);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        .auth-button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            width: 100%;
+        }
+        
+        .auth-button:hover {
+            background: var(--primary-light);
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+        }
+        
+        @media (min-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background: var(--primary-light);
+        }
+        
+        .delete-btn {
+            background: var(--delete);
+            padding: 6px 12px;
+            font-size: 14px;
+        }
+        
+        .delete-btn:hover {
+            background: #b91c1c;
+        }
+        
+        .edit-btn {
+            background: var(--edit);
+            padding: 6px 12px;
+            font-size: 14px;
+            margin-right: 5px;
+        }
+        
+        .edit-btn:hover {
+            background: #2563eb;
+        }
+        
+        .download-btn {
+            background: var(--download);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin: 5px;
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+        
+        .download-btn:hover {
+            background: #7c3aed;
+        }
+        
+        .summary {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        @media (min-width: 768px) {
+            .summary {
+                grid-template-columns: 1fr 1fr 1fr;
+            }
+        }
+        
+        .summary-item {
+            text-align: center;
+            padding: 15px;
+            border-radius: 10px;
+            background: var(--light);
+        }
+        
+        .summary-item.deposit {
+            border-left: 4px solid var(--deposit);
+        }
+        
+        .summary-item.withdraw {
+            border-left: 4px solid var(--withdraw);
+        }
+        
+        .summary-item.total {
+            border-left: 4px solid var(--total);
+        }
+        
+        .summary-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-top: 5px;
+        }
+        
+        .deposit .summary-value {
+            color: var(--deposit);
+        }
+        
+        .withdraw .summary-value {
+            color: var(--withdraw);
+        }
+        
+        .total .summary-value {
+            color: var(--total);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        th {
+            background-color: var(--light);
+            font-weight: 600;
+            color: var(--primary);
+        }
+        
+        tr:hover {
+            background-color: rgba(79, 70, 229, 0.05);
+        }
+        
+        .deposit-row {
+            color: var(--deposit);
+            font-weight: 600;
+        }
+        
+        .withdraw-row {
+            color: var(--withdraw);
+            font-weight: 600;
+        }
+        
+        .student-name {
+            color: var(--primary);
+            text-decoration: underline;
+            cursor: pointer;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+        
+        .student-name:hover {
+            color: var(--primary-light);
+            background-color: rgba(79, 70, 229, 0.1);
+        }
+        
+        .student-history {
+            display: none;
+            margin-top: 30px;
+            animation: fadeIn 0.5s ease-in;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        
+        .student-history-content {
+            background: white;
+            margin: 40px auto;
+            max-width: 1000px;
+            padding: 30px;
+            border-radius: 15px;
+            margin-top: 80px;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .student-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--border);
+        }
+        
+        .balance {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        .balance.positive {
+            color: var(--deposit);
+        }
+        
+        .balance.negative {
+            color: var(--withdraw);
+        }
+        
+        .back-btn {
+            background: var(--gray);
+        }
+        
+        .back-btn:hover {
+            background: #475569;
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: var(--gray);
+            color: white;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .close-btn:hover {
+            background: #475569;
+        }
+        
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: var(--gray);
+            font-style: italic;
+        }
+        
+        .transaction-count {
+            background: var(--primary);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .nav-tab {
+            padding: 10px 20px;
+            background: var(--light);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .nav-tab.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        .nav-tab:hover:not(.active) {
+            background: #f1f5f9;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .students-list {
+            margin-top: 20px;
+        }
+        
+        .student-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-bottom: 10px;
+            background: var(--light);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .student-card:hover {
+            transform: translateX(5px);
+            border-color: var(--primary);
+            background-color: white;
+        }
+        
+        .student-info h3 {
+            margin-bottom: 5px;
+            color: var(--primary);
+        }
+        
+        .student-balance {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+        
+        .student-balance.positive {
+            color: var(--deposit);
+        }
+        
+        .student-balance.negative {
+            color: var(--withdraw);
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .cancel-btn {
+            background: var(--gray);
+            padding: 6px 12px;
+            font-size: 14px;
+        }
+        
+        .cancel-btn:hover {
+            background: #475569;
+        }
+        
+        .search-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            position: relative;
+        }
+        
+        .search-container input {
+            flex: 1;
+            padding-right: 40px;
+        }
+        
+        .clear-search {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--gray);
+            cursor: pointer;
+            font-size: 18px;
+            padding: 0;
+            width: 20px;
+            height: 20px;
+            display: none;
+        }
+        
+        .clear-search.show {
+            display: block;
+        }
+        
+        /* Autocomplete styles */
+        .autocomplete {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+        
+        .autocomplete-items {
+            position: absolute;
+            border: 1px solid var(--border);
+            border-top: none;
+            z-index: 99;
+            top: 100%;
+            left: 0;
+            right: 0;
+            border-radius: 0 0 8px 8px;
+            background-color: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .autocomplete-items div {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border);
+            transition: background-color 0.2s;
+        }
+        
+        .autocomplete-items div:hover {
+            background-color: var(--light);
+        }
+        
+        .autocomplete-items div.selected {
+            background-color: var(--primary-light);
+            color: white;
+        }
+        
+        /* Download section styles */
+        .download-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+        }
+        
+        .download-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .student-select-group {
+            margin: 15px 0;
+        }
+        
+        /* Custom dropdown style */
+        .custom-dropdown {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+        
+        .custom-dropdown select {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            cursor: pointer;
+            background: white;
+            font-weight: 600;
+        }
+        
+        .custom-dropdown::after {
+            content: '▼';
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            font-size: 16px;
+            color: var(--dark);
+        }
+        
+        .custom-dropdown select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        .user-info {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .logout-btn {
+            background: var(--gray);
+            padding: 6px 12px;
+            font-size: 14px;
+        }
+        
+        .logout-btn:hover {
+            background: #475569;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px 0;
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .auth-container {
+                margin: 40px 20px;
+                padding: 30px;
+            }
+            
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .summary {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            
+            table {
+                font-size: 14px;
+            }
+            
+            th, td {
+                padding: 8px;
+            }
+            
+            .nav-tabs {
+                flex-direction: column;
+            }
+            
+            .nav-tab {
+                width: 100%;
+                text-align: center;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .search-container {
+                flex-direction: column;
+            }
+            
+            .student-history-content {
+                margin: 20px;
+                padding: 20px;
+                margin-top: 60px;
+            }
+            
+            .student-header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            
+            .download-btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Authentication Screen (Login Only) -->
+    <div id="loginScreen" class="auth-container">
+        <div class="auth-header">
+            <h2>Student Pocket Money Management</h2>
+            <p>Login to access your account</p>
+        </div>
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="loginUsername">Username</label>
+                <input type="text" id="loginUsername" value="" required>
+            </div>
+            <div class="form-group">
+                <label for="loginPassword">Password</label>
+                <input type="password" id="loginPassword" value="" required>
+            </div>
+            <button type="submit" class="auth-button">Login</button>
+        </form>
+    </div>
+
+    <!-- Main Application (initially hidden) -->
+    <div id="mainApp" class="container" style="display: none;">
+        <header>
+            <h1>Student Pocket Money Management</h1>
+            <p>Track deposits and withdrawals efficiently</p>
+            <div class="creator-name" style="font-size: 0.9rem; color: var(--gray); margin-top: 5px; font-style: italic;">Created by Ashish Kamble</div>
+        </header>
+        
+        <div class="user-info">
+            <span id="currentUser">Ashish</span>
+            <button class="logout-btn" id="logoutBtn">Logout</button>
+        </div>
+        
+        <div class="nav-tabs">
+            <div class="nav-tab active" data-tab="dashboard">Dashboard</div>
+            <div class="nav-tab" data-tab="students">All Students</div>
+            <div class="nav-tab" data-tab="downloads">Download Data</div>
+        </div>
+        
+        <div id="dashboard" class="tab-content active">
+            <div class="dashboard">
+                <div class="card">
+                    <h2 class="card-title">Add New Transaction</h2>
+                    <form id="transactionForm">
+                        <input type="hidden" id="editTransactionId">
+                        <div class="form-group">
+                            <label for="studentName">Student Name</label>
+                            <div class="autocomplete">
+                                <input type="text" id="studentName" required autocomplete="off">
+                                <div id="studentNameList" class="autocomplete-items"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="transactionDate">Transaction Date</label>
+                            <input type="date" id="transactionDate" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="transactionType">Transaction Type</label>
+                            <select id="transactionType" required>
+                                <option value="">Select Type</option>
+                                <option value="deposit">Deposit/Jama</option>
+                                <option value="withdraw">Withdraw/Nikali</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="amount">Amount</label>
+                            <input type="number" id="amount" min="1" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="remark">Remark/Note</label>
+                            <textarea id="remark" rows="3"></textarea>
+                        </div>
+                        
+                        <div id="formButtons">
+                            <button type="submit" id="submitBtn">Add Transaction</button>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="card">
+                    <h2 class="card-title">System Summary</h2>
+                    <div class="summary">
+                        <div class="summary-item deposit">
+                            <div>Total Cash In (Jama)</div>
+                            <div class="summary-value" id="totalDeposit">₹0</div>
+                        </div>
+                        <div class="summary-item withdraw">
+                            <div>Total Cash Out (Nikali)</div>
+                            <div class="summary-value" id="totalWithdraw">₹0</div>
+                        </div>
+                        <div class="summary-item total">
+                            <div>Total Amount</div>
+                            <div class="summary-value" id="totalAmount">₹0</div>
+                        </div>
+                    </div>
+                    
+                    <h3 style="margin: 20px 0 10px 0;">Recent Transactions</h3>
+                    <div class="search-container">
+                        <input type="text" id="transactionsSearch" placeholder="Search transactions by student name...">
+                        <button class="clear-search" id="clearTransactionsSearch">&times;</button>
+                    </div>
+                    <div id="transactionsTable">
+                        <table id="transactionsList">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Student</th>
+                                    <th>Type</th>
+                                    <th>Amount</th>
+                                    <th>Remark</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactionsBody">
+                                <!-- Transactions will be added here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="students" class="tab-content">
+            <div class="card">
+                <h2 class="card-title">All Students List</h2>
+                <div class="search-container">
+                    <input type="text" id="studentsSearch" placeholder="Search students by name...">
+                    <button class="clear-search" id="clearStudentsSearch">&times;</button>
+                </div>
+                <div class="students-list" id="studentsList">
+                    <!-- Student cards will be added here -->
+                </div>
+            </div>
+        </div>
+        
+        <div id="downloads" class="tab-content">
+            <div class="download-section">
+                <h2 class="card-title">Download Data</h2>
+                
+                <div class="download-buttons">
+                    <button class="download-btn" id="downloadAllTransactionsBtn">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        All Transactions
+                    </button>
+                    
+                    <button class="download-btn" id="downloadStudentsSummaryBtn">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        Students Summary
+                    </button>
+                </div>
+                
+                <div class="student-select-group">
+                    <label for="downloadStudentSelect">Select Student:</label>
+                    <select id="downloadStudentSelect" style="width: 100%; padding: 12px; margin-top: 8px; border: 2px solid var(--border); border-radius: 8px;">
+                        <option value="">-- Select Student --</option>
+                    </select>
+                    <button class="download-btn" id="downloadSelectedStudentBtn" style="margin-top: 15px;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        Download Student
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student History Modal (appears as separate page) -->
+    <div id="studentHistory" class="student-history">
+        <div class="student-history-content">
+            <button class="close-btn" id="closeStudentHistory">&times;</button>
+            <div class="student-header">
+                <div>
+                    <h2 class="card-title">Student History: <span id="studentNameDisplay"></span></h2>
+                    <p>Total Times Added: <span id="transactionCount" class="transaction-count">0</span></p>
+                </div>
+                <div>
+                    <div class="balance" id="studentBalance">₹0</div>
+                </div>
+            </div>
+            
+            <h3>Complete Transaction History</h3>
+            <div id="studentTransactionsTable">
+                <table id="studentTransactionsList">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Amount</th>
+                            <th>Remark</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentTransactionsBody">
+                        <!-- Student transactions will be added here -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <button class="back-btn" id="backBtn">Close</button>
+        </div>
+    </div>
+
+    <footer>
+        <p>Student Pocket Money Management System &copy; 2025 | Created by Ashish Kamble</p>
+    </footer>
+
+    <script>
+        // Predefined credentials
+        const USERNAME = "ashish";
+        const PASSWORD = "ashish1122";
+        
+        // Transaction data structure
+        let transactions = [];
+        const TRANSACTIONS_STORAGE_KEY = 'studentPocketMoneyTransactions';
+        
+        // DOM Elements for Auth
+        const loginScreen = document.getElementById('loginScreen');
+        const mainApp = document.getElementById('mainApp');
+        const loginForm = document.getElementById('loginForm');
+        const currentUserSpan = document.getElementById('currentUser');
+        const logoutBtn = document.getElementById('logoutBtn');
+        
+        // Initialize the application
+        function init() {
+            // Check if user is already logged in (simplified - no persistent login)
+            // For this demo, we'll always show login screen first
+            showLoginScreen();
+            
+            // Set up event listeners
+            loginForm.addEventListener('submit', handleLogin);
+            logoutBtn.addEventListener('click', handleLogout);
+        }
+        
+        // Show login screen
+        function showLoginScreen() {
+            loginScreen.style.display = 'block';
+            mainApp.style.display = 'none';
+        }
+        
+        // Show main application
+        function showMainApp() {
+            loginScreen.style.display = 'none';
+            mainApp.style.display = 'block';
+            
+            // Initialize main app
+            loadTransactions();
+            renderTransactions();
+            updateSummary();
+            renderAllStudents();
+            updateStudentSelectDropdown();
+            // Set default date to today
+            const transactionDateInput = document.getElementById('transactionDate');
+            if (transactionDateInput) {
+                const today = new Date().toISOString().split('T')[0];
+                transactionDateInput.value = today;
+            }
+            
+            // Set up main app event listeners
+            setupMainAppEventListeners();
+        }
+        
+        // Handle login
+        function handleLogin(e) {
+            e.preventDefault();
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            
+            if (username === USERNAME && password === PASSWORD) {
+                showMainApp();
+                // Reset form for security
+                loginForm.reset();
+            } else {
+                alert('Invalid username or password. Please use: hint: ashish....?');
+            }
+        }
+        
+        // Handle logout
+        function handleLogout() {
+            showLoginScreen();
+            
+            // Clear transaction data from UI (data remains in localStorage)
+            transactions = [];
+            const transactionsBody = document.getElementById('transactionsBody');
+            const studentsList = document.getElementById('studentsList');
+            const downloadStudentSelect = document.getElementById('downloadStudentSelect');
+            if (transactionsBody) transactionsBody.innerHTML = '<tr><td colspan="6" class="no-data">No transactions recorded yet</td></tr>';
+            if (studentsList) studentsList.innerHTML = '<div class="no-data">No students found</div>';
+            if (downloadStudentSelect) downloadStudentSelect.innerHTML = '<option value="">-- Select Student --</option>';
+            
+            // Reset summary
+            const totalDepositElement = document.getElementById('totalDeposit');
+            const totalWithdrawElement = document.getElementById('totalWithdraw');
+            const totalAmountElement = document.getElementById('totalAmount');
+            if (totalDepositElement) totalDepositElement.textContent = '₹0';
+            if (totalWithdrawElement) totalWithdrawElement.textContent = '₹0';
+            if (totalAmountElement) totalAmountElement.textContent = '₹0';
+        }
+        
+        // Load transactions from localStorage
+        function loadTransactions() {
+            try {
+                const stored = localStorage.getItem(TRANSACTIONS_STORAGE_KEY);
+                if (stored) {
+                    transactions = JSON.parse(stored);
+                }
+            } catch (error) {
+                console.error('Error loading transactions:', error);
+                transactions = [];
+            }
+        }
+        
+        // Save transactions to localStorage
+        function saveTransactions() {
+            try {
+                localStorage.setItem(TRANSACTIONS_STORAGE_KEY, JSON.stringify(transactions));
+            } catch (error) {
+                console.error('Error saving transactions:', error);
+            }
+        }
+        
+        // Update student select dropdown
+        function updateStudentSelectDropdown() {
+            const downloadStudentSelect = document.getElementById('downloadStudentSelect');
+            if (!downloadStudentSelect) return;
+            
+            // Clear existing options except the first one
+            downloadStudentSelect.innerHTML = '<option value="">-- Select Student --</option>';
+            
+            if (transactions.length === 0) {
+                return;
+            }
+            
+            // Get unique student names
+            const studentNames = [...new Set(transactions.map(t => t.studentName))].sort();
+            
+            studentNames.forEach(studentName => {
+                const option = document.createElement('option');
+                option.value = studentName;
+                option.textContent = studentName;
+                downloadStudentSelect.appendChild(option);
+            });
+        }
+        
+        // Set up main app event listeners
+        function setupMainAppEventListeners() {
+            const transactionForm = document.getElementById('transactionForm');
+            const backBtn = document.getElementById('backBtn');
+            const closeStudentHistory = document.getElementById('closeStudentHistory');
+            const transactionsSearchInput = document.getElementById('transactionsSearch');
+            const studentsSearchInput = document.getElementById('studentsSearch');
+            const clearTransactionsSearch = document.getElementById('clearTransactionsSearch');
+            const clearStudentsSearch = document.getElementById('clearStudentsSearch');
+            const navTabs = document.querySelectorAll('.nav-tab');
+            const studentHistory = document.getElementById('studentHistory');
+            const downloadAllTransactionsBtn = document.getElementById('downloadAllTransactionsBtn');
+            const downloadStudentsSummaryBtn = document.getElementById('downloadStudentsSummaryBtn');
+            const downloadSelectedStudentBtn = document.getElementById('downloadSelectedStudentBtn');
+            
+            if (transactionForm) {
+                transactionForm.addEventListener('submit', handleAddTransaction);
+            }
+            if (backBtn) backBtn.addEventListener('click', hideStudentHistory);
+            if (closeStudentHistory) closeStudentHistory.addEventListener('click', hideStudentHistory);
+            if (downloadAllTransactionsBtn) downloadAllTransactionsBtn.addEventListener('click', downloadAllTransactionsOnly);
+            if (downloadStudentsSummaryBtn) downloadStudentsSummaryBtn.addEventListener('click', downloadStudentsSummaryOnly);
+            if (downloadSelectedStudentBtn) downloadSelectedStudentBtn.addEventListener('click', downloadSelectedStudentData);
+            
+            // Live search with debounce
+            let transactionsSearchTimeout;
+            if (transactionsSearchInput) {
+                transactionsSearchInput.addEventListener('input', (e) => {
+                    clearTimeout(transactionsSearchTimeout);
+                    transactionsSearchTimeout = setTimeout(() => {
+                        handleTransactionsSearch();
+                    }, 300);
+                });
+            }
+            
+            let studentsSearchTimeout;
+            if (studentsSearchInput) {
+                studentsSearchInput.addEventListener('input', (e) => {
+                    clearTimeout(studentsSearchTimeout);
+                    studentsSearchTimeout = setTimeout(() => {
+                        handleStudentsSearch();
+                    }, 300);
+                });
+            }
+            
+            if (clearTransactionsSearch) {
+                clearTransactionsSearch.addEventListener('click', () => {
+                    if (transactionsSearchInput) {
+                        transactionsSearchInput.value = '';
+                        renderTransactions();
+                        clearTransactionsSearch.classList.remove('show');
+                    }
+                });
+            }
+            
+            if (clearStudentsSearch) {
+                clearStudentsSearch.addEventListener('click', () => {
+                    if (studentsSearchInput) {
+                        studentsSearchInput.value = '';
+                        renderAllStudents();
+                        clearStudentsSearch.classList.remove('show');
+                    }
+                });
+            }
+            
+            if (transactionsSearchInput) {
+                transactionsSearchInput.addEventListener('input', () => {
+                    if (clearTransactionsSearch) {
+                        clearTransactionsSearch.classList.toggle('show', transactionsSearchInput.value.trim() !== '');
+                    }
+                });
+            }
+            
+            if (studentsSearchInput) {
+                studentsSearchInput.addEventListener('input', () => {
+                    if (clearStudentsSearch) {
+                        clearStudentsSearch.classList.toggle('show', studentsSearchInput.value.trim() !== '');
+                    }
+                });
+            }
+            
+            if (navTabs) {
+                navTabs.forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        const targetTab = tab.getAttribute('data-tab');
+                        showTab(targetTab);
+                    });
+                });
+            }
+            
+            if (studentHistory) {
+                studentHistory.addEventListener('click', (e) => {
+                    if (e.target === studentHistory) {
+                        hideStudentHistory();
+                    }
+                });
+            }
+            
+            // Initialize autocomplete
+            initAutocomplete();
+        }
+        
+        // Initialize autocomplete functionality
+        function initAutocomplete() {
+            const studentNameInput = document.getElementById('studentName');
+            if (!studentNameInput) return;
+            
+            let currentFocus = -1;
+            
+            // Execute when someone writes in the text field
+            studentNameInput.addEventListener("input", function(e) {
+                const val = this.value;
+                closeAllLists();
+                if (!val) { return false; }
+                
+                currentFocus = -1;
+                
+                // Create a DIV element that will contain the items
+                const list = document.createElement("DIV");
+                list.setAttribute("id", this.id + "autocomplete-list");
+                list.setAttribute("class", "autocomplete-items");
+                this.parentNode.appendChild(list);
+                
+                // Get all existing student names
+                const studentNames = [...new Set(transactions.map(t => t.studentName))];
+                
+                // Filter student names that match the input
+                let matches = [];
+                for (let i = 0; i < studentNames.length; i++) {
+                    if (studentNames[i].substr(0, val.length).toUpperCase() === val.toUpperCase()) {
+                        matches.push(studentNames[i]);
+                    }
+                }
+                
+                // Add the matching items to the autocomplete list
+                matches.forEach(match => {
+                    const item = document.createElement("DIV");
+                    item.innerHTML = match;
+                    item.addEventListener("click", function(e) {
+                        studentNameInput.value = this.innerHTML;
+                        closeAllLists();
+                    });
+                    list.appendChild(item);
+                });
+                
+                // If no matches found, show "No results" message
+                if (matches.length === 0) {
+                    const item = document.createElement("DIV");
+                    item.innerHTML = "<em>No students found</em>";
+                    item.style.cursor = "default";
+                    list.appendChild(item);
+                }
+            });
+            
+            // Execute when someone clicks in the document
+            document.addEventListener("click", function(e) {
+                closeAllLists(e.target);
+            });
+            
+            // Execute when someone presses a key
+            studentNameInput.addEventListener("keydown", function(e) {
+                let list = document.getElementById(this.id + "autocomplete-list");
+                if (list) {
+                    const items = list.getElementsByTagName("DIV");
+                    
+                    if (e.keyCode === 40) { // Arrow down
+                        currentFocus++;
+                        addActive(items);
+                    } else if (e.keyCode === 38) { // Arrow up
+                        currentFocus--;
+                        addActive(items);
+                    } else if (e.keyCode === 13) { // Enter
+                        e.preventDefault();
+                        if (currentFocus > -1) {
+                            if (items[currentFocus]) {
+                                items[currentFocus].click();
+                            }
+                        }
+                    }
+                }
+            });
+            
+            function addActive(items) {
+                if (!items) return false;
+                removeActive(items);
+                if (currentFocus >= items.length) currentFocus = 0;
+                if (currentFocus < 0) currentFocus = items.length - 1;
+                items[currentFocus].classList.add("selected");
+            }
+            
+            function removeActive(items) {
+                for (let i = 0; i < items.length; i++) {
+                    items[i].classList.remove("selected");
+                }
+            }
+            
+            function closeAllLists(element) {
+                const items = document.getElementsByClassName("autocomplete-items");
+                for (let i = 0; i < items.length; i++) {
+                    if (element !== items[i] && element !== studentNameInput) {
+                        items[i].parentNode.removeChild(items[i]);
+                    }
+                }
+            }
+        }
+        
+        // Handle adding/editing a transaction
+        function handleAddTransaction(e) {
+            e.preventDefault();
+            
+            const studentNameInput = document.getElementById('studentName');
+            const transactionDateInput = document.getElementById('transactionDate');
+            const transactionTypeSelect = document.getElementById('transactionType');
+            const amountInput = document.getElementById('amount');
+            const remarkInput = document.getElementById('remark');
+            const editTransactionId = document.getElementById('editTransactionId');
+            const submitBtn = document.getElementById('submitBtn');
+            const transactionsSearchInput = document.getElementById('transactionsSearch');
+            const studentsSearchInput = document.getElementById('studentsSearch');
+            const clearTransactionsSearch = document.getElementById('clearTransactionsSearch');
+            const clearStudentsSearch = document.getElementById('clearStudentsSearch');
+            
+            if (!studentNameInput || !transactionDateInput || !transactionTypeSelect || !amountInput) {
+                return;
+            }
+            
+            const studentName = studentNameInput.value.trim();
+            const transactionDate = transactionDateInput.value;
+            const transactionType = transactionTypeSelect.value;
+            const amount = parseFloat(amountInput.value);
+            const remark = remarkInput.value.trim();
+            const id = editTransactionId.value || Date.now().toString();
+            
+            if (!studentName || !transactionDate || !transactionType || !amount || amount <= 0) {
+                alert('Please fill all required fields with valid data');
+                return;
+            }
+            
+            // Convert date to ISO string for storage
+            const dateISO = new Date(transactionDate).toISOString();
+            
+            if (editTransactionId.value) {
+                // Edit existing transaction
+                const index = transactions.findIndex(t => t.id === editTransactionId.value);
+                if (index !== -1) {
+                    transactions[index] = {
+                        id: editTransactionId.value,
+                        studentName,
+                        transactionType,
+                        amount,
+                        remark,
+                        date: dateISO
+                    };
+                }
+            } else {
+                // Add new transaction
+                const newTransaction = {
+                    id,
+                    studentName,
+                    transactionType,
+                    amount,
+                    remark,
+                    date: dateISO
+                };
+                transactions.unshift(newTransaction);
+            }
+            
+            saveTransactions();
+            
+            // Reset form
+            resetForm();
+            
+            // Update UI
+            renderTransactions();
+            updateSummary();
+            renderAllStudents();
+            updateStudentSelectDropdown();
+            
+            // Clear search inputs if they exist
+            if (transactionsSearchInput && transactionsSearchInput.value.trim() !== '') {
+                transactionsSearchInput.value = '';
+                if (clearTransactionsSearch) clearTransactionsSearch.classList.remove('show');
+            }
+            if (studentsSearchInput && studentsSearchInput.value.trim() !== '') {
+                studentsSearchInput.value = '';
+                if (clearStudentsSearch) clearStudentsSearch.classList.remove('show');
+            }
+        }
+        
+        // Reset form to add mode
+        function resetForm() {
+            const transactionForm = document.getElementById('transactionForm');
+            const editTransactionId = document.getElementById('editTransactionId');
+            const submitBtn = document.getElementById('submitBtn');
+            const transactionDateInput = document.getElementById('transactionDate');
+            
+            if (transactionForm) transactionForm.reset();
+            if (editTransactionId) editTransactionId.value = '';
+            if (submitBtn) submitBtn.textContent = 'Add Transaction';
+            
+            // Set default date to today
+            if (transactionDateInput) {
+                const today = new Date().toISOString().split('T')[0];
+                transactionDateInput.value = today;
+            }
+        }
+        
+        // Edit transaction
+        function editTransaction(id) {
+            const transaction = transactions.find(t => t.id === id);
+            if (transaction) {
+                const studentNameInput = document.getElementById('studentName');
+                const transactionDateInput = document.getElementById('transactionDate');
+                const transactionTypeSelect = document.getElementById('transactionType');
+                const amountInput = document.getElementById('amount');
+                const remarkInput = document.getElementById('remark');
+                const editTransactionId = document.getElementById('editTransactionId');
+                const submitBtn = document.getElementById('submitBtn');
+                
+                if (studentNameInput) studentNameInput.value = transaction.studentName;
+                if (transactionDateInput) {
+                    const dateObj = new Date(transaction.date);
+                    const dateStr = dateObj.toISOString().split('T')[0];
+                    transactionDateInput.value = dateStr;
+                }
+                if (transactionTypeSelect) transactionTypeSelect.value = transaction.transactionType;
+                if (amountInput) amountInput.value = transaction.amount;
+                if (remarkInput) remarkInput.value = transaction.remark;
+                if (editTransactionId) editTransactionId.value = transaction.id;
+                if (submitBtn) submitBtn.textContent = 'Update Transaction';
+                
+                // Switch to dashboard and scroll to form
+                showTab('dashboard');
+                document.querySelector('.card').scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+        
+        // Delete transaction
+        function deleteTransaction(id) {
+            if (confirm('Are you sure you want to delete this transaction?')) {
+                transactions = transactions.filter(t => t.id !== id);
+                saveTransactions();
+                renderTransactions();
+                updateSummary();
+                renderAllStudents();
+                updateStudentSelectDropdown();
+                
+                // If student history is open, refresh it
+                const studentHistory = document.getElementById('studentHistory');
+                const studentNameDisplay = document.getElementById('studentNameDisplay');
+                if (studentHistory && studentHistory.style.display === 'block' && studentNameDisplay) {
+                    const currentStudent = studentNameDisplay.textContent;
+                    viewStudentHistory(currentStudent);
+                }
+                
+                // Clear search inputs if they exist
+                const transactionsSearchInput = document.getElementById('transactionsSearch');
+                const studentsSearchInput = document.getElementById('studentsSearch');
+                const clearTransactionsSearch = document.getElementById('clearTransactionsSearch');
+                const clearStudentsSearch = document.getElementById('clearStudentsSearch');
+                
+                if (transactionsSearchInput && transactionsSearchInput.value.trim() !== '') {
+                    transactionsSearchInput.value = '';
+                    if (clearTransactionsSearch) clearTransactionsSearch.classList.remove('show');
+                }
+                if (studentsSearchInput && studentsSearchInput.value.trim() !== '') {
+                    studentsSearchInput.value = '';
+                    if (clearStudentsSearch) clearStudentsSearch.classList.remove('show');
+                }
+            }
+        }
+        
+        // Handle transactions search (live search)
+        function handleTransactionsSearch() {
+            const transactionsSearchInput = document.getElementById('transactionsSearch');
+            if (!transactionsSearchInput) return;
+            
+            const searchTerm = transactionsSearchInput.value.trim().toLowerCase();
+            
+            if (searchTerm === '') {
+                renderTransactions();
+                return;
+            }
+            
+            const filteredTransactions = transactions.filter(transaction => 
+                transaction.studentName.toLowerCase().includes(searchTerm)
+            );
+            
+            renderFilteredTransactions(filteredTransactions);
+        }
+        
+        // Render filtered transactions
+        function renderFilteredTransactions(filteredTransactions) {
+            const transactionsBody = document.getElementById('transactionsBody');
+            if (!transactionsBody) return;
+            
+            if (filteredTransactions.length === 0) {
+                transactionsBody.innerHTML = '<tr><td colspan="6" class="no-data">No transactions found matching your search</td></tr>';
+                return;
+            }
+            
+            transactionsBody.innerHTML = '';
+            
+            // Show all matching transactions (not limited to 5 for search results)
+            filteredTransactions.forEach(transaction => {
+                const row = document.createElement('tr');
+                const transactionDate = new Date(transaction.date).toLocaleDateString();
+                const typeClass = transaction.transactionType === 'deposit' ? 'deposit-row' : 'withdraw-row';
+                const typeText = transaction.transactionType === 'deposit' ? 'Deposit/Jama' : 'Withdraw/Nikali';
+                
+                row.innerHTML = `
+                    <td>${transactionDate}</td>
+                    <td><span class="student-name" onclick="viewStudentHistory('${transaction.studentName.replace(/'/g, "\\'")}')">${transaction.studentName}</span></td>
+                    <td class="${typeClass}">${typeText}</td>
+                    <td class="${typeClass}">₹${transaction.amount.toFixed(2)}</td>
+                    <td>${transaction.remark || '-'}</td>
+                    <td class="action-buttons">
+                        <button class="edit-btn" onclick="editTransaction('${transaction.id}')">Edit</button>
+                        <button class="delete-btn" onclick="deleteTransaction('${transaction.id}')">Delete</button>
+                    </td>
+                `;
+                
+                transactionsBody.appendChild(row);
+            });
+        }
+        
+        // Handle students search (live search)
+        function handleStudentsSearch() {
+            const studentsSearchInput = document.getElementById('studentsSearch');
+            if (!studentsSearchInput) return;
+            
+            const searchTerm = studentsSearchInput.value.trim().toLowerCase();
+            
+            if (searchTerm === '') {
+                renderAllStudents();
+                return;
+            }
+            
+            const filteredStudents = [...new Set(transactions.map(t => t.studentName))].filter(studentName => 
+                studentName.toLowerCase().includes(searchTerm)
+            );
+            
+            renderFilteredStudents(filteredStudents);
+        }
+        
+        // Render filtered students
+        function renderFilteredStudents(filteredStudents) {
+            const studentsList = document.getElementById('studentsList');
+            if (!studentsList) return;
+            
+            if (filteredStudents.length === 0) {
+                studentsList.innerHTML = '<div class="no-data">No students found matching your search</div>';
+                return;
+            }
+            
+            studentsList.innerHTML = '';
+            
+            filteredStudents.forEach(studentName => {
+                // Calculate student balance
+                const studentTransactions = transactions.filter(t => t.studentName === studentName);
+                const depositTotal = studentTransactions
+                    .filter(t => t.transactionType === 'deposit')
+                    .reduce((sum, t) => sum + t.amount, 0);
+                const withdrawTotal = studentTransactions
+                    .filter(t => t.transactionType === 'withdraw')
+                    .reduce((sum, t) => sum + t.amount, 0);
+                const balance = depositTotal - withdrawTotal;
+                const depositCount = studentTransactions.filter(t => t.transactionType === 'deposit').length;
+                
+                const studentCard = document.createElement('div');
+                studentCard.className = 'student-card';
+                studentCard.innerHTML = `
+                    <div class="student-info">
+                        <h3>${studentName}</h3>
+                        <p>Total Deposits: ${depositCount}</p>
+                    </div>
+                    <div class="student-balance ${balance >= 0 ? 'positive' : 'negative'}">
+                        ₹${balance.toFixed(2)}
+                    </div>
+                `;
+                
+                studentCard.addEventListener('click', () => {
+                    viewStudentHistory(studentName);
+                });
+                
+                studentsList.appendChild(studentCard);
+            });
+        }
+        
+        // View student history in modal (separate page appearance)
+        function viewStudentHistory(studentName) {
+            const studentTransactions = transactions.filter(t => 
+                t.studentName === studentName
+            );
+            
+            if (studentTransactions.length === 0) {
+                return;
+            }
+            
+            const depositTotal = studentTransactions
+                .filter(t => t.transactionType === 'deposit')
+                .reduce((sum, t) => sum + t.amount, 0);
+            const withdrawTotal = studentTransactions
+                .filter(t => t.transactionType === 'withdraw')
+                .reduce((sum, t) => sum + t.amount, 0);
+            const balance = depositTotal - withdrawTotal;
+            const depositCount = studentTransactions.filter(t => t.transactionType === 'deposit').length;
+            
+            const studentNameDisplay = document.getElementById('studentNameDisplay');
+            const studentBalance = document.getElementById('studentBalance');
+            const transactionCount = document.getElementById('transactionCount');
+            
+            if (studentNameDisplay) studentNameDisplay.textContent = studentName;
+            if (studentBalance) {
+                studentBalance.textContent = `₹${balance.toFixed(2)}`;
+                studentBalance.className = 'balance ' + (balance >= 0 ? 'positive' : 'negative');
+            }
+            if (transactionCount) transactionCount.textContent = depositCount;
+            
+            renderStudentTransactions(studentTransactions);
+            
+            const studentHistory = document.getElementById('studentHistory');
+            if (studentHistory) {
+                studentHistory.style.display = 'block';
+                document.body.style.overflow = 'hidden'; // Prevent background scrolling
+            }
+        }
+        
+        // Function to download selected student data
+        function downloadSelectedStudentData() {
+            const downloadStudentSelect = document.getElementById('downloadStudentSelect');
+            if (!downloadStudentSelect) return;
+            
+            const selectedStudent = downloadStudentSelect.value;
+            if (!selectedStudent) {
+                alert('Please select a student to download');
+                return;
+            }
+            downloadCurrentStudentCsv(selectedStudent);
+        }
+        
+        // Hide student history modal
+        function hideStudentHistory() {
+            const studentHistory = document.getElementById('studentHistory');
+            if (studentHistory) {
+                studentHistory.style.display = 'none';
+                document.body.style.overflow = 'auto'; // Restore background scrolling
+            }
+        }
+        
+        // Render all transactions in the main table - NOW SHOWING ONLY 5 RECENT TRANSACTIONS
+        function renderTransactions() {
+            const transactionsBody = document.getElementById('transactionsBody');
+            if (!transactionsBody) return;
+            
+            if (transactions.length === 0) {
+                transactionsBody.innerHTML = '<tr><td colspan="6" class="no-data">No transactions recorded yet</td></tr>';
+                return;
+            }
+            
+            transactionsBody.innerHTML = '';
+            
+            // Show only recent 5 transactions
+            const recentTransactions = transactions.slice(0, 5);
+            
+            recentTransactions.forEach(transaction => {
+                const row = document.createElement('tr');
+                const transactionDate = new Date(transaction.date).toLocaleDateString();
+                const typeClass = transaction.transactionType === 'deposit' ? 'deposit-row' : 'withdraw-row';
+                const typeText = transaction.transactionType === 'deposit' ? 'Deposit/Jama' : 'Withdraw/Nikali';
+                
+                row.innerHTML = `
+                    <td>${transactionDate}</td>
+                    <td><span class="student-name" onclick="viewStudentHistory('${transaction.studentName.replace(/'/g, "\\'")}')">${transaction.studentName}</span></td>
+                    <td class="${typeClass}">${typeText}</td>
+                    <td class="${typeClass}">₹${transaction.amount.toFixed(2)}</td>
+                    <td>${transaction.remark || '-'}</td>
+                    <td class="action-buttons">
+                        <button class="edit-btn" onclick="editTransaction('${transaction.id}')">Edit</button>
+                        <button class="delete-btn" onclick="deleteTransaction('${transaction.id}')">Delete</button>
+                    </td>
+                `;
+                
+                transactionsBody.appendChild(row);
+            });
+        }
+        
+        // Update the summary totals
+        function updateSummary() {
+            const totalDepositElement = document.getElementById('totalDeposit');
+            const totalWithdrawElement = document.getElementById('totalWithdraw');
+            const totalAmountElement = document.getElementById('totalAmount');
+            
+            const totalDeposit = transactions
+                .filter(t => t.transactionType === 'deposit')
+                .reduce((sum, t) => sum + t.amount, 0);
+                
+            const totalWithdraw = transactions
+                .filter(t => t.transactionType === 'withdraw')
+                .reduce((sum, t) => sum + t.amount, 0);
+                
+            const totalAmount = totalDeposit - totalWithdraw;
+                
+            if (totalDepositElement) totalDepositElement.textContent = `₹${totalDeposit.toFixed(2)}`;
+            if (totalWithdrawElement) totalWithdrawElement.textContent = `₹${totalWithdraw.toFixed(2)}`;
+            if (totalAmountElement) totalAmountElement.textContent = `₹${totalAmount.toFixed(2)}`;
+        }
+        
+        // Render student-specific transactions
+        function renderStudentTransactions(studentTransactions) {
+            const studentTransactionsBody = document.getElementById('studentTransactionsBody');
+            if (!studentTransactionsBody) return;
+            
+            studentTransactionsBody.innerHTML = '';
+            
+            if (studentTransactions.length === 0) {
+                studentTransactionsBody.innerHTML = '<tr><td colspan="5" class="no-data">No transactions found</td></tr>';
+                return;
+            }
+            
+            // Sort transactions by date (newest first)
+            const sortedTransactions = [...studentTransactions].sort((a, b) => 
+                new Date(b.date) - new Date(a.date)
+            );
+            
+            sortedTransactions.forEach(transaction => {
+                const row = document.createElement('tr');
+                const transactionDate = new Date(transaction.date).toLocaleDateString();
+                const typeClass = transaction.transactionType === 'deposit' ? 'deposit-row' : 'withdraw-row';
+                const typeText = transaction.transactionType === 'deposit' ? 'Deposit/Jama' : 'Withdraw/Nikali';
+                
+                row.innerHTML = `
+                    <td>${transactionDate}</td>
+                    <td class="${typeClass}">${typeText}</td>
+                    <td class="${typeClass}">₹${transaction.amount.toFixed(2)}</td>
+                    <td>${transaction.remark || '-'}</td>
+                    <td class="action-buttons">
+                        <button class="edit-btn" onclick="editTransaction('${transaction.id}')">Edit</button>
+                        <button class="delete-btn" onclick="deleteTransaction('${transaction.id}')">Delete</button>
+                    </td>
+                `;
+                
+                studentTransactionsBody.appendChild(row);
+            });
+        }
+        
+        // Show tab
+        function showTab(tabName) {
+            const tabContents = document.querySelectorAll('.tab-content');
+            const navTabs = document.querySelectorAll('.nav-tab');
+            
+            // Hide all tabs
+            tabContents.forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Deactivate all nav tabs
+            navTabs.forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab
+            const selectedTab = document.getElementById(tabName);
+            if (selectedTab) {
+                selectedTab.classList.add('active');
+            }
+            
+            // Activate selected nav tab
+            const activeTab = document.querySelector(`.nav-tab[data-tab="${tabName}"]`);
+            if (activeTab) {
+                activeTab.classList.add('active');
+            }
+        }
+        
+        // Render all students list
+        function renderAllStudents() {
+            const studentsList = document.getElementById('studentsList');
+            if (!studentsList) return;
+            
+            if (transactions.length === 0) {
+                studentsList.innerHTML = '<div class="no-data">No students found</div>';
+                return;
+            }
+            
+            // Get unique student names
+            const studentNames = [...new Set(transactions.map(t => t.studentName))];
+            
+            if (studentNames.length === 0) {
+                studentsList.innerHTML = '<div class="no-data">No students found</div>';
+                return;
+            }
+            
+            studentsList.innerHTML = '';
+            
+            studentNames.forEach(studentName => {
+                // Calculate student balance
+                const studentTransactions = transactions.filter(t => t.studentName === studentName);
+                const depositTotal = studentTransactions
+                    .filter(t => t.transactionType === 'deposit')
+                    .reduce((sum, t) => sum + t.amount, 0);
+                const withdrawTotal = studentTransactions
+                    .filter(t => t.transactionType === 'withdraw')
+                    .reduce((sum, t) => sum + t.amount, 0);
+                const balance = depositTotal - withdrawTotal;
+                const depositCount = studentTransactions.filter(t => t.transactionType === 'deposit').length;
+                
+                const studentCard = document.createElement('div');
+                studentCard.className = 'student-card';
+                studentCard.innerHTML = `
+                    <div class="student-info">
+                        <h3>${studentName}</h3>
+                        <p>Total Deposits: ${depositCount}</p>
+                    </div>
+                    <div class="student-balance ${balance >= 0 ? 'positive' : 'negative'}">
+                        ₹${balance.toFixed(2)}
+                    </div>
+                `;
+                
+                studentCard.addEventListener('click', () => {
+                    viewStudentHistory(studentName);
+                });
+                
+                studentsList.appendChild(studentCard);
+            });
+        }
+        
+        // CSV Download Functions
+        function downloadCsv(filename, csvContent) {
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.setAttribute('href', url);
+            link.setAttribute('download', filename);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        // Escape CSV values to handle commas, quotes, and newlines
+        function escapeCsvValue(value) {
+            if (value === null || value === undefined) return '';
+            value = value.toString();
+            if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+                value = '"' + value.replace(/"/g, '""') + '"';
+            }
+            return value;
+        }
+        
+        // Download all transactions as CSV
+        function downloadAllTransactionsCsv() {
+            if (transactions.length === 0) {
+                return ''; // Return empty string if no data
+            }
+            
+            // Sort transactions by date (newest first)
+            const sortedTransactions = [...transactions].sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            // CSV headers
+            const headers = ['Date', 'Student Name', 'Transaction Type', 'Amount', 'Remark'];
+            let csvContent = headers.join(',') + '\n';
+            
+            // Add transaction data
+            sortedTransactions.forEach(transaction => {
+                const date = new Date(transaction.date).toLocaleDateString('en-GB'); // DD/MM/YYYY format
+                const studentName = escapeCsvValue(transaction.studentName);
+                const transactionType = transaction.transactionType === 'deposit' ? 'Deposit/Jama' : 'Withdraw/Nikali';
+                const amount = transaction.amount;
+                const remark = escapeCsvValue(transaction.remark || '');
+                
+                csvContent += `${date},${studentName},${transactionType},${amount},${remark}\n`;
+            });
+            
+            return csvContent;
+        }
+        
+        // Download students summary in Excel format (as requested)
+        function downloadStudentsSummaryExcelFormat() {
+            if (transactions.length === 0) {
+                return ''; // Return empty string if no data
+            }
+            
+            // Get unique student names
+            const studentNames = [...new Set(transactions.map(t => t.studentName))];
+            
+            // CSV headers (exactly as requested)
+            const headers = ['Sr.No', 'Student Name', 'Total Deposits', 'Total Withdrawals', 'Balance', 'Total Transactions'];
+            let csvContent = headers.join(',') + '\n';
+            
+            // Process each student
+            let srNo = 1;
+            let totalDeposits = 0;
+            let totalWithdrawals = 0;
+            
+            studentNames.forEach(studentName => {
+                const studentTransactions = transactions.filter(t => t.studentName === studentName);
+                const depositTotal = studentTransactions
+                    .filter(t => t.transactionType === 'deposit')
+                    .reduce((sum, t) => sum + t.amount, 0);
+                const withdrawTotal = studentTransactions
+                    .filter(t => t.transactionType === 'withdraw')
+                    .reduce((sum, t) => sum + t.amount, 0);
+                const balance = depositTotal - withdrawTotal;
+                const totalTransactions = studentTransactions.length;
+                
+                // Add student data
+                const escapedName = escapeCsvValue(studentName);
+                csvContent += `${srNo},${escapedName},${depositTotal},${withdrawTotal},${balance},${totalTransactions}\n`;
+                
+                // Update totals
+                totalDeposits += depositTotal;
+                totalWithdrawals += withdrawTotal;
+                
+                srNo++;
+            });
+            
+            // Add total row
+            csvContent += `\nTotal,${totalDeposits},${totalWithdrawals},${totalDeposits - totalWithdrawals},`;
+            
+            return csvContent;
+        }
+        
+        // Download only transactions
+        function downloadAllTransactionsOnly() {
+            if (transactions.length === 0) {
+                alert('No transactions to download');
+                return;
+            }
+            
+            const allTransactionsCsv = downloadAllTransactionsCsv();
+            if (allTransactionsCsv) {
+                downloadCsv('student_pocket_money_transactions.csv', allTransactionsCsv);
+            }
+        }
+        
+        // Download only students summary
+        function downloadStudentsSummaryOnly() {
+            if (transactions.length === 0) {
+                alert('No student data to download');
+                return;
+            }
+            
+            const studentsSummaryCsv = downloadStudentsSummaryExcelFormat();
+            if (studentsSummaryCsv) {
+                downloadCsv('students_summary_excel_format.csv', studentsSummaryCsv);
+            }
+        }
+        
+        // Download current student transactions as CSV
+        function downloadCurrentStudentCsv(studentName) {
+            if (!studentName) {
+                alert('No student selected');
+                return;
+            }
+            
+            const studentTransactions = transactions.filter(t => t.studentName === studentName);
+            if (studentTransactions.length === 0) {
+                alert('No transactions for this student');
+                return;
+            }
+            
+            // Sort transactions by date (newest first)
+            const sortedTransactions = [...studentTransactions].sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            const headers = ['Date', 'Transaction Type', 'Amount', 'Remark'];
+            let csvContent = `Student Name: ${studentName}\n\n`;
+            csvContent += headers.join(',') + '\n';
+            
+            sortedTransactions.forEach(transaction => {
+                const date = new Date(transaction.date).toLocaleDateString('en-GB'); // DD/MM/YYYY format
+                const transactionType = transaction.transactionType === 'deposit' ? 'Deposit/Jama' : 'Withdraw/Nikali';
+                const amount = transaction.amount;
+                const remark = escapeCsvValue(transaction.remark || '');
+                
+                csvContent += `${date},${transactionType},${amount},${remark}\n`;
+            });
+            
+            downloadCsv(`student_${studentName.replace(/\s+/g, '_')}_transactions.csv`, csvContent);
+        }
+        
+        // Initialize the app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
+
