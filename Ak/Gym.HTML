@@ -1,0 +1,1098 @@
+```react
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { 
+  Camera, Calendar, LayoutDashboard, Image as ImageIcon, 
+  Settings, Play, SlidersHorizontal, Download, 
+  Trash2, ChevronLeft, ChevronRight, CheckCircle2, 
+  XCircle, Trophy, Flame, Activity, Video, RefreshCw,
+  User as UserIcon
+} from 'lucide-react';
+import { initializeApp } from 'firebase/app';
+import { 
+  getAuth, signInWithCustomToken, signInAnonymously, 
+  onAuthStateChanged 
+} from 'firebase/auth';
+import { 
+  getFirestore, collection, doc, setDoc, deleteDoc, 
+  onSnapshot
+} from 'firebase/firestore';
+
+// --- Firebase Initialization ---
+const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const appId = typeof __app_id !== 'undefined' ? __app_id : 'gym-progress-tracker-app';
+
+// --- Utility Functions ---
+const compressImage = (file, maxWidth = 800, quality = 0.7) => {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target.result;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+    };
+  });
+};
+
+const getDaysBetween = (start, end) => {
+  const oneDay = 24 * 60 * 60 * 1000;
+  return Math.round(Math.abs((new Date(end) - new Date(start)) / oneDay));
+};
+
+const formatDate = (date) => {
+  return new Date(date).toISOString().split('T')[0];
+};
+
+const getToday = () => formatDate(new Date());
+
+// --- Custom UI Components ---
+const GlassCard = ({ children, className = '', onClick }) => (
+  <div 
+    onClick={onClick}
+    className={`bg-gray-900/60 backdrop-blur-xl border border-gray-800 rounded-3xl p-5 ${className} ${onClick ? 'cursor-pointer hover:border-green-500/50 transition-colors' : ''}`}
+  >
+    {children}
+  </div>
+);
+
+const Button = ({ children, onClick, variant = 'primary', className = '', disabled = false, icon: Icon }) => {
+  const base = "flex items-center justify-center gap-2 px-6 py-3 rounded-full font-bold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed";
+  const variants = {
+    primary: "bg-green-500 hover:bg-green-400 text-black shadow-[0_0_15px_rgba(34,197,94,0.4)] hover:shadow-[0_0_25px_rgba(34,197,94,0.6)]",
+    secondary: "bg-gray-800 hover:bg-gray-700 text-white border border-gray-700",
+    danger: "bg-red-500/20 hover:bg-red-500/30 text-red-500 border border-red-500/50",
+    ghost: "bg-transparent hover:bg-white/10 text-white"
+  };
+  return (
+    <button disabled={disabled} onClick={onClick} className={`${base} ${variants[variant]} ${className}`}>
+      {Icon && <Icon size={20} />}
+      {children}
+    </button>
+  );
+};
+
+const Toast = ({ message, type = 'success', onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(onClose, 3000);
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  const bg = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-gray-800';
+  return (
+    <div className={`fixed top-4 left-1/2 -translate-x-1/2 ${bg} text-white px-6 py-3 rounded-full shadow-lg z-50 flex items-center gap-2 animate-fade-in-down`}>
+      {type === 'success' ? <CheckCircle2 size={20} /> : <XCircle size={20} />}
+      <span className="font-medium">{message}</span>
+    </div>
+  );
+};
+
+// --- Main Application ---
+export default function App() {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [toast, setToast] = useState(null);
+  
+  const [challenge, setChallenge] = useState(null);
+  const [photos, setPhotos] = useState([]);
+  
+  const [currentView, setCurrentView] = useState('dashboard'); // dashboard, calendar, upload, gallery, compare, timelapse, settings
+
+  // 1. Auth Setup
+  useEffect(() => {
+    const initAuth = async () => {
+      try {
+        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+          await signInWithCustomToken(auth, __initial_auth_token);
+        } else {
+          await signInAnonymously(auth);
+        }
+      } catch (err) {
+        console.error("Auth error:", err);
+      }
+    };
+    initAuth();
+
+    const unsubscribe = onAuthStateChanged(auth, (u) => {
+      setUser(u);
+      setLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // 2. Data Fetching
+  useEffect(() => {
+    if (!user) return;
+
+    // Fetch Challenge
+    const challengeRef = doc(db, 'artifacts', appId, 'users', user.uid, 'settings', 'challenge');
+    const unsubChallenge = onSnapshot(challengeRef, (docSnap) => {
+      if (docSnap.exists()) {
+        setChallenge(docSnap.data());
+      } else {
+        setChallenge(null);
+      }
+    }, (err) => console.error("Challenge fetch error", err));
+
+    // Fetch Photos
+    const photosRef = collection(db, 'artifacts', appId, 'users', user.uid, 'photos');
+    const unsubPhotos = onSnapshot(photosRef, (snapshot) => {
+      const fetchedPhotos = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      // Sort in memory (Rule 2)
+      fetchedPhotos.sort((a, b) => new Date(a.date) - new Date(b.date));
+      setPhotos(fetchedPhotos);
+    }, (err) => console.error("Photos fetch error", err));
+
+    return () => {
+      unsubChallenge();
+      unsubPhotos();
+    };
+  }, [user]);
+
+  const showToast = (msg, type = 'success') => setToast({ message: msg, type });
+
+  // --- Views ---
+  const renderView = () => {
+    if (!challenge) {
+      return <ChallengeSetupView user={user} showToast={showToast} />;
+    }
+
+    switch (currentView) {
+      case 'dashboard': return <DashboardView challenge={challenge} photos={photos} setView={setCurrentView} />;
+      case 'upload': return <UploadView user={user} challenge={challenge} photos={photos} showToast={showToast} setView={setCurrentView} />;
+      case 'calendar': return <CalendarView challenge={challenge} photos={photos} setView={setCurrentView} />;
+      case 'gallery': return <GalleryView user={user} photos={photos} showToast={showToast} />;
+      case 'compare': return <CompareView photos={photos} />;
+      case 'timelapse': return <TimelapseView photos={photos} challenge={challenge} />;
+      case 'settings': return <SettingsView user={user} challenge={challenge} showToast={showToast} setView={setCurrentView} />;
+      default: return <DashboardView challenge={challenge} photos={photos} setView={setCurrentView} />;
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-black text-gray-100 font-sans selection:bg-green-500/30 pb-20 md:pb-0">
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+
+      <div className="max-w-md mx-auto h-full min-h-screen flex flex-col md:border-x md:border-gray-800 bg-[#050505] shadow-2xl relative overflow-hidden">
+        
+        {/* Top Header */}
+        <header className="p-4 flex justify-between items-center sticky top-0 bg-[#050505]/80 backdrop-blur-xl z-40 border-b border-gray-800">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-green-500/10 flex items-center justify-center border border-green-500/20 text-green-500 shadow-[0_0_15px_rgba(34,197,94,0.15)]">
+              <Activity size={20} />
+            </div>
+            <div>
+              <h1 className="font-bold text-lg leading-tight tracking-tight">Gym Tracker</h1>
+              {challenge && <p className="text-[10px] text-green-400 font-medium uppercase tracking-wider">{challenge.name}</p>}
+            </div>
+          </div>
+          {challenge && (
+            <button onClick={() => setCurrentView('settings')} className="p-2 text-gray-400 hover:text-white bg-gray-900 rounded-full transition-colors border border-gray-800 hover:border-gray-600">
+              <Settings size={20} />
+            </button>
+          )}
+        </header>
+
+        {/* Dynamic Content */}
+        <main className="flex-1 overflow-y-auto p-4 scroll-smooth">
+          {renderView()}
+        </main>
+
+        {/* Bottom Navigation */}
+        {challenge && (
+          <nav className="fixed bottom-0 left-0 right-0 md:absolute bg-[#050505]/95 backdrop-blur-lg border-t border-gray-800 z-50">
+            <div className="max-w-md mx-auto flex justify-between items-center px-4 py-2">
+              <NavButton icon={LayoutDashboard} label="Home" active={currentView === 'dashboard'} onClick={() => setCurrentView('dashboard')} />
+              <NavButton icon={Calendar} label="Log" active={currentView === 'calendar'} onClick={() => setCurrentView('calendar')} />
+              
+              {/* Center Floating Action Button */}
+              <div className="relative -top-6 mx-2">
+                <button 
+                  onClick={() => setCurrentView('upload')}
+                  className={`w-14 h-14 rounded-full flex items-center justify-center transition-transform hover:scale-105 active:scale-95 ${
+                    currentView === 'upload' 
+                      ? 'bg-green-400 text-black shadow-[0_0_20px_rgba(74,222,128,0.5)]' 
+                      : 'bg-green-500 text-black shadow-[0_0_15px_rgba(34,197,94,0.4)] border-4 border-[#050505]'
+                  }`}
+                >
+                  <Camera size={26} />
+                </button>
+              </div>
+
+              <NavButton icon={ImageIcon} label="Gallery" active={currentView === 'gallery'} onClick={() => setCurrentView('gallery')} />
+              <NavButton icon={SlidersHorizontal} label="Compare" active={currentView === 'compare'} onClick={() => setCurrentView('compare')} />
+            </div>
+          </nav>
+        )}
+      </div>
+    </div>
+  );
+}
+
+const NavButton = ({ icon: Icon, label, active, onClick }) => (
+  <button 
+    onClick={onClick}
+    className={`flex flex-col items-center gap-1 p-2 w-16 transition-colors rounded-xl ${active ? 'text-green-500' : 'text-gray-500 hover:text-gray-300'}`}
+  >
+    <Icon size={22} className={active ? 'fill-green-500/10' : ''} />
+    <span className="text-[10px] font-medium">{label}</span>
+  </button>
+);
+
+// --- Sub Views ---
+
+const ChallengeSetupView = ({ user, showToast }) => {
+  const [name, setName] = useState('Summer Shred');
+  const [duration, setDuration] = useState(30);
+  const [customDuration, setCustomDuration] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleStart = async () => {
+    if (!name.trim()) return showToast('Please enter a challenge name', 'error');
+    const days = duration === 'custom' ? parseInt(customDuration) : duration;
+    if (!days || days < 1) return showToast('Invalid duration', 'error');
+
+    setLoading(true);
+    try {
+      const startDate = getToday();
+      const newChallenge = {
+        name,
+        duration: days,
+        startDate,
+        createdAt: new Date().toISOString()
+      };
+      await setDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'settings', 'challenge'), newChallenge);
+      showToast('Challenge started! Let\'s go! 🚀');
+    } catch (err) {
+      console.error(err);
+      showToast('Error starting challenge', 'error');
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div className="flex flex-col h-full justify-center space-y-6 animate-fade-in py-8">
+      <div className="text-center space-y-3 mb-6">
+        <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-green-500/10 border border-green-500/20 shadow-[0_0_30px_rgba(34,197,94,0.1)]">
+          <Trophy size={48} className="text-green-500" />
+        </div>
+        <h2 className="text-3xl font-black text-white tracking-tight">New Challenge</h2>
+        <p className="text-gray-400 text-sm">Commit to your daily progress tracking.</p>
+      </div>
+
+      <GlassCard className="space-y-6">
+        <div className="space-y-2">
+          <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Challenge Name</label>
+          <input 
+            type="text" 
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="w-full bg-gray-950 border border-gray-800 rounded-xl p-4 text-white focus:outline-none focus:border-green-500 transition-colors"
+            placeholder="e.g. 90 Day Transformation"
+          />
+        </div>
+
+        <div className="space-y-3">
+          <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Duration (Days)</label>
+          <div className="grid grid-cols-3 gap-2">
+            {[30, 60, 90, 180].map(d => (
+              <button
+                key={d}
+                onClick={() => setDuration(d)}
+                className={`py-3 rounded-xl border font-bold text-sm transition-all ${duration === d ? 'bg-green-500/10 border-green-500 text-green-500' : 'bg-gray-950 border-gray-800 text-gray-400 hover:border-gray-600'}`}
+              >
+                {d}
+              </button>
+            ))}
+            <button
+              onClick={() => setDuration('custom')}
+              className={`py-3 rounded-xl border col-span-2 font-bold text-sm transition-all ${duration === 'custom' ? 'bg-green-500/10 border-green-500 text-green-500' : 'bg-gray-950 border-gray-800 text-gray-400 hover:border-gray-600'}`}
+            >
+              Custom
+            </button>
+          </div>
+          {duration === 'custom' && (
+            <input 
+              type="number" 
+              value={customDuration}
+              onChange={(e) => setCustomDuration(e.target.value)}
+              className="w-full bg-gray-950 border border-gray-800 rounded-xl p-4 text-white focus:outline-none focus:border-green-500 mt-2"
+              placeholder="Enter number of days"
+              min="1"
+            />
+          )}
+        </div>
+
+        <Button onClick={handleStart} disabled={loading} className="w-full py-4 text-lg mt-6 shadow-[0_0_20px_rgba(34,197,94,0.3)]">
+          {loading ? 'Starting...' : 'Start Challenge'}
+        </Button>
+      </GlassCard>
+    </div>
+  );
+};
+
+const DashboardView = ({ challenge, photos, setView }) => {
+  const today = getToday();
+  const daysSinceStart = getDaysBetween(challenge.startDate, today);
+  const currentDayNumber = Math.min(daysSinceStart + 1, challenge.duration);
+  const progressPercent = Math.min(100, Math.round((photos.length / challenge.duration) * 100));
+  const isTodayUploaded = photos.some(p => p.date === today);
+
+  // Calculate Streak
+  const currentStreak = useMemo(() => {
+    let streak = 0;
+    const sortedDates = [...photos].map(p => p.date).sort().reverse();
+    let checkDate = new Date(today);
+    
+    // If today is not uploaded, start checking from yesterday
+    if (!isTodayUploaded) {
+      checkDate.setDate(checkDate.getDate() - 1);
+    }
+
+    for (let i = 0; i < sortedDates.length; i++) {
+      if (sortedDates[i] === formatDate(checkDate)) {
+        streak++;
+        checkDate.setDate(checkDate.getDate() - 1);
+      } else {
+        break;
+      }
+    }
+    return streak;
+  }, [photos, today, isTodayUploaded]);
+
+  return (
+    <div className="space-y-5 animate-fade-in pb-6">
+      
+      {/* Hero Stats (Radial Progress) */}
+      <GlassCard className="text-center relative overflow-hidden flex flex-col items-center py-8">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl"></div>
+        
+        <div className="relative z-10 space-y-4 w-full">
+          <div className="flex justify-between items-center w-full px-4 text-xs font-bold uppercase tracking-wider text-gray-500">
+            <span>Day {currentDayNumber}</span>
+            <span>{challenge.duration} Days</span>
+          </div>
+          
+          <div className="relative w-40 h-40 mx-auto flex items-center justify-center">
+            {/* Background Circle */}
+            <svg className="w-full h-full -rotate-90 transform absolute inset-0" viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="44" fill="none" stroke="#1f2937" strokeWidth="8" />
+              {/* Progress Circle */}
+              <circle cx="50" cy="50" r="44" fill="none" stroke="#22c55e" strokeWidth="8" 
+                strokeDasharray={`${2 * Math.PI * 44}`} 
+                strokeDashoffset={`${2 * Math.PI * 44 * (1 - progressPercent / 100)}`} 
+                className="transition-all duration-1000 ease-out drop-shadow-[0_0_8px_rgba(34,197,94,0.5)]"
+                strokeLinecap="round"
+              />
+            </svg>
+            <div className="absolute flex flex-col items-center">
+              <span className="text-4xl font-black text-white tracking-tighter">{progressPercent}%</span>
+              <span className="text-[10px] text-green-400 font-bold uppercase tracking-widest mt-1">Complete</span>
+            </div>
+          </div>
+          
+          <p className="text-sm text-gray-400 font-medium">
+            {Math.max(0, challenge.duration - currentDayNumber)} days remaining
+          </p>
+        </div>
+      </GlassCard>
+
+      {/* Action Banner */}
+      {!isTodayUploaded ? (
+        <div className="bg-gradient-to-r from-gray-900 to-gray-800 border border-green-500/30 rounded-2xl p-4 flex items-center justify-between shadow-[0_4px_20px_rgba(0,0,0,0.5)] relative overflow-hidden group cursor-pointer" onClick={() => setView('upload')}>
+          <div className="absolute inset-0 bg-green-500/5 group-hover:bg-green-500/10 transition-colors"></div>
+          <div className="relative z-10">
+            <h3 className="text-white font-bold text-lg mb-0.5">Upload Today</h3>
+            <p className="text-green-400 text-xs font-medium uppercase tracking-wider">Keep the streak alive</p>
+          </div>
+          <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-black shadow-[0_0_15px_rgba(34,197,94,0.5)] group-hover:scale-105 transition-transform relative z-10">
+            <Camera size={24} />
+          </div>
+        </div>
+      ) : (
+        <div className="bg-green-500/10 border border-green-500/20 rounded-2xl p-4 flex items-center gap-4">
+          <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center">
+            <CheckCircle2 className="text-green-500" size={28} />
+          </div>
+          <div>
+            <h3 className="text-white font-bold text-lg">Done for today!</h3>
+            <p className="text-green-500/70 text-xs font-medium uppercase tracking-wider">Great consistency</p>
+          </div>
+        </div>
+      )}
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 gap-3">
+        <GlassCard className="flex flex-col items-center justify-center py-5">
+          <Flame size={28} className="text-orange-500 mb-2 drop-shadow-[0_0_8px_rgba(249,115,22,0.5)]" />
+          <span className="text-3xl font-black text-white">{currentStreak}</span>
+          <span className="text-[10px] text-gray-400 uppercase tracking-wider font-bold mt-1">Day Streak</span>
+        </GlassCard>
+        
+        <GlassCard className="flex flex-col items-center justify-center py-5">
+          <ImageIcon size={28} className="text-blue-500 mb-2 drop-shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
+          <span className="text-3xl font-black text-white">{photos.length}</span>
+          <span className="text-[10px] text-gray-400 uppercase tracking-wider font-bold mt-1">Total Photos</span>
+        </GlassCard>
+      </div>
+
+      {/* Tools */}
+      <div className="space-y-2 pt-2">
+        <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider px-2">Tools</h3>
+        <button onClick={() => setView('timelapse')} className="w-full flex items-center justify-between p-4 bg-gray-900 rounded-2xl border border-gray-800 hover:border-gray-700 transition-colors group">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-purple-500/10 text-purple-400 rounded-xl group-hover:bg-purple-500/20 transition-colors">
+              <Video size={22} />
+            </div>
+            <div className="text-left">
+              <span className="font-bold text-white block">Generate Timelapse</span>
+              <span className="text-xs text-gray-500 block mt-0.5">Create a video of your progress</span>
+            </div>
+          </div>
+          <ChevronRight size={20} className="text-gray-600 group-hover:text-white transition-colors" />
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const UploadView = ({ user, challenge, photos, showToast, setView }) => {
+  const [selectedDate, setSelectedDate] = useState(getToday());
+  const [imageFile, setImageFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef(null);
+
+  const existingPhoto = photos.find(p => p.date === selectedDate);
+  const daysSinceStart = getDaysBetween(challenge.startDate, selectedDate);
+  const dayNumber = daysSinceStart + 1;
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 10 * 1024 * 1024) {
+        return showToast('Image too large. Max 10MB.', 'error');
+      }
+      setImageFile(file);
+      setPreviewUrl(URL.createObjectURL(file));
+    }
+  };
+
+  const handleUpload = async () => {
+    if (!imageFile) return;
+    setIsUploading(true);
+    
+    try {
+      // Compress to ensure it fits in a single document (<1MB)
+      const base64Image = await compressImage(imageFile, 1080, 0.75);
+      
+      const photoData = {
+        date: selectedDate,
+        dayNumber,
+        imageUrl: base64Image,
+        timestamp: new Date().toISOString()
+      };
+
+      await setDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'photos', selectedDate), photoData);
+      
+      showToast('Photo uploaded successfully! 🎉');
+      setView('dashboard');
+    } catch (err) {
+      console.error(err);
+      showToast('Failed to upload photo', 'error');
+    }
+    setIsUploading(false);
+  };
+
+  return (
+    <div className="space-y-5 animate-fade-in h-full flex flex-col pb-6">
+      <div>
+        <h2 className="text-2xl font-bold text-white tracking-tight">Daily Photo</h2>
+        <p className="text-sm text-gray-400">Log your progress for a specific day.</p>
+      </div>
+
+      <GlassCard className="p-4">
+        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-2">Target Date</label>
+        <div className="relative">
+          <input 
+            type="date" 
+            value={selectedDate}
+            onChange={(e) => {
+              setSelectedDate(e.target.value);
+              setImageFile(null);
+              setPreviewUrl(null);
+            }}
+            min={challenge.startDate}
+            max={getToday()}
+            className="w-full bg-gray-950 border border-gray-800 rounded-xl p-3.5 text-white font-medium focus:outline-none focus:border-green-500 [color-scheme:dark] appearance-none"
+          />
+        </div>
+        <div className="mt-3 flex justify-between items-center text-sm font-medium">
+          <span className="text-gray-400">Day in challenge:</span>
+          <span className="text-white bg-gray-800 px-3 py-1 rounded-full">{dayNumber > 0 ? dayNumber : 'N/A'} / {challenge.duration}</span>
+        </div>
+      </GlassCard>
+
+      {existingPhoto && !previewUrl && (
+        <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 flex items-start gap-3">
+          <RefreshCw className="text-yellow-500 shrink-0 mt-1" size={20} />
+          <div>
+            <p className="text-yellow-500 font-bold text-sm mb-1">Photo already logged</p>
+            <p className="text-yellow-500/70 text-xs leading-relaxed">You already have a photo for {selectedDate}. Uploading a new one will replace the old one.</p>
+            <div className="mt-3 relative w-24 h-24 rounded-lg overflow-hidden border border-yellow-500/20 shadow-md">
+              <img src={existingPhoto.imageUrl} alt="Existing" className="w-full h-full object-cover" />
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="flex-1 flex flex-col items-center justify-center min-h-[300px]">
+        {!previewUrl ? (
+          <div 
+            onClick={() => fileInputRef.current?.click()}
+            className="w-full h-full min-h-[250px] border-2 border-dashed border-gray-700 hover:border-green-500 rounded-3xl flex flex-col items-center justify-center gap-4 cursor-pointer bg-gray-900/40 transition-all group"
+          >
+            <div className="w-20 h-20 rounded-full bg-gray-800 group-hover:bg-green-500/20 flex items-center justify-center transition-colors shadow-lg">
+              <Camera size={40} className="text-gray-400 group-hover:text-green-500 transition-colors" />
+            </div>
+            <div className="text-center">
+              <p className="text-white font-bold text-lg">Tap to Add Photo</p>
+              <p className="text-xs text-gray-500 mt-1 uppercase tracking-wider font-bold">Camera or Gallery</p>
+            </div>
+          </div>
+        ) : (
+          <div className="relative w-full h-full min-h-[250px] rounded-3xl overflow-hidden border border-gray-800 shadow-2xl flex items-center justify-center bg-black group">
+            <img src={previewUrl} alt="Preview" className="w-full h-full object-contain absolute inset-0" />
+            <button 
+              onClick={() => { setImageFile(null); setPreviewUrl(null); }}
+              className="absolute top-4 right-4 w-10 h-10 bg-black/60 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-red-500/80 transition-colors opacity-100 sm:opacity-0 group-hover:opacity-100"
+            >
+              <XCircle size={24} />
+            </button>
+          </div>
+        )}
+        
+        <input 
+          type="file" 
+          ref={fileInputRef} 
+          onChange={handleFileChange} 
+          accept="image/*"
+          capture="environment" // Uses back camera on mobile
+          className="hidden" 
+        />
+      </div>
+
+      <Button 
+        onClick={handleUpload} 
+        disabled={!imageFile || isUploading}
+        className="w-full py-4 text-lg shadow-[0_0_15px_rgba(34,197,94,0.3)]"
+      >
+        {isUploading ? 'Saving securely...' : (existingPhoto ? 'Replace Photo' : 'Save Today\'s Progress')}
+      </Button>
+    </div>
+  );
+};
+
+const CalendarView = ({ challenge, photos, setView }) => {
+  const startDate = new Date(challenge.startDate);
+  const today = new Date(getToday());
+  
+  // Create array of days for the grid
+  const days = Array.from({ length: challenge.duration }, (_, i) => {
+    const d = new Date(startDate);
+    d.setDate(d.getDate() + i);
+    const dateStr = formatDate(d);
+    
+    return {
+      dayNumber: i + 1,
+      date: dateStr,
+      isFuture: d > today,
+      isToday: dateStr === formatDate(today),
+      photo: photos.find(p => p.date === dateStr)
+    };
+  });
+
+  return (
+    <div className="space-y-6 animate-fade-in">
+      <div>
+        <h2 className="text-2xl font-bold text-white tracking-tight">Challenge Log</h2>
+        <p className="text-sm text-gray-400">Your daily consistency grid.</p>
+      </div>
+
+      <GlassCard className="p-5">
+        <div className="flex justify-between items-center mb-6 text-xs font-bold uppercase tracking-wider text-gray-500">
+          <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]"></div> <span>Done</span></div>
+          <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-red-500/50"></div> <span>Missed</span></div>
+          <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-gray-800 border border-gray-700"></div> <span>Future</span></div>
+        </div>
+
+        <div className="grid grid-cols-5 sm:grid-cols-7 gap-2">
+          {days.map((day) => (
+            <div 
+              key={day.date}
+              className={`
+                aspect-square rounded-xl flex flex-col items-center justify-center relative overflow-hidden text-xs font-bold transition-all
+                ${day.isToday && !day.photo ? 'ring-2 ring-green-500 ring-offset-2 ring-offset-gray-900 shadow-[0_0_15px_rgba(34,197,94,0.3)] scale-110 z-10' : ''}
+                ${day.isFuture ? 'bg-gray-950 border border-gray-900 text-gray-700' : 
+                  day.photo ? 'bg-green-500/20 border border-green-500 text-white' : 
+                  'bg-red-500/10 border border-red-500/30 text-red-500/70'}
+              `}
+            >
+              <span className={`relative z-10 ${day.photo ? 'drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] text-white text-sm' : ''}`}>
+                {day.dayNumber}
+              </span>
+              {day.photo && (
+                <img src={day.photo.imageUrl} className="absolute inset-0 w-full h-full object-cover opacity-50 mix-blend-overlay" alt={`Day ${day.dayNumber}`} />
+              )}
+            </div>
+          ))}
+        </div>
+      </GlassCard>
+    </div>
+  );
+};
+
+const GalleryView = ({ user, photos, showToast }) => {
+  const [selectedPhoto, setSelectedPhoto] = useState(null);
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Delete this photo? This cannot be undone and breaks your streak.")) return;
+    try {
+      await deleteDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'photos', id));
+      showToast('Photo deleted');
+      setSelectedPhoto(null);
+    } catch (err) {
+      console.error(err);
+      showToast('Error deleting photo', 'error');
+    }
+  };
+
+  return (
+    <div className="space-y-4 animate-fade-in h-full">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-white tracking-tight">Gallery</h2>
+        <span className="text-green-400 font-bold text-xs uppercase tracking-wider bg-green-500/10 px-3 py-1.5 rounded-full border border-green-500/20">
+          {photos.length} Photos
+        </span>
+      </div>
+
+      {photos.length === 0 ? (
+        <div className="flex flex-col items-center justify-center h-[50vh] text-gray-500 space-y-4">
+          <div className="w-20 h-20 bg-gray-900 rounded-full flex items-center justify-center"><ImageIcon size={32} className="opacity-50" /></div>
+          <p className="font-medium">No photos uploaded yet.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-3 gap-1">
+          {photos.map(photo => (
+            <div 
+              key={photo.id}
+              onClick={() => setSelectedPhoto(photo)}
+              className="aspect-square bg-gray-900 overflow-hidden cursor-pointer relative group"
+            >
+              <img src={photo.imageUrl} alt={`Day ${photo.dayNumber}`} loading="lazy" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-2">
+                <span className="text-white text-xs font-bold leading-none">Day {photo.dayNumber}</span>
+                <span className="text-gray-400 text-[9px] font-medium mt-0.5">{photo.date}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Fullscreen Modal */}
+      {selectedPhoto && (
+        <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex flex-col animate-fade-in touch-none">
+          <div className="p-4 flex justify-between items-center absolute top-0 w-full z-10 bg-gradient-to-b from-black/80 to-transparent">
+            <div>
+              <p className="font-bold text-xl text-white">Day {selectedPhoto.dayNumber}</p>
+              <p className="text-sm text-green-400 font-medium">{selectedPhoto.date}</p>
+            </div>
+            <div className="flex gap-2">
+              <button onClick={() => handleDelete(selectedPhoto.id)} className="p-3 text-red-500 hover:bg-red-500/20 rounded-full transition-colors"><Trash2 size={20} /></button>
+              <button onClick={() => setSelectedPhoto(null)} className="p-3 text-white hover:bg-white/20 rounded-full transition-colors"><XCircle size={24} /></button>
+            </div>
+          </div>
+          <div className="flex-1 flex items-center justify-center p-4 pt-20">
+            <img src={selectedPhoto.imageUrl} alt="Preview" className="max-w-full max-h-full object-contain rounded-lg shadow-2xl" />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const CompareView = ({ photos }) => {
+  const [beforeIdx, setBeforeIdx] = useState(0);
+  const [afterIdx, setAfterIdx] = useState(photos.length - 1);
+  const [sliderPos, setSliderPos] = useState(50);
+  const containerRef = useRef(null);
+
+  if (photos.length < 2) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[60vh] text-center space-y-4 animate-fade-in">
+        <div className="w-20 h-20 bg-gray-900 rounded-full flex items-center justify-center text-gray-600 border border-gray-800">
+          <SlidersHorizontal size={32} />
+        </div>
+        <div>
+          <h2 className="text-xl font-bold text-white">Need More Photos</h2>
+          <p className="text-sm text-gray-400 mt-2 max-w-xs mx-auto">Upload at least two photos on different days to enable the comparison slider.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const beforePhoto = photos[beforeIdx];
+  const afterPhoto = photos[afterIdx];
+
+  const handleDrag = (e) => {
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const x = e.clientX || (e.touches && e.touches[0].clientX);
+    if (!x) return;
+    let pos = ((x - rect.left) / rect.width) * 100;
+    pos = Math.max(0, Math.min(pos, 100));
+    setSliderPos(pos);
+  };
+
+  return (
+    <div className="space-y-6 animate-fade-in flex flex-col h-full pb-6">
+      <div>
+        <h2 className="text-2xl font-bold text-white tracking-tight">Compare</h2>
+        <p className="text-sm text-gray-400">Drag the slider to see progress.</p>
+      </div>
+
+      <div className="flex justify-between items-center gap-2 bg-gray-900/50 p-2 rounded-2xl border border-gray-800 shadow-inner">
+        <select 
+          value={beforeIdx} 
+          onChange={(e) => setBeforeIdx(Number(e.target.value))}
+          className="bg-transparent text-xs font-bold text-gray-300 border-none focus:ring-0 cursor-pointer p-2 w-full text-center appearance-none text-ellipsis"
+        >
+          {photos.map((p, i) => <option key={i} value={i} className="bg-gray-900">Day {p.dayNumber}</option>)}
+        </select>
+        <span className="text-green-500 text-xs font-black px-2">VS</span>
+        <select 
+          value={afterIdx} 
+          onChange={(e) => setAfterIdx(Number(e.target.value))}
+          className="bg-transparent text-xs font-bold text-gray-300 border-none focus:ring-0 cursor-pointer p-2 w-full text-center appearance-none text-ellipsis"
+        >
+          {photos.map((p, i) => <option key={i} value={i} className="bg-gray-900">Day {p.dayNumber}</option>)}
+        </select>
+      </div>
+
+      <div className="flex-1 relative min-h-[50vh] select-none rounded-3xl overflow-hidden border border-gray-800 bg-black shadow-2xl">
+        <div 
+          ref={containerRef}
+          className="absolute inset-0 touch-none cursor-ew-resize"
+          onMouseMove={(e) => e.buttons === 1 && handleDrag(e)}
+          onMouseUp={handleDrag}
+          onTouchMove={handleDrag}
+        >
+          {/* After Image (Background) */}
+          <img src={afterPhoto.imageUrl} className="absolute inset-0 w-full h-full object-cover" alt="After" draggable="false" />
+          
+          {/* Before Image (Foreground, Clipped) */}
+          <div 
+            className="absolute inset-0 overflow-hidden" 
+            style={{ width: `${sliderPos}%` }}
+          >
+            {/* The Before image needs a fixed width equal to container to avoid squishing */}
+            <img src={beforePhoto.imageUrl} className="absolute inset-0 h-full object-cover max-w-none" style={{ width: containerRef.current?.offsetWidth || '100vw' }} alt="Before" draggable="false" />
+            <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-white border border-gray-700">Before</div>
+          </div>
+          
+          <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-green-400 border border-green-500/30">After</div>
+
+          {/* Slider Thumb/Line */}
+          <div className="absolute top-0 bottom-0 w-1 bg-white cursor-ew-resize shadow-[0_0_15px_rgba(0,0,0,0.8)] z-10" style={{ left: `calc(${sliderPos}% - 2px)` }}>
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 bg-white rounded-full shadow-[0_0_20px_rgba(0,0,0,0.5)] flex items-center justify-center">
+              <div className="flex gap-1">
+                <div className="w-0.5 h-4 bg-gray-400 rounded-full"></div>
+                <div className="w-0.5 h-4 bg-gray-400 rounded-full"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const TimelapseView = ({ photos, challenge }) => {
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [videoUrl, setVideoUrl] = useState(null);
+  const canvasRef = useRef(null);
+
+  const generateVideo = async () => {
+    if (photos.length < 2) return alert("Need at least 2 photos!");
+    
+    setIsGenerating(true);
+    setProgress(0);
+    setVideoUrl(null);
+
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    const width = 800;
+    const height = 800;
+    canvas.width = width;
+    canvas.height = height;
+
+    try {
+      const stream = canvas.captureStream(30); 
+      const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm';
+      const recorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 2500000 });
+      const chunks = [];
+
+      recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
+      recorder.onstop = () => {
+        const blob = new Blob(chunks, { type: mimeType });
+        setVideoUrl(URL.createObjectURL(blob));
+        setIsGenerating(false);
+        setProgress(100);
+      };
+
+      recorder.start();
+
+      const loadImg = (src) => new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.src = src;
+      });
+
+      // 10 frames per photo = ~0.33s per photo @ 30fps
+      const framesPerImage = 10; 
+
+      for (let i = 0; i < photos.length; i++) {
+        const photo = photos[i];
+        const img = await loadImg(photo.imageUrl);
+        
+        // Calculate cover logic
+        const imgAspect = img.width / img.height;
+        const canvasAspect = width / height;
+        let drawW, drawH, drawX, drawY;
+
+        if (imgAspect > canvasAspect) {
+          drawH = height;
+          drawW = img.width * (height / img.height);
+          drawX = (width - drawW) / 2;
+          drawY = 0;
+        } else {
+          drawW = width;
+          drawH = img.height * (width / img.width);
+          drawX = 0;
+          drawY = (height - drawH) / 2;
+        }
+        
+        for (let f = 0; f < framesPerImage; f++) {
+          ctx.fillStyle = '#050505';
+          ctx.fillRect(0, 0, width, height);
+          
+          // Subtle zoom logic
+          const scale = 1 + (f * 0.003); 
+          const cw = drawW * scale;
+          const ch = drawH * scale;
+          const cx = drawX - ((cw - drawW) / 2);
+          const cy = drawY - ((ch - drawH) / 2);
+
+          ctx.drawImage(img, cx, cy, cw, ch);
+
+          // Dark overlay gradient at bottom for text
+          const grad = ctx.createLinearGradient(0, height - 150, 0, height);
+          grad.addColorStop(0, 'rgba(0,0,0,0)');
+          grad.addColorStop(1, 'rgba(0,0,0,0.8)');
+          ctx.fillStyle = grad;
+          ctx.fillRect(0, height - 150, width, 150);
+
+          // Draw Day Number
+          ctx.fillStyle = '#22c55e';
+          ctx.font = 'bold 56px system-ui, sans-serif';
+          ctx.textAlign = 'left';
+          ctx.fillText(`DAY ${photo.dayNumber}`, 40, height - 40);
+          
+          // Draw Date
+          ctx.fillStyle = 'rgba(255,255,255,0.7)';
+          ctx.font = '600 24px system-ui, sans-serif';
+          ctx.textAlign = 'right';
+          ctx.fillText(photo.date, width - 40, height - 45);
+
+          // Force async wait for browser to capture frame
+          await new Promise(r => setTimeout(r, 1000 / 30)); 
+        }
+        setProgress(Math.round(((i + 1) / photos.length) * 100));
+      }
+      
+      // Hold last frame
+      for (let f=0; f<30; f++) await new Promise(r => setTimeout(r, 1000 / 30));
+
+      recorder.stop();
+    } catch (e) {
+      console.error(e);
+      alert("Error generating video on this device/browser.");
+      setIsGenerating(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6 animate-fade-in flex flex-col h-full">
+      <div>
+        <h2 className="text-2xl font-bold text-white tracking-tight">Timelapse</h2>
+        <p className="text-sm text-gray-400">Generate a video of your journey.</p>
+      </div>
+
+      <GlassCard className="flex flex-col items-center justify-center p-8 text-center space-y-8 flex-1">
+        <canvas ref={canvasRef} style={{ display: 'none' }} />
+
+        {isGenerating ? (
+          <div className="w-full space-y-4">
+            <div className="w-24 h-24 mx-auto rounded-full border-4 border-gray-800 border-t-green-500 animate-spin"></div>
+            <h3 className="text-lg font-bold text-white">Stitching Photos...</h3>
+            <div className="h-2 bg-gray-900 rounded-full overflow-hidden border border-gray-800">
+              <div className="h-full bg-gradient-to-r from-green-500 to-emerald-400 transition-all duration-300" style={{ width: `${progress}%` }}></div>
+            </div>
+            <p className="text-xs text-green-400 font-bold uppercase tracking-wider">{progress}% Complete</p>
+          </div>
+        ) : videoUrl ? (
+          <div className="w-full space-y-6 animate-fade-in">
+            <div className="relative rounded-2xl overflow-hidden border border-gray-800 shadow-2xl bg-black">
+              <video src={videoUrl} controls autoPlay loop playsInline className="w-full aspect-square object-cover" />
+            </div>
+            <a 
+              href={videoUrl} 
+              download={`${challenge.name.replace(/\s+/g, '_')}_Progress.webm`}
+              className="w-full flex items-center justify-center gap-2 bg-green-500 hover:bg-green-400 text-black font-bold py-4 px-6 rounded-full transition-all shadow-[0_0_15px_rgba(34,197,94,0.4)]"
+            >
+              <Download size={20} /> Save Video
+            </a>
+            <Button variant="ghost" onClick={() => setVideoUrl(null)} className="w-full text-sm">Make Another</Button>
+          </div>
+        ) : (
+          <>
+            <div className="space-y-4">
+              <div className="w-24 h-24 mx-auto bg-purple-500/10 rounded-full flex items-center justify-center border border-purple-500/20 shadow-[0_0_30px_rgba(168,85,247,0.15)]">
+                <Video size={40} className="text-purple-400" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-white mb-2">Create Progress Video</h3>
+                <p className="text-sm text-gray-400 max-w-xs mx-auto">Compiles your {photos.length} photos into a smooth, chronological video (WebM format).</p>
+              </div>
+            </div>
+            <Button onClick={generateVideo} disabled={photos.length < 2} className="w-full py-4 text-lg" icon={Play}>
+              Generate Now
+            </Button>
+          </>
+        )}
+      </GlassCard>
+    </div>
+  );
+};
+
+const SettingsView = ({ user, challenge, showToast, setView }) => {
+  const [reminders, setReminders] = useState(false);
+
+  const requestNotificationPermission = async () => {
+    if (!("Notification" in window)) {
+      return showToast("Browser doesn't support notifications", "error");
+    }
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission === "granted") {
+        setReminders(true);
+        showToast("Reminders enabled! (Demo mode)");
+      } else {
+        showToast("Notification permission denied", "error");
+        setReminders(false);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleEndChallenge = async () => {
+    if (!window.confirm("Are you sure? This will END your current challenge early. Your photos will remain in the database but the active challenge will stop.")) return;
+    try {
+      await deleteDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'settings', 'challenge'));
+      showToast('Challenge ended');
+    } catch (err) {
+      showToast('Error ending challenge', 'error');
+    }
+  };
+
+  return (
+    <div className="space-y-6 animate-fade-in">
+      <div className="flex items-center gap-3 mb-6">
+        <button onClick={() => setView('dashboard')} className="p-2 bg-gray-900 rounded-full text-gray-400 hover:text-white transition-colors border border-gray-800">
+          <ChevronLeft size={20} />
+        </button>
+        <h2 className="text-2xl font-bold text-white tracking-tight">Settings</h2>
+      </div>
+
+      <GlassCard className="space-y-4">
+        <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Account Data</h3>
+        <div className="flex items-center gap-4 p-3 bg-gray-900/40 rounded-xl border border-gray-800">
+          <div className="w-12 h-12 bg-gray-800 rounded-full flex items-center justify-center text-gray-400 shadow-inner">
+            <UserIcon size={24} />
+          </div>
+          <div className="flex-1 overflow-hidden">
+            <p className="text-white font-bold text-sm">{user.isAnonymous ? 'Anonymous User' : user.email}</p>
+            <p className="text-xs text-gray-500 font-mono truncate">{user.uid}</p>
+          </div>
+        </div>
+      </GlassCard>
+
+      <GlassCard className="space-y-4">
+        <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Preferences</h3>
+        
+        <div className="flex items-center justify-between p-2">
+          <div>
+            <p className="text-white font-bold text-sm">Daily Reminders</p>
+            <p className="text-xs text-gray-500 mt-0.5">Push notification at 8:00 AM</p>
+          </div>
+          <button 
+            onClick={reminders ? () => setReminders(false) : requestNotificationPermission}
+            className={`w-12 h-6 rounded-full relative transition-colors shadow-inner ${reminders ? 'bg-green-500' : 'bg-gray-800'}`}
+          >
+            <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${reminders ? 'left-7' : 'left-1'}`}></div>
+          </button>
+        </div>
+      </GlassCard>
+
+      <GlassCard className="space-y-4 border-red-500/20 bg-red-500/5">
+        <h3 className="text-xs font-bold text-red-500 uppercase tracking-wider">Danger Zone</h3>
+        <p className="text-sm text-gray-400 mb-4">Ending your challenge early will stop progress tracking for {challenge.name}.</p>
+        <Button variant="danger" onClick={handleEndChallenge} className="w-full text-sm font-bold">
+          End Challenge Early
+        </Button>
+      </GlassCard>
+    </div>
+  );
+};
+
+
+```
