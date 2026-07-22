@@ -1,0 +1,1639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="theme-color" content="#000000" />
+<title>Gym Progress Tracker</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.0/index.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/space-grotesk@5.0.0/index.css" />
+<style>
+  :root {
+    --neon: #39FF14;
+    --neon-dim: #2bc40f;
+    --neon-glow: 0 0 20px rgba(57,255,20,0.5), 0 0 40px rgba(57,255,20,0.2);
+    --bg: #000000;
+    --bg-2: #0a0a0a;
+    --card: rgba(255,255,255,0.04);
+    --border: rgba(57,255,20,0.15);
+    --text: #f5f5f5;
+    --text-dim: #9ca3af;
+  }
+  [data-theme="light"] {
+    --bg: #f5f5f5;
+    --bg-2: #ffffff;
+    --card: rgba(0,0,0,0.03);
+    --border: rgba(43,196,15,0.25);
+    --text: #0a0a0a;
+    --text-dim: #4b5563;
+  }
+  * { -webkit-tap-highlight-color: transparent; }
+  html, body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); }
+  body {
+    background:
+      radial-gradient(ellipse at top left, rgba(57,255,20,0.08), transparent 50%),
+      radial-gradient(ellipse at bottom right, rgba(57,255,20,0.05), transparent 50%),
+      var(--bg);
+    min-height: 100vh;
+  }
+  h1, h2, h3, .font-display { font-family: 'Space Grotesk', sans-serif; letter-spacing: -0.02em; }
+  .glass {
+    background: var(--card);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+  }
+  .neon-text { color: var(--neon); text-shadow: 0 0 10px rgba(57,255,20,0.5); }
+  .neon-border { border: 1px solid var(--neon); box-shadow: var(--neon-glow); }
+  .btn-neon {
+    background: var(--neon);
+    color: #000;
+    font-weight: 700;
+    transition: all 0.3s;
+    border-radius: 14px;
+    box-shadow: 0 0 20px rgba(57,255,20,0.3);
+  }
+  .btn-neon:hover { transform: translateY(-2px); box-shadow: 0 0 30px rgba(57,255,20,0.6); }
+  .btn-neon:active { transform: translateY(0); }
+  .btn-ghost {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 14px;
+    transition: all 0.3s;
+  }
+  .btn-ghost:hover { border-color: var(--neon); color: var(--neon); }
+  .tab-active {
+    color: var(--neon) !important;
+    background: rgba(57,255,20,0.08);
+  }
+  .fade-in { animation: fadeIn 0.4s ease-out; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes pulse-neon {
+    0%, 100% { box-shadow: 0 0 20px rgba(57,255,20,0.3); }
+    50% { box-shadow: 0 0 40px rgba(57,255,20,0.6); }
+  }
+  .pulse-neon { animation: pulse-neon 2s infinite; }
+  .scroll-hide::-webkit-scrollbar { display: none; }
+  .scroll-hide { -ms-overflow-style: none; scrollbar-width: none; }
+  
+  /* Calendar day cells */
+  .day-cell {
+    aspect-ratio: 1;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  .day-cell:hover { transform: scale(1.05); }
+  .day-cell.uploaded { background: rgba(57,255,20,0.15); border-color: var(--neon); color: var(--neon); }
+  .day-cell.missing { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.4); color: #ef4444; }
+  .day-cell.future { opacity: 0.3; }
+  .day-cell.today { border-color: var(--neon); box-shadow: 0 0 15px rgba(57,255,20,0.4); }
+  .day-cell img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .day-cell .num { position: relative; z-index: 2; text-shadow: 0 1px 3px rgba(0,0,0,0.8); }
+  
+  /* Slider comparison */
+  .compare-wrap { position: relative; overflow: hidden; border-radius: 16px; user-select: none; }
+  .compare-wrap img { display: block; width: 100%; pointer-events: none; }
+  .compare-after { position: absolute; inset: 0; clip-path: inset(0 0 0 50%); }
+  .compare-slider {
+    position: absolute; top: 0; bottom: 0; left: 50%;
+    width: 3px; background: var(--neon);
+    box-shadow: 0 0 15px var(--neon);
+    cursor: ew-resize;
+  }
+  .compare-handle {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 44px; height: 44px;
+    background: var(--neon);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: #000; font-weight: bold;
+    box-shadow: 0 0 20px var(--neon);
+  }
+  
+  /* Modal */
+  .modal-bg {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(8px); z-index: 100;
+    display: flex; align-items: center; justify-content: center;
+    padding: 16px;
+  }
+  
+  /* Progress ring */
+  .ring-progress { transform: rotate(-90deg); }
+  
+  /* Gallery item */
+  .gallery-item {
+    aspect-ratio: 1;
+    border-radius: 14px;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.3s;
+  }
+  .gallery-item:hover { transform: scale(1.03); }
+  .gallery-item img { width: 100%; height: 100%; object-fit: cover; }
+  .gallery-item .overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.8), transparent 50%);
+    display: flex; align-items: flex-end;
+    padding: 10px;
+    opacity: 0; transition: opacity 0.3s;
+  }
+  .gallery-item:hover .overlay { opacity: 1; }
+  
+  input, select, textarea {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 12px;
+    padding: 12px 14px;
+    width: 100%;
+    outline: none;
+    transition: all 0.2s;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--neon);
+    box-shadow: 0 0 0 3px rgba(57,255,20,0.1);
+  }
+  
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 18px;
+    transition: all 0.3s;
+  }
+  .stat-card:hover { border-color: var(--neon); transform: translateY(-3px); }
+  
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px; border-radius: 999px;
+    font-size: 11px; font-weight: 600;
+  }
+  
+  .toast {
+    position: fixed; bottom: 90px; left: 50%;
+    transform: translateX(-50%);
+    background: var(--neon); color: #000;
+    padding: 12px 20px; border-radius: 999px;
+    font-weight: 600; z-index: 200;
+    box-shadow: 0 0 30px rgba(57,255,20,0.5);
+    animation: slideUp 0.3s ease-out;
+  }
+  @keyframes slideUp { from { transform: translate(-50%, 20px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+  
+  /* Hide scrollbar on mobile nav */
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border);
+    z-index: 50;
+    padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
+  }
+  [data-theme="light"] .bottom-nav { background: rgba(255,255,255,0.85); }
+  
+  .main-content { padding-bottom: 90px; }
+  
+  /* Video canvas */
+  #videoCanvas { display: none; }
+  
+  /* Loading bar */
+  .loading-bar {
+    height: 4px; background: var(--card); border-radius: 2px; overflow: hidden;
+  }
+  .loading-bar-fill {
+    height: 100%; background: var(--neon);
+    box-shadow: 0 0 10px var(--neon);
+    transition: width 0.3s;
+  }
+  
+  /* Achievement */
+  .achievement {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 16px; padding: 16px;
+    display: flex; align-items: center; gap: 14px;
+    transition: all 0.3s;
+  }
+  .achievement.unlocked { border-color: var(--neon); box-shadow: 0 0 20px rgba(57,255,20,0.2); }
+  .achievement.locked { opacity: 0.4; filter: grayscale(1); }
+  .achievement-icon {
+    width: 48px; height: 48px; border-radius: 12px;
+    background: rgba(57,255,20,0.1);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px;
+  }
+  
+  /* Switch */
+  .switch { position: relative; width: 44px; height: 24px; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .switch-slider {
+    position: absolute; inset: 0;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 999px; cursor: pointer; transition: 0.3s;
+  }
+  .switch-slider:before {
+    content: ''; position: absolute;
+    width: 18px; height: 18px; left: 2px; top: 2px;
+    background: var(--text-dim); border-radius: 50%;
+    transition: 0.3s;
+  }
+  .switch input:checked + .switch-slider { background: rgba(57,255,20,0.2); border-color: var(--neon); }
+  .switch input:checked + .switch-slider:before {
+    transform: translateX(20px); background: var(--neon);
+    box-shadow: 0 0 10px var(--neon);
+  }
+</style>
+</head>
+<body data-theme="dark">
+
+<!-- AUTH SCREEN -->
+<div id="authScreen" class="min-h-screen flex items-center justify-center p-4">
+  <div class="glass p-8 max-w-md w-full fade-in">
+    <div class="text-center mb-8">
+      <div class="inline-flex w-16 h-16 rounded-2xl bg-[var(--neon)] items-center justify-center mb-4 pulse-neon">
+        <svg class="w-8 h-8 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+      </div>
+      <h1 class="text-3xl font-bold font-display">Gym Progress</h1>
+      <p class="text-[var(--text-dim)] mt-2 text-sm">Track your transformation journey</p>
+    </div>
+    
+    <div id="loginForm">
+      <div class="space-y-3 mb-4">
+        <input type="email" id="loginEmail" placeholder="Email" />
+        <input type="password" id="loginPassword" placeholder="Password" />
+      </div>
+      <button onclick="doLogin()" class="btn-neon w-full py-3 mb-3">Login</button>
+      <button onclick="doGoogleLogin()" class="btn-ghost w-full py-3 mb-3 flex items-center justify-center gap-2">
+        <svg class="w-5 h-5" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        Continue with Google
+      </button>
+      <div class="text-center text-sm text-[var(--text-dim)] mt-4">
+        <button onclick="toggleAuth('signup')" class="hover:text-[var(--neon)]">Create account</button>
+        <span class="mx-2">•</span>
+        <button onclick="toast('Reset link sent!')" class="hover:text-[var(--neon)]">Forgot password?</button>
+      </div>
+    </div>
+    
+    <div id="signupForm" class="hidden">
+      <div class="space-y-3 mb-4">
+        <input type="text" id="signupName" placeholder="Full Name" />
+        <input type="email" id="signupEmail" placeholder="Email" />
+        <input type="password" id="signupPassword" placeholder="Password" />
+      </div>
+      <button onclick="doSignup()" class="btn-neon w-full py-3 mb-3">Create Account</button>
+      <div class="text-center text-sm text-[var(--text-dim)]">
+        <button onclick="toggleAuth('login')" class="hover:text-[var(--neon)]">← Back to login</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="mainApp" class="hidden main-content">
+  
+  <!-- HEADER -->
+  <header class="sticky top-0 z-40 backdrop-blur-xl bg-black/50 border-b border-[var(--border)]">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-[var(--neon)] flex items-center justify-center">
+          <svg class="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        </div>
+        <div>
+          <h1 class="font-display font-bold text-lg leading-none">Gym Progress</h1>
+          <p class="text-xs text-[var(--text-dim)]" id="headerChallenge">No challenge yet</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="toggleTheme()" class="btn-ghost w-9 h-9 flex items-center justify-center !rounded-xl !p-0">
+          <svg id="themeIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+        </button>
+        <button onclick="doLogout()" class="btn-ghost w-9 h-9 flex items-center justify-center !rounded-xl !p-0">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+  
+  <!-- PAGES -->
+  <main class="max-w-6xl mx-auto px-4 py-5">
+    
+    <!-- DASHBOARD -->
+    <section id="page-dashboard" class="page fade-in">
+      <div id="noChallengeView" class="glass p-8 text-center">
+        <div class="text-6xl mb-4">🏋️</div>
+        <h2 class="text-2xl font-bold font-display mb-2">Start Your Transformation</h2>
+        <p class="text-[var(--text-dim)] mb-6">Create a challenge and upload daily progress photos</p>
+        <button onclick="showCreateChallenge()" class="btn-neon px-8 py-3">Create New Challenge</button>
+      </div>
+      
+      <div id="challengeView" class="hidden space-y-5">
+        <!-- Hero stats -->
+        <div class="glass p-6">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h2 class="font-display text-xl font-bold" id="challengeName">Challenge</h2>
+              <p class="text-sm text-[var(--text-dim)]" id="challengeDates">—</p>
+            </div>
+            <button onclick="showCreateChallenge()" class="text-xs text-[var(--neon)] hover:underline">Edit</button>
+          </div>
+          
+          <div class="flex items-center gap-5">
+            <div class="relative">
+              <svg class="ring-progress" width="110" height="110">
+                <circle cx="55" cy="55" r="48" stroke="rgba(255,255,255,0.08)" stroke-width="10" fill="none"/>
+                <circle id="progressRing" cx="55" cy="55" r="48" stroke="var(--neon)" stroke-width="10" fill="none"
+                  stroke-linecap="round" stroke-dasharray="301.6" stroke-dashoffset="301.6" style="filter: drop-shadow(0 0 8px rgba(57,255,20,0.6))"/>
+              </svg>
+              <div class="absolute inset-0 flex flex-col items-center justify-center">
+                <div class="text-2xl font-bold neon-text" id="progressPercent">0%</div>
+                <div class="text-xs text-[var(--text-dim)]">Complete</div>
+              </div>
+            </div>
+            <div class="flex-1 grid grid-cols-2 gap-3">
+              <div>
+                <div class="text-xs text-[var(--text-dim)]">Current Day</div>
+                <div class="text-xl font-bold font-display" id="currentDay">—</div>
+              </div>
+              <div>
+                <div class="text-xs text-[var(--text-dim)]">Remaining</div>
+                <div class="text-xl font-bold font-display" id="remainingDays">—</div>
+              </div>
+              <div>
+                <div class="text-xs text-[var(--text-dim)]">Uploaded</div>
+                <div class="text-xl font-bold font-display" id="uploadedCount">0</div>
+              </div>
+              <div>
+                <div class="text-xs text-[var(--text-dim)]">Missing</div>
+                <div class="text-xl font-bold font-display text-red-400" id="missingCount">0</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Streaks -->
+        <div class="grid grid-cols-2 gap-3">
+          <div class="stat-card">
+            <div class="text-xs text-[var(--text-dim)] mb-1">🔥 Current Streak</div>
+            <div class="text-2xl font-bold font-display neon-text" id="currentStreak">0</div>
+            <div class="text-xs text-[var(--text-dim)]">days</div>
+          </div>
+          <div class="stat-card">
+            <div class="text-xs text-[var(--text-dim)] mb-1">🏆 Longest Streak</div>
+            <div class="text-2xl font-bold font-display" id="longestStreak">0</div>
+            <div class="text-xs text-[var(--text-dim)]">days</div>
+          </div>
+        </div>
+        
+        <!-- Today upload -->
+        <div id="todayUpload" class="glass p-5">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h3 class="font-display font-bold">Today's Upload</h3>
+              <p class="text-xs text-[var(--text-dim)]" id="todayDate">—</p>
+            </div>
+            <span id="todayBadge" class="badge bg-[rgba(57,255,20,0.15)] text-[var(--neon)]">Pending</span>
+          </div>
+          <div id="todayPreview" class="hidden mb-3">
+            <img id="todayImage" class="w-full rounded-xl" />
+          </div>
+          <div class="flex gap-2">
+            <button onclick="openUploadModal()" class="btn-neon flex-1 py-3 flex items-center justify-center gap-2">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+              <span id="todayBtnText">Upload Photo</span>
+            </button>
+            <button onclick="openCamera()" class="btn-ghost w-12 h-12 flex items-center justify-center !p-0">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9l2-2h4l2-2h6l2 2h2a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/></svg>
+            </button>
+          </div>
+        </div>
+        
+        <!-- Quick actions -->
+        <div class="grid grid-cols-3 gap-3">
+          <button onclick="switchPage('calendar')" class="stat-card text-center">
+            <div class="text-2xl mb-1">📅</div>
+            <div class="text-xs">Calendar</div>
+          </button>
+          <button onclick="switchPage('compare')" class="stat-card text-center">
+            <div class="text-2xl mb-1">⚡</div>
+            <div class="text-xs">Compare</div>
+          </button>
+          <button onclick="switchPage('video')" class="stat-card text-center">
+            <div class="text-2xl mb-1">🎬</div>
+            <div class="text-xs">Video</div>
+          </button>
+        </div>
+      </div>
+    </section>
+    
+    <!-- CALENDAR -->
+    <section id="page-calendar" class="page hidden fade-in">
+      <div class="glass p-5 mb-4">
+        <div class="flex items-center justify-between mb-4">
+          <button onclick="calendarNav(-1)" class="btn-ghost w-9 h-9 flex items-center justify-center !p-0">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          </button>
+          <h2 class="font-display font-bold text-lg" id="calendarTitle">Challenge Calendar</h2>
+          <button onclick="calendarNav(1)" class="btn-ghost w-9 h-9 flex items-center justify-center !p-0">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+        <div class="grid grid-cols-7 gap-1.5 mb-2 text-center text-xs text-[var(--text-dim)]">
+          <div>S</div><div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>S</div>
+        </div>
+        <div id="calendarGrid" class="grid grid-cols-7 gap-1.5"></div>
+      </div>
+      <div class="flex gap-4 text-xs text-[var(--text-dim)] justify-center">
+        <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-[rgba(57,255,20,0.3)] border border-[var(--neon)]"></span> Uploaded</span>
+        <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-[rgba(239,68,68,0.2)] border border-red-500"></span> Missing</span>
+      </div>
+    </section>
+    
+    <!-- GALLERY -->
+    <section id="page-gallery" class="page hidden fade-in">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="font-display text-xl font-bold">Gallery</h2>
+        <button onclick="exportZip()" class="btn-ghost px-4 py-2 text-sm flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          Export ZIP
+        </button>
+      </div>
+      <div id="galleryGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3"></div>
+      <div id="emptyGallery" class="glass p-10 text-center hidden">
+        <div class="text-5xl mb-3">📷</div>
+        <p class="text-[var(--text-dim)]">No photos yet. Start uploading!</p>
+      </div>
+    </section>
+    
+    <!-- COMPARE -->
+    <section id="page-compare" class="page hidden fade-in">
+      <h2 class="font-display text-xl font-bold mb-4">Before & After</h2>
+      <div id="compareContent"></div>
+      <div class="mt-4 flex gap-2">
+        <button onclick="openFullscreenCompare()" class="btn-ghost flex-1 py-3 flex items-center justify-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
+          Fullscreen
+        </button>
+      </div>
+    </section>
+    
+    <!-- VIDEO -->
+    <section id="page-video" class="page hidden fade-in">
+      <h2 class="font-display text-xl font-bold mb-4">Timelapse Video</h2>
+      <div class="glass p-6">
+        <div class="text-center mb-5">
+          <div class="text-5xl mb-3">🎬</div>
+          <h3 class="font-display font-bold text-lg mb-1">Create Your Transformation Video</h3>
+          <p class="text-sm text-[var(--text-dim)]">Generate a cinematic timelapse with zoom & fade effects</p>
+        </div>
+        
+        <div class="space-y-3 mb-5">
+          <div>
+            <label class="text-xs text-[var(--text-dim)] mb-1 block">Transition Effect</label>
+            <select id="videoEffect">
+              <option value="fade">Fade</option>
+              <option value="zoom">Ken Burns Zoom</option>
+              <option value="slide">Slide</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-xs text-[var(--text-dim)] mb-1 block">Duration per Photo (seconds)</label>
+            <input type="number" id="videoDuration" value="2" min="1" max="5" />
+          </div>
+          <div>
+            <label class="text-xs text-[var(--text-dim)] mb-1 block">Background Music (optional)</label>
+            <input type="file" id="videoMusic" accept="audio/*" class="text-sm" />
+          </div>
+        </div>
+        
+        <div id="videoProgress" class="hidden mb-4">
+          <div class="flex justify-between text-xs text-[var(--text-dim)] mb-2">
+            <span id="videoStatusText">Generating...</span>
+            <span id="videoPercent">0%</span>
+          </div>
+          <div class="loading-bar"><div id="videoBar" class="loading-bar-fill" style="width:0%"></div></div>
+        </div>
+        
+        <button onclick="generateVideo()" id="generateBtn" class="btn-neon w-full py-3 flex items-center justify-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Generate Video
+        </button>
+        
+        <div id="videoResult" class="hidden mt-4">
+          <video id="videoPreview" controls class="w-full rounded-xl mb-3"></video>
+          <a id="videoDownload" download="gym-timelapse.webm" class="btn-neon w-full py-3 flex items-center justify-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Download Video
+          </a>
+        </div>
+      </div>
+    </section>
+    
+    <!-- BONUS -->
+    <section id="page-bonus" class="page hidden fade-in">
+      <h2 class="font-display text-xl font-bold mb-4">Wellness Tracker</h2>
+      
+      <!-- Weight -->
+      <div class="glass p-5 mb-4">
+        <h3 class="font-display font-bold mb-3 flex items-center gap-2">⚖️ Weight Tracker</h3>
+        <div class="flex gap-2 mb-3">
+          <input type="number" id="weightInput" placeholder="Weight (kg)" step="0.1" />
+          <button onclick="addWeight()" class="btn-neon px-5">Add</button>
+        </div>
+        <div id="weightList" class="space-y-1 max-h-40 overflow-y-auto scroll-hide"></div>
+        <canvas id="weightChart" class="w-full mt-3" height="120"></canvas>
+      </div>
+      
+      <!-- BMI -->
+      <div class="glass p-5 mb-4">
+        <h3 class="font-display font-bold mb-3 flex items-center gap-2">📊 BMI Calculator</h3>
+        <div class="grid grid-cols-2 gap-2 mb-3">
+          <input type="number" id="bmiHeight" placeholder="Height (cm)" />
+          <input type="number" id="bmiWeight" placeholder="Weight (kg)" />
+        </div>
+        <button onclick="calcBMI()" class="btn-ghost w-full py-2">Calculate</button>
+        <div id="bmiResult" class="mt-3 text-center"></div>
+      </div>
+      
+      <!-- Water -->
+      <div class="glass p-5 mb-4">
+        <h3 class="font-display font-bold mb-3 flex items-center gap-2">💧 Water Intake</h3>
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <div class="text-3xl font-bold font-display neon-text" id="waterCount">0</div>
+            <div class="text-xs text-[var(--text-dim)]">/ 8 glasses today</div>
+          </div>
+          <button onclick="addWater()" class="btn-neon w-12 h-12 !rounded-full text-2xl">+</button>
+        </div>
+        <div id="waterGlasses" class="flex gap-1 flex-wrap"></div>
+      </div>
+      
+      <!-- Notes -->
+      <div class="glass p-5 mb-4">
+        <h3 class="font-display font-bold mb-3 flex items-center gap-2">📝 Daily Notes</h3>
+        <textarea id="dailyNotes" rows="3" placeholder="How was your workout today?"></textarea>
+        <button onclick="saveNotes()" class="btn-neon w-full py-2 mt-2">Save Note</button>
+      </div>
+      
+      <!-- Achievements -->
+      <div class="glass p-5">
+        <h3 class="font-display font-bold mb-3 flex items-center gap-2">🏅 Achievements</h3>
+        <div id="achievementsList" class="space-y-2"></div>
+      </div>
+    </section>
+    
+  </main>
+  
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <div class="flex justify-around items-center max-w-md mx-auto">
+      <button onclick="switchPage('dashboard')" data-page="dashboard" class="nav-btn flex flex-col items-center gap-0.5 py-2 px-4 text-[var(--text-dim)]">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+        <span class="text-[10px]">Home</span>
+      </button>
+      <button onclick="switchPage('calendar')" data-page="calendar" class="nav-btn flex flex-col items-center gap-0.5 py-2 px-4 text-[var(--text-dim)]">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        <span class="text-[10px]">Calendar</span>
+      </button>
+      <button onclick="openUploadModal()" class="relative -top-5 w-14 h-14 rounded-full bg-[var(--neon)] flex items-center justify-center shadow-[0_0_25px_rgba(57,255,20,0.5)]">
+        <svg class="w-7 h-7 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"/></svg>
+      </button>
+      <button onclick="switchPage('gallery')" data-page="gallery" class="nav-btn flex flex-col items-center gap-0.5 py-2 px-4 text-[var(--text-dim)]">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        <span class="text-[10px]">Gallery</span>
+      </button>
+      <button onclick="switchPage('bonus')" data-page="bonus" class="nav-btn flex flex-col items-center gap-0.5 py-2 px-4 text-[var(--text-dim)]">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        <span class="text-[10px]">More</span>
+      </button>
+    </div>
+  </nav>
+</div>
+
+<!-- UPLOAD MODAL -->
+<div id="uploadModal" class="modal-bg hidden">
+  <div class="glass p-6 max-w-md w-full fade-in">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="font-display font-bold text-lg">Upload Photo</h3>
+      <button onclick="closeModal('uploadModal')" class="text-[var(--text-dim)] hover:text-[var(--neon)]">✕</button>
+    </div>
+    <div id="uploadReplace" class="hidden mb-3 p-3 rounded-xl bg-yellow-500/10 border border-yellow-500/30 text-sm">
+      ⚠️ Photo already uploaded for this day. Upload will replace it.
+    </div>
+    <div id="uploadPreview" class="hidden mb-4">
+      <img id="previewImg" class="w-full rounded-xl" />
+    </div>
+    <input type="file" id="photoInput" accept="image/*" class="hidden" />
+    <div class="grid grid-cols-2 gap-2 mb-3">
+      <button onclick="document.getElementById('photoInput').click()" class="btn-ghost py-3 flex items-center justify-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        Gallery
+      </button>
+      <button onclick="openCamera()" class="btn-ghost py-3 flex items-center justify-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        Camera
+      </button>
+    </div>
+    <input type="file" id="cameraInput" accept="image/*" capture="environment" class="hidden" />
+    <button onclick="savePhoto()" id="savePhotoBtn" class="btn-neon w-full py-3 hidden">Save Photo</button>
+  </div>
+</div>
+
+<!-- DAY DETAIL MODAL -->
+<div id="dayModal" class="modal-bg hidden">
+  <div class="glass p-5 max-w-md w-full fade-in">
+    <div class="flex items-center justify-between mb-3">
+      <h3 class="font-display font-bold" id="dayModalTitle">Day 1</h3>
+      <button onclick="closeModal('dayModal')" class="text-[var(--text-dim)] hover:text-[var(--neon)]">✕</button>
+    </div>
+    <img id="dayModalImg" class="w-full rounded-xl mb-3" />
+    <p class="text-sm text-[var(--text-dim)] mb-3" id="dayModalDate">—</p>
+    <div class="grid grid-cols-2 gap-2">
+      <button onclick="replaceFromModal()" class="btn-ghost py-2 text-sm">Replace</button>
+      <button onclick="deleteFromModal()" class="btn-ghost py-2 text-sm text-red-400">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- FULLSCREEN COMPARE -->
+<div id="fullscreenModal" class="modal-bg hidden">
+  <div class="w-full h-full flex flex-col">
+    <div class="flex justify-between p-3">
+      <h3 class="font-display font-bold">Before & After</h3>
+      <button onclick="closeModal('fullscreenModal')" class="text-white text-2xl">✕</button>
+    </div>
+    <div id="fullscreenCompare" class="flex-1 flex items-center justify-center p-2"></div>
+  </div>
+</div>
+
+<!-- CREATE CHALLENGE MODAL -->
+<div id="challengeModal" class="modal-bg hidden">
+  <div class="glass p-6 max-w-md w-full fade-in max-h-[90vh] overflow-y-auto scroll-hide">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="font-display font-bold text-lg">Create Challenge</h3>
+      <button onclick="closeModal('challengeModal')" class="text-[var(--text-dim)] hover:text-[var(--neon)]">✕</button>
+    </div>
+    <div class="space-y-3">
+      <div>
+        <label class="text-xs text-[var(--text-dim)] mb-1 block">Challenge Name</label>
+        <input type="text" id="chName" placeholder="e.g., 90 Day Shred" />
+      </div>
+      <div>
+        <label class="text-xs text-[var(--text-dim)] mb-1 block">Start Date</label>
+        <input type="date" id="chStart" />
+      </div>
+      <div>
+        <label class="text-xs text-[var(--text-dim)] mb-1 block">Duration</label>
+        <div class="grid grid-cols-5 gap-2 mb-2">
+          <button onclick="setDuration(30)" class="btn-ghost py-2 text-sm">30</button>
+          <button onclick="setDuration(60)" class="btn-ghost py-2 text-sm">60</button>
+          <button onclick="setDuration(90)" class="btn-ghost py-2 text-sm">90</button>
+          <button onclick="setDuration(180)" class="btn-ghost py-2 text-sm">180</button>
+          <button onclick="setDuration('custom')" class="btn-ghost py-2 text-sm">Custom</button>
+        </div>
+        <input type="number" id="chDays" placeholder="Number of days" min="1" max="365" />
+      </div>
+      <button onclick="saveChallenge()" class="btn-neon w-full py-3">Create Challenge</button>
+    </div>
+  </div>
+</div>
+
+<!-- PHOTO VIEWER -->
+<div id="photoViewer" class="modal-bg hidden">
+  <div class="w-full h-full flex flex-col">
+    <div class="flex justify-between p-3">
+      <h3 class="font-display font-bold" id="viewerTitle">Photo</h3>
+      <button onclick="closeModal('photoViewer')" class="text-white text-2xl">✕</button>
+    </div>
+    <div class="flex-1 flex items-center justify-center p-2">
+      <img id="viewerImg" class="max-w-full max-h-full rounded-xl" />
+    </div>
+    <div class="p-3 grid grid-cols-4 gap-2">
+      <button onclick="downloadViewerPhoto()" class="btn-ghost py-2 text-xs">Download</button>
+      <button onclick="shareViewerPhoto()" class="btn-ghost py-2 text-xs">Share</button>
+      <button onclick="replaceViewerPhoto()" class="btn-ghost py-2 text-xs">Replace</button>
+      <button onclick="deleteViewerPhoto()" class="btn-ghost py-2 text-xs text-red-400">Delete</button>
+    </div>
+  </div>
+</div>
+
+<canvas id="videoCanvas"></canvas>
+
+<script>
+// ============ STATE ============
+let state = {
+  user: null,
+  challenge: null,
+  photos: {}, // date -> {data, timestamp, day}
+  weight: [],
+  water: {}, // date -> count
+  notes: {}, // date -> text
+  theme: 'dark'
+};
+let currentUploadDate = null;
+let pendingImageData = null;
+let currentModalDay = null;
+let viewerDay = null;
+let calendarOffset = 0;
+
+// ============ STORAGE ============
+function save() {
+  if (!state.user) return;
+  localStorage.setItem('gpt_' + state.user.email, JSON.stringify({
+    challenge: state.challenge,
+    photos: state.photos,
+    weight: state.weight,
+    water: state.water,
+    notes: state.notes,
+    theme: state.theme
+  }));
+}
+function load() {
+  if (!state.user) return;
+  const raw = localStorage.getItem('gpt_' + state.user.email);
+  if (raw) {
+    const d = JSON.parse(raw);
+    state.challenge = d.challenge || null;
+    state.photos = d.photos || {};
+    state.weight = d.weight || [];
+    state.water = d.water || {};
+    state.notes = d.notes || {};
+    state.theme = d.theme || 'dark';
+  }
+}
+
+// ============ AUTH ============
+function toggleAuth(mode) {
+  document.getElementById('loginForm').classList.toggle('hidden', mode !== 'login');
+  document.getElementById('signupForm').classList.toggle('hidden', mode !== 'signup');
+}
+function doLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pw = document.getElementById('loginPassword').value;
+  if (!email || !pw) return toast('Fill all fields');
+  state.user = { email, name: email.split('@')[0] };
+  localStorage.setItem('gpt_user', JSON.stringify(state.user));
+  load();
+  enterApp();
+}
+function doSignup() {
+  const name = document.getElementById('signupName').value.trim();
+  const email = document.getElementById('signupEmail').value.trim();
+  const pw = document.getElementById('signupPassword').value;
+  if (!name || !email || !pw) return toast('Fill all fields');
+  state.user = { email, name };
+  localStorage.setItem('gpt_user', JSON.stringify(state.user));
+  load();
+  enterApp();
+  toast('Welcome, ' + name + '!');
+}
+function doGoogleLogin() {
+  state.user = { email: 'demo@gmail.com', name: 'Demo User' };
+  localStorage.setItem('gpt_user', JSON.stringify(state.user));
+  load();
+  enterApp();
+  toast('Signed in with Google');
+}
+function doLogout() {
+  localStorage.removeItem('gpt_user');
+  location.reload();
+}
+function enterApp() {
+  document.getElementById('authScreen').classList.add('hidden');
+  document.getElementById('mainApp').classList.remove('hidden');
+  applyTheme();
+  renderAll();
+  requestNotifPermission();
+}
+
+// ============ THEME ============
+function applyTheme() {
+  let t = state.theme;
+  if (t === 'auto') t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  document.body.dataset.theme = t;
+}
+function toggleTheme() {
+  const cycle = { dark: 'light', light: 'auto', auto: 'dark' };
+  state.theme = cycle[state.theme];
+  save();
+  applyTheme();
+  toast('Theme: ' + state.theme);
+}
+
+// ============ NAVIGATION ============
+function switchPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+  document.getElementById('page-' + name).classList.remove('hidden');
+  document.querySelectorAll('.nav-btn').forEach(b => {
+    b.classList.toggle('tab-active', b.dataset.page === name);
+  });
+  if (name === 'calendar') renderCalendar();
+  if (name === 'gallery') renderGallery();
+  if (name === 'compare') renderCompare();
+  if (name === 'bonus') { renderWeight(); renderWater(); renderAchievements(); loadNotes(); }
+}
+
+// ============ CHALLENGE ============
+function showCreateChallenge() {
+  document.getElementById('challengeModal').classList.remove('hidden');
+  if (state.challenge) {
+    document.getElementById('chName').value = state.challenge.name;
+    document.getElementById('chStart').value = state.challenge.startDate;
+    document.getElementById('chDays').value = state.challenge.days;
+  } else {
+    document.getElementById('chName').value = '';
+    document.getElementById('chStart').value = new Date().toISOString().split('T')[0];
+    document.getElementById('chDays').value = 30;
+  }
+}
+function setDuration(d) {
+  if (d === 'custom') {
+    document.getElementById('chDays').value = '';
+    document.getElementById('chDays').focus();
+  } else {
+    document.getElementById('chDays').value = d;
+  }
+}
+function saveChallenge() {
+  const name = document.getElementById('chName').value.trim();
+  const start = document.getElementById('chStart').value;
+  const days = parseInt(document.getElementById('chDays').value);
+  if (!name || !start || !days) return toast('Fill all fields');
+  state.challenge = { name, startDate: start, days };
+  save();
+  closeModal('challengeModal');
+  renderAll();
+  toast('Challenge created!');
+}
+
+function getChallengeStats() {
+  if (!state.challenge) return null;
+  const start = new Date(state.challenge.startDate + 'T00:00:00');
+  const today = new Date(); today.setHours(0,0,0,0);
+  const end = new Date(start); end.setDate(end.getDate() + state.challenge.days - 1);
+  const diffMs = today - start;
+  const currentDay = Math.floor(diffMs / 86400000) + 1;
+  const remaining = Math.max(0, state.challenge.days - currentDay);
+  const totalUploaded = Object.keys(state.photos).length;
+  
+  // Count missing (past days without photo)
+  let missing = 0;
+  const lastDay = Math.min(currentDay, state.challenge.days);
+  for (let d = 1; d <= lastDay; d++) {
+    const date = new Date(start); date.setDate(date.getDate() + d - 1);
+    const key = dateKey(date);
+    if (!state.photos[key]) missing++;
+  }
+  
+  const percent = Math.min(100, Math.max(0, (currentDay / state.challenge.days) * 100));
+  
+  // Streaks
+  let currentStreak = 0, longestStreak = 0, tempStreak = 0;
+  for (let d = 1; d <= Math.min(currentDay, state.challenge.days); d++) {
+    const date = new Date(start); date.setDate(date.getDate() + d - 1);
+    const key = dateKey(date);
+    if (state.photos[key]) {
+      tempStreak++;
+      longestStreak = Math.max(longestStreak, tempStreak);
+      currentStreak = tempStreak;
+    } else {
+      tempStreak = 0;
+    }
+  }
+  // Current streak: count backward from today
+  currentStreak = 0;
+  for (let d = Math.min(currentDay, state.challenge.days); d >= 1; d--) {
+    const date = new Date(start); date.setDate(date.getDate() + d - 1);
+    const key = dateKey(date);
+    if (state.photos[key]) currentStreak++;
+    else break;
+  }
+  
+  return {
+    currentDay: Math.max(1, Math.min(currentDay, state.challenge.days)),
+    remaining, totalUploaded, missing, percent,
+    currentStreak, longestStreak, start, end
+  };
+}
+
+function dateKey(d) {
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+function renderAll() {
+  if (!state.challenge) {
+    document.getElementById('noChallengeView').classList.remove('hidden');
+    document.getElementById('challengeView').classList.add('hidden');
+    document.getElementById('headerChallenge').textContent = 'No challenge yet';
+    return;
+  }
+  document.getElementById('noChallengeView').classList.add('hidden');
+  document.getElementById('challengeView').classList.remove('hidden');
+  
+  const s = getChallengeStats();
+  document.getElementById('headerChallenge').textContent = state.challenge.name;
+  document.getElementById('challengeName').textContent = state.challenge.name;
+  document.getElementById('challengeDates').textContent = 
+    s.start.toLocaleDateString() + ' → ' + s.end.toLocaleDateString();
+  document.getElementById('currentDay').textContent = 'Day ' + s.currentDay + '/' + state.challenge.days;
+  document.getElementById('remainingDays').textContent = s.remaining;
+  document.getElementById('uploadedCount').textContent = s.totalUploaded;
+  document.getElementById('missingCount').textContent = s.missing;
+  document.getElementById('progressPercent').textContent = Math.round(s.percent) + '%';
+  document.getElementById('currentStreak').textContent = s.currentStreak;
+  document.getElementById('longestStreak').textContent = s.longestStreak;
+  
+  // Ring
+  const ring = document.getElementById('progressRing');
+  const circumference = 301.6;
+  ring.style.strokeDashoffset = circumference - (circumference * s.percent / 100);
+  
+  // Today
+  const today = new Date(); today.setHours(0,0,0,0);
+  const todayKey = dateKey(today);
+  document.getElementById('todayDate').textContent = today.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  
+  if (state.photos[todayKey]) {
+    document.getElementById('todayPreview').classList.remove('hidden');
+    document.getElementById('todayImage').src = state.photos[todayKey].data;
+    document.getElementById('todayBadge').textContent = '✓ Uploaded';
+    document.getElementById('todayBadge').className = 'badge bg-[rgba(57,255,20,0.15)] text-[var(--neon)]';
+    document.getElementById('todayBtnText').textContent = 'Replace Photo';
+  } else {
+    document.getElementById('todayPreview').classList.add('hidden');
+    document.getElementById('todayBadge').textContent = 'Pending';
+    document.getElementById('todayBadge').className = 'badge bg-yellow-500/15 text-yellow-400';
+    document.getElementById('todayBtnText').textContent = 'Upload Photo';
+  }
+}
+
+// ============ UPLOAD ============
+function openUploadModal() {
+  if (!state.challenge) {
+    showCreateChallenge();
+    return;
+  }
+  currentUploadDate = new Date(); currentUploadDate.setHours(0,0,0,0);
+  const key = dateKey(currentUploadDate);
+  pendingImageData = null;
+  document.getElementById('uploadPreview').classList.add('hidden');
+  document.getElementById('savePhotoBtn').classList.add('hidden');
+  document.getElementById('uploadReplace').classList.toggle('hidden', !state.photos[key]);
+  document.getElementById('uploadModal').classList.remove('hidden');
+}
+function openCamera() {
+  document.getElementById('cameraInput').click();
+}
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('photoInput').addEventListener('change', handleFileSelect);
+  document.getElementById('cameraInput').addEventListener('change', handleFileSelect);
+});
+
+function handleFileSelect(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) return toast('Please select an image');
+  compressImage(file, (data) => {
+    pendingImageData = data;
+    document.getElementById('previewImg').src = data;
+    document.getElementById('uploadPreview').classList.remove('hidden');
+    document.getElementById('savePhotoBtn').classList.remove('hidden');
+  });
+  e.target.value = '';
+}
+
+function compressImage(file, cb) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const maxDim = 1200;
+      let w = img.width, h = img.height;
+      if (w > maxDim || h > maxDim) {
+        const ratio = Math.min(maxDim/w, maxDim/h);
+        w = Math.round(w * ratio);
+        h = Math.round(h * ratio);
+      }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      cb(canvas.toDataURL('image/jpeg', 0.85));
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function savePhoto() {
+  if (!pendingImageData || !currentUploadDate) return;
+  const key = dateKey(currentUploadDate);
+  const s = getChallengeStats();
+  const dayNum = Math.floor((currentUploadDate - s.start) / 86400000) + 1;
+  state.photos[key] = {
+    data: pendingImageData,
+    timestamp: Date.now(),
+    day: dayNum
+  };
+  save();
+  closeModal('uploadModal');
+  pendingImageData = null;
+  renderAll();
+  toast('Photo saved! Day ' + dayNum);
+  checkAchievements();
+}
+
+// ============ CALENDAR ============
+function renderCalendar() {
+  if (!state.challenge) return;
+  const s = getChallengeStats();
+  const grid = document.getElementById('calendarGrid');
+  grid.innerHTML = '';
+  
+  const today = new Date(); today.setHours(0,0,0,0);
+  
+  for (let d = 1; d <= state.challenge.days; d++) {
+    const date = new Date(s.start);
+    date.setDate(date.getDate() + d - 1);
+    const key = dateKey(date);
+    const cell = document.createElement('div');
+    cell.className = 'day-cell';
+    
+    const isFuture = date > today;
+    const isToday = date.getTime() === today.getTime();
+    const uploaded = !!state.photos[key];
+    const isPast = date < today;
+    
+    if (uploaded) cell.classList.add('uploaded');
+    else if (isPast) cell.classList.add('missing');
+    if (isFuture) cell.classList.add('future');
+    if (isToday) cell.classList.add('today');
+    
+    if (uploaded) {
+      const img = document.createElement('img');
+      img.src = state.photos[key].data;
+      cell.appendChild(img);
+    }
+    const num = document.createElement('span');
+    num.className = 'num';
+    num.textContent = d;
+    cell.appendChild(num);
+    
+    cell.onclick = () => {
+      if (uploaded) openDayDetail(key, d, date);
+      else if (isFuture) toast('Future day');
+      else {
+        currentUploadDate = date;
+        openUploadModal();
+      }
+    };
+    grid.appendChild(cell);
+  }
+}
+function calendarNav(dir) {
+  // Simple scroll effect - just toast
+  toast(dir > 0 ? 'Scroll to see more' : 'Scroll up');
+}
+
+function openDayDetail(key, day, date) {
+  currentModalDay = key;
+  document.getElementById('dayModalTitle').textContent = 'Day ' + day;
+  document.getElementById('dayModalImg').src = state.photos[key].data;
+  document.getElementById('dayModalDate').textContent = date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }) + ' • ' + new Date(state.photos[key].timestamp).toLocaleTimeString();
+  document.getElementById('dayModal').classList.remove('hidden');
+}
+function replaceFromModal() {
+  closeModal('dayModal');
+  currentUploadDate = new Date(currentModalDay + 'T00:00:00');
+  openUploadModal();
+}
+function deleteFromModal() {
+  if (!confirm('Delete this photo?')) return;
+  delete state.photos[currentModalDay];
+  save();
+  closeModal('dayModal');
+  renderAll();
+  renderCalendar();
+  toast('Photo deleted');
+}
+
+// ============ GALLERY ============
+function renderGallery() {
+  const grid = document.getElementById('galleryGrid');
+  const empty = document.getElementById('emptyGallery');
+  const keys = Object.keys(state.photos).sort();
+  if (keys.length === 0) {
+    grid.innerHTML = '';
+    empty.classList.remove('hidden');
+    return;
+  }
+  empty.classList.add('hidden');
+  grid.innerHTML = '';
+  keys.forEach(key => {
+    const p = state.photos[key];
+    const item = document.createElement('div');
+    item.className = 'gallery-item';
+    item.innerHTML = `
+      <img src="${p.data}" />
+      <div class="overlay">
+        <div class="text-white text-xs">
+          <div class="font-bold">Day ${p.day}</div>
+          <div class="opacity-75">${new Date(key).toLocaleDateString()}</div>
+        </div>
+      </div>
+    `;
+    item.onclick = () => openPhotoViewer(key);
+    grid.appendChild(item);
+  });
+}
+
+function openPhotoViewer(key) {
+  viewerDay = key;
+  const p = state.photos[key];
+  document.getElementById('viewerTitle').textContent = 'Day ' + p.day;
+  document.getElementById('viewerImg').src = p.data;
+  document.getElementById('photoViewer').classList.remove('hidden');
+}
+function downloadViewerPhoto() {
+  const a = document.createElement('a');
+  a.href = state.photos[viewerDay].data;
+  a.download = 'gym-day-' + state.photos[viewerDay].day + '.jpg';
+  a.click();
+}
+function shareViewerPhoto() {
+  if (navigator.share) {
+    fetch(state.photos[viewerDay].data).then(r => r.blob()).then(blob => {
+      const file = new File([blob], 'photo.jpg', { type: 'image/jpeg' });
+      navigator.share({ files: [file], title: 'Gym Progress Day ' + state.photos[viewerDay].day });
+    });
+  } else {
+    toast('Share not supported');
+  }
+}
+function replaceViewerPhoto() {
+  closeModal('photoViewer');
+  currentUploadDate = new Date(viewerDay + 'T00:00:00');
+  openUploadModal();
+}
+function deleteViewerPhoto() {
+  if (!confirm('Delete this photo?')) return;
+  delete state.photos[viewerDay];
+  save();
+  closeModal('photoViewer');
+  renderGallery();
+  renderAll();
+  toast('Deleted');
+}
+
+// ============ COMPARE ============
+function renderCompare() {
+  const content = document.getElementById('compareContent');
+  const keys = Object.keys(state.photos).sort();
+  if (keys.length < 2) {
+    content.innerHTML = `<div class="glass p-10 text-center"><div class="text-5xl mb-3">⚡</div><p class="text-[var(--text-dim)]">Upload at least 2 photos to compare</p></div>`;
+    return;
+  }
+  const first = keys[0];
+  const last = keys[keys.length - 1];
+  content.innerHTML = `
+    <div class="glass p-3 mb-3">
+      <div class="compare-wrap" id="compareWrap">
+        <img src="${state.photos[first].data}" />
+        <div class="compare-after"><img src="${state.photos[last].data}" /></div>
+        <div class="compare-slider" id="compareSlider">
+          <div class="compare-handle">⇔</div>
+        </div>
+      </div>
+      <div class="flex justify-between mt-3 text-xs text-[var(--text-dim)]">
+        <span>Day ${state.photos[first].day} (Before)</span>
+        <span>Day ${state.photos[last].day} (After)</span>
+      </div>
+    </div>
+  `;
+  initCompareSlider('compareWrap', 'compareSlider');
+}
+
+function initCompareSlider(wrapId, sliderId) {
+  const wrap = document.getElementById(wrapId);
+  const slider = document.getElementById(sliderId);
+  let dragging = false;
+  const move = (clientX) => {
+    const rect = wrap.getBoundingClientRect();
+    let x = (clientX - rect.left) / rect.width;
+    x = Math.max(0, Math.min(1, x));
+    slider.style.left = (x * 100) + '%';
+    wrap.querySelector('.compare-after').style.clipPath = `inset(0 0 0 ${x*100}%)`;
+  };
+  const start = (e) => { dragging = true; move(e.touches ? e.touches[0].clientX : e.clientX); };
+  const end = () => dragging = false;
+  const mv = (e) => { if (dragging) { move(e.touches ? e.touches[0].clientX : e.clientX); e.preventDefault(); } };
+  slider.addEventListener('mousedown', start);
+  slider.addEventListener('touchstart', start);
+  window.addEventListener('mouseup', end);
+  window.addEventListener('touchend', end);
+  window.addEventListener('mousemove', mv);
+  window.addEventListener('touchmove', mv, { passive: false });
+  wrap.addEventListener('click', (e) => move(e.clientX));
+}
+
+function openFullscreenCompare() {
+  const keys = Object.keys(state.photos).sort();
+  if (keys.length < 2) return toast('Need 2 photos');
+  const first = keys[0], last = keys[keys.length - 1];
+  document.getElementById('fullscreenCompare').innerHTML = `
+    <div class="compare-wrap w-full" id="fsWrap" style="max-height:80vh">
+      <img src="${state.photos[first].data}" />
+      <div class="compare-after"><img src="${state.photos[last].data}" /></div>
+      <div class="compare-slider" id="fsSlider"><div class="compare-handle">⇔</div></div>
+    </div>
+  `;
+  document.getElementById('fullscreenModal').classList.remove('hidden');
+  setTimeout(() => initCompareSlider('fsWrap', 'fsSlider'), 100);
+}
+
+// ============ VIDEO GENERATION ============
+async function generateVideo() {
+  const keys = Object.keys(state.photos).sort();
+  if (keys.length < 2) return toast('Need at least 2 photos');
+  
+  const effect = document.getElementById('videoEffect').value;
+  const durationPer = parseInt(document.getElementById('videoDuration').value) || 2;
+  const musicFile = document.getElementById('videoMusic').files[0];
+  
+  const canvas = document.getElementById('videoCanvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = 720; canvas.height = 1280;
+  
+  const progress = document.getElementById('videoProgress');
+  const bar = document.getElementById('videoBar');
+  const percentEl = document.getElementById('videoPercent');
+  const statusText = document.getElementById('videoStatusText');
+  progress.classList.remove('hidden');
+  document.getElementById('generateBtn').disabled = true;
+  document.getElementById('generateBtn').innerHTML = 'Generating...';
+  document.getElementById('videoResult').classList.add('hidden');
+  
+  // Preload images
+  const images = [];
+  for (const key of keys) {
+    const img = await loadImage(state.photos[key].data);
+    images.push({ img, day: state.photos[key].day, date: key });
+  }
+  
+  const fps = 30;
+  const framesPerImage = fps * durationPer;
+  const totalFrames = framesPerImage * images.length;
+  
+  const stream = canvas.captureStream(fps);
+  
+  // Add audio if provided
+  let audioCtx, audioSource, audioDest;
+  if (musicFile) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    audioDest = audioCtx.createMediaStreamDestination();
+    const arrayBuf = await musicFile.arrayBuffer();
+    const audioBuf = await audioCtx.decodeAudioData(arrayBuf);
+    audioSource = audioCtx.createBufferSource();
+    audioSource.buffer = audioBuf;
+    audioSource.connect(audioDest);
+    audioDest.stream.getAudioTracks().forEach(t => stream.addTrack(t));
+    audioSource.start();
+  }
+  
+  const recorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9,opus', videoBitsPerSecond: 4000000 });
+  const chunks = [];
+  recorder.ondataavailable = e => chunks.push(e.data);
+  
+  recorder.onstop = () => {
+    const blob = new Blob(chunks, { type: 'video/webm' });
+    const url = URL.createObjectURL(blob);
+    document.getElementById('videoPreview').src = url;
+    document.getElementById('videoDownload').href = url;
+    document.getElementById('videoResult').classList.remove('hidden');
+    document.getElementById('generateBtn').disabled = false;
+    document.getElementById('generateBtn').innerHTML = '🎬 Generate Video';
+    statusText.textContent = 'Complete!';
+    if (audioSource) audioSource.stop();
+    toast('Video ready!');
+  };
+  
+  recorder.start();
+  
+  let frame = 0;
+  const fadeFrames = Math.floor(fps * 0.5);
+  
+  function drawFrame() {
+    if (frame >= totalFrames) {
+      recorder.stop();
+      stream.getTracks().forEach(t => t.stop());
+      return;
+    }
+    
+    const imgIdx = Math.floor(frame / framesPerImage);
+    const frameInImg = frame % framesPerImage;
+    const progressInImg = frameInImg / framesPerImage;
+    
+    const cur = images[imgIdx];
+    const next = images[imgIdx + 1];
+    
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Draw current image with effect
+    ctx.save();
+    if (effect === 'zoom') {
+      const scale = 1 + progressInImg * 0.15;
+      const cx = canvas.width / 2, cy = canvas.height / 2;
+      ctx.translate(cx, cy);
+      ctx.scale(scale, scale);
+      ctx.translate(-cx, -cy);
+    }
+    drawCover(ctx, cur.img, canvas.width, canvas.height);
+    ctx.restore();
+    
+    // Fade in/out
+    let alpha = 0;
+    if (frameInImg < fadeFrames) alpha = 1 - frameInImg / fadeFrames;
+    else if (frameInImg > framesPerImage - fadeFrames) alpha = (frameInImg - (framesPerImage - fadeFrames)) / fadeFrames;
+    
+    if (alpha > 0) {
+      ctx.fillStyle = `rgba(0,0,0,${alpha})`;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+    
+    // Day number & date overlay
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.fillRect(0, canvas.height - 120, canvas.width, 120);
+    ctx.fillStyle = '#39FF14';
+    ctx.font = 'bold 48px Space Grotesk, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('DAY ' + cur.day, 30, canvas.height - 60);
+    ctx.fillStyle = '#fff';
+    ctx.font = '20px Inter, sans-serif';
+    const d = new Date(cur.date);
+    ctx.fillText(d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }), 30, canvas.height - 30);
+    
+    // Progress bar at top
+    const totalProgress = (imgIdx + progressInImg) / images.length;
+    ctx.fillStyle = 'rgba(57,255,20,0.3)';
+    ctx.fillRect(0, 0, canvas.width, 6);
+    ctx.fillStyle = '#39FF14';
+    ctx.fillRect(0, 0, canvas.width * totalProgress, 6);
+    
+    frame++;
+    const pct = Math.round((frame / totalFrames) * 100);
+    bar.style.width = pct + '%';
+    percentEl.textContent = pct + '%';
+    statusText.textContent = `Rendering frame ${frame}/${totalFrames}...`;
+    
+    requestAnimationFrame(drawFrame);
+  }
+  
+  drawFrame();
+}
+
+function drawCover(ctx, img, w, h) {
+  const ir = img.width / img.height;
+  const cr = w / h;
+  let dw, dh, dx, dy;
+  if (ir > cr) {
+    dh = h; dw = h * ir; dx = (w - dw) / 2; dy = 0;
+  } else {
+    dw = w; dh = w / ir; dx = 0; dy = (h - dh) / 2;
+  }
+  ctx.drawImage(img, dx, dy, dw, dh);
+}
+
+function loadImage(src) {
+  return new Promise((res, rej) => {
+    const img = new Image();
+    img.onload = () => res(img);
+    img.onerror = rej;
+    img.src = src;
+  });
+}
+
+// ============ BONUS FEATURES ============
+function addWeight() {
+  const v = parseFloat(document.getElementById('weightInput').value);
+  if (!v) return toast('Enter weight');
+  state.weight.push({ date: Date.now(), value: v });
+  save();
+  document.getElementById('weightInput').value = '';
+  renderWeight();
+  checkAchievements();
+}
+function renderWeight() {
+  const list = document.getElementById('weightList');
+  list.innerHTML = state.weight.slice(-5).reverse().map(w => `
+    <div class="flex justify-between text-sm py-1 border-b border-[var(--border)]">
+      <span class="text-[var(--text-dim)]">${new Date(w.date).toLocaleDateString()}</span>
+      <span class="font-bold neon-text">${w.value} kg</span>
+    </div>
+  `).join('');
+  drawWeightChart();
+}
+function drawWeightChart() {
+  const canvas = document.getElementById('weightChart');
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width = canvas.offsetWidth;
+  const h = canvas.height;
+  ctx.clearRect(0,0,w,h);
+  if (state.weight.length < 2) return;
+  const data = state.weight.slice(-10);
+  const min = Math.min(...data.map(d => d.value));
+  const max = Math.max(...data.map(d => d.value));
+  const range = max - min || 1;
+  ctx.strokeStyle = '#39FF14';
+  ctx.lineWidth = 2;
+  ctx.shadowColor = '#39FF14';
+  ctx.shadowBlur = 8;
+  ctx.beginPath();
+  data.forEach((d, i) => {
+    const x = (i / (data.length - 1)) * (w - 20) + 10;
+    const y = h - 20 - ((d.value - min) / range) * (h - 40);
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+  data.forEach((d, i) => {
+    const x = (i / (data.length - 1)) * (w - 20) + 10;
+    const y = h - 20 - ((d.value - min) / range) * (h - 40);
+    ctx.fillStyle = '#39FF14';
+    ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI*2); ctx.fill();
+  });
+}
+
+function calcBMI() {
+  const h = parseFloat(document.getElementById('bmiHeight').value) / 100;
+  const w = parseFloat(document.getElementById('bmiWeight').value);
+  if (!h || !w) return toast('Enter height and weight');
+  const bmi = w / (h * h);
+  let cat = '', color = '';
+  if (bmi < 18.5) { cat = 'Underweight'; color = '#3b82f6'; }
+  else if (bmi < 25) { cat = 'Normal'; color = '#39FF14'; }
+  else if (bmi < 30) { cat = 'Overweight'; color = '#f59e0b'; }
+  else { cat = 'Obese'; color = '#ef4444'; }
+  document.getElementById('bmiResult').innerHTML = `
+    <div class="text-3xl font-bold font-display" style="color:${color}">${bmi.toFixed(1)}</div>
+    <div class="text-sm" style="color:${color}">${cat}</div>
+  `;
+}
+
+function addWater() {
+  const key = dateKey(new Date());
+  state.water[key] = (state.water[key] || 0) + 1;
+  save();
+  renderWater();
+  checkAchievements();
+}
+function renderWater() {
+  const key = dateKey(new Date());
+  const count = state.water[key] || 0;
+  document.getElementById('waterCount').textContent = count;
+  const glasses = document.getElementById('waterGlasses');
+  glasses.innerHTML = '';
+  for (let i = 0; i < 8; i++) {
+    const g = document.createElement('div');
+    g.className = 'w-8 h-10 rounded-lg border-2 flex items-end justify-center text-xs font-bold ' +
+      (i < count ? 'border-[var(--neon)] bg-[rgba(57,255,20,0.2)] text-[var(--neon)]' : 'border-[var(--border)] text-[var(--text-dim)]');
+    g.textContent = i < count ? '💧' : (i+1);
+    glasses.appendChild(g);
+  }
+}
+
+function saveNotes() {
+  const key = dateKey(new Date());
+  const txt = document.getElementById('dailyNotes').value.trim();
+  if (!txt) return;
+  state.notes[key] = txt;
+  save();
+  toast('Note saved');
+}
+function loadNotes() {
+  const key = dateKey(new Date());
+  document.getElementById('dailyNotes').value = state.notes[key] || '';
+}
+
+const ACHIEVEMENTS = [
+  { id: 'first', icon: '🎯', name: 'First Step', desc: 'Upload your first photo', check: () => Object.keys(state.photos).length >= 1 },
+  { id: 'week', icon: '📅', name: 'Week Warrior', desc: '7 days streak', check: () => (getChallengeStats()?.currentStreak || 0) >= 7 },
+  { id: 'month', icon: '🔥', name: 'Monthly Master', desc: '30 days streak', check: () => (getChallengeStats()?.currentStreak || 0) >= 30 },
+  { id: 'half', icon: '⚡', name: 'Halfway There', desc: '50% challenge complete', check: () => (getChallengeStats()?.percent || 0) >= 50 },
+  { id: 'done', icon: '🏆', name: 'Champion', desc: 'Complete the challenge', check: () => (getChallengeStats()?.percent || 0) >= 100 },
+  { id: 'weigh', icon: '⚖️', name: 'Weight Watcher', desc: 'Log 5 weight entries', check: () => state.weight.length >= 5 },
+  { id: 'water', icon: '💧', name: 'Hydrated', desc: '8 glasses in a day', check: () => (state.water[dateKey(new Date())] || 0) >= 8 },
+];
+function renderAchievements() {
+  const list = document.getElementById('achievementsList');
+  list.innerHTML = ACHIEVEMENTS.map(a => {
+    const unlocked = a.check();
+    return `
+      <div class="achievement ${unlocked ? 'unlocked' : 'locked'}">
+        <div class="achievement-icon">${a.icon}</div>
+        <div class="flex-1">
+          <div class="font-bold text-sm">${a.name}</div>
+          <div class="text-xs text-[var(--text-dim)]">${a.desc}</div>
+        </div>
+        ${unlocked ? '<span class="text-[var(--neon)] text-xl">✓</span>' : '<span class="text-[var(--text-dim)]">🔒</span>'}
+      </div>
+    `;
+  }).join('');
+}
+function checkAchievements() {
+  renderAchievements();
+}
+
+// ============ ZIP EXPORT ============
+async function exportZip() {
+  const keys = Object.keys(state.photos).sort();
+  if (keys.length === 0) return toast('No photos');
+  toast('Preparing download...');
+  // Simple: download each photo
+  for (const key of keys) {
+    const a = document.createElement('a');
+    a.href = state.photos[key].data;
+    a.download = 'day-' + state.photos[key].day + '-' + key + '.jpg';
+    document.body.appendChild(a); a.click(); a.remove();
+    await new Promise(r => setTimeout(r, 200));
+  }
+  toast('Downloaded ' + keys.length + ' photos');
+}
+
+// ============ NOTIFICATIONS ============
+function requestNotifPermission() {
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+  // Schedule demo reminder
+  scheduleReminder();
+}
+function scheduleReminder() {
+  const todayKey = dateKey(new Date());
+  if (state.photos[todayKey]) return;
+  // Check every minute if it's reminder time
+  setInterval(() => {
+    const now = new Date();
+    const h = now.getHours(), m = now.getMinutes();
+    const times = [[8,0],[10,0],[14,0],[20,0]];
+    if (times.some(t => t[0] === h && t[1] === m)) {
+      if (!state.photos[dateKey(now)]) {
+        sendNotification();
+      }
+    }
+  }, 60000);
+}
+function sendNotification() {
+  if ('Notification' in window && Notification.permission === 'granted') {
+    new Notification('Gym Progress', {
+      body: '📸 Time to upload today\'s Gym Progress Photo!',
+      icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%2339FF14"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>'
+    });
+  }
+  toast('📸 Reminder: Upload today\'s photo!');
+}
+
+// ============ UTILS ============
+function closeModal(id) {
+  document.getElementById(id).classList.add('hidden');
+}
+function toast(msg) {
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2500);
+}
+
+// ============ INIT ============
+document.addEventListener('DOMContentLoaded', () => {
+  const user = localStorage.getItem('gpt_user');
+  if (user) {
+    state.user = JSON.parse(user);
+    load();
+    enterApp();
+  }
+  switchPage('dashboard');
+  
+  // Close modals on backdrop click
+  document.querySelectorAll('.modal-bg').forEach(m => {
+    m.addEventListener('click', (e) => {
+      if (e.target === m) m.classList.add('hidden');
+    });
+  });
+});
+</script>
+</body>
+</html>
