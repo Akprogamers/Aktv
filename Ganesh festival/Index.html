@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -367,7 +368,7 @@
           <span>Community Celebration</span>
         </div>
       </div>
-      <button id="openSettingsBtn" class="settings-gear" title="Settings">⚙️</button>
+      <button id="openSettingsBtn" class="settings-gear" title="Settings">️</button>
     </div>
   </div>
 </header>
@@ -387,13 +388,13 @@
         <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Total Spent</span>
         <span class="text-2xl">🛍️</span>
       </div>
-      <div class="text-2xl md:text-3xl font-bold text-red-600" id="statSpent">₹0</div>
+      <div class="text-2xl md:text-3xl font-bold text-red-600" id="statSpent">0</div>
       <div class="text-xs text-gray-500 mt-1" id="statExpenses">0 expenses</div>
     </div>
     <div class="stat-card rounded-2xl p-5 shadow-lg">
       <div class="flex items-center justify-between mb-2">
         <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Balance</span>
-        <span class="text-2xl">⚖️</span>
+        <span class="text-2xl">️</span>
       </div>
       <div class="text-2xl md:text-3xl font-bold text-amber-600" id="statBalance">₹0</div>
       <div class="text-xs text-gray-500 mt-1">Available funds</div>
@@ -431,8 +432,8 @@
           <div><label class="text-xs font-semibold text-gray-600 uppercase">WhatsApp Number *</label><input type="tel" id="contribMobile" required placeholder="+91 9876543210" class="w-full mt-1 px-4 py-2.5 rounded-lg border border-gray-200 bg-white" /></div>
           <div><label class="text-xs font-semibold text-gray-600 uppercase">Address</label><input type="text" id="contribAddress" placeholder="Optional address" class="w-full mt-1 px-4 py-2.5 rounded-lg border border-gray-200 bg-white" /></div>
           <div class="grid grid-cols-2 gap-3">
-            <div><label class="text-xs font-semibold text-gray-600 uppercase">Amount (₹) *</label><input type="number" id="contribAmount" required min="1" placeholder="1001" class="w-full mt-1 px-4 py-2.5 rounded-lg border border-gray-200 bg-white" /></div>
-            <div><label class="text-xs font-semibold text-gray-600 uppercase">Payment Mode</label><select id="contribPaymentMode" class="w-full mt-1 px-4 py-2.5 rounded-lg border border-gray-200 bg-white"><option value="Cash"> Cash</option><option value="UPI"> UPI</option><option value="Bank Transfer">🏦 Bank Transfer</option><option value="Cheque">📄 Cheque</option><option value="Online">🌐 Online</option></select></div>
+            <div><label class="text-xs font-semibold text-gray-600 uppercase">Amount () *</label><input type="number" id="contribAmount" required min="1" placeholder="1001" class="w-full mt-1 px-4 py-2.5 rounded-lg border border-gray-200 bg-white" /></div>
+            <div><label class="text-xs font-semibold text-gray-600 uppercase">Payment Mode</label><select id="contribPaymentMode" class="w-full mt-1 px-4 py-2.5 rounded-lg border border-gray-200 bg-white"><option value="Cash"> Cash</option><option value="UPI"> UPI</option><option value="Bank Transfer"> Bank Transfer</option><option value="Cheque">📄 Cheque</option><option value="Online">🌐 Online</option></select></div>
           </div>
           <div><label class="text-xs font-semibold text-gray-600 uppercase">Date *</label><input type="date" id="contribDate" required class="w-full mt-1 px-4 py-2.5 rounded-lg border border-gray-200 bg-white" /></div>
           <div><label class="text-xs font-semibold text-gray-600 uppercase">Purpose / Note</label><input type="text" id="contribNote" placeholder="e.g., Annual donation" class="w-full mt-1 px-4 py-2.5 rounded-lg border border-gray-200 bg-white" /></div>
@@ -446,9 +447,9 @@
           <h2 class="text-xl font-bold text-gray-800">Add Expense</h2>
         </div>
         <form id="expenseForm" class="space-y-3">
-          <div><label class="text-xs font-semibold text-gray-600 uppercase">Category</label><select id="expenseCategory" required class="w-full mt-1 px-4 py-2.5 rounded-lg border border-gray-200 bg-white"><option value="">Select category</option><option value="Pandal"> Pandal & Decoration</option><option value="Idol">🗿 Idol & Puja Items</option><option value="Prasad">🍬 Prasad & Food</option><option value="Flowers">🌸 Flowers & Garlands</option><option value="Music">🎵 Music & Entertainment</option><option value="Lighting">💡 Lighting & Electricity</option><option value="Visarjan">🌊 Visarjan Procession</option><option value="Other">📦 Other</option></select></div>
+          <div><label class="text-xs font-semibold text-gray-600 uppercase">Category</label><select id="expenseCategory" required class="w-full mt-1 px-4 py-2.5 rounded-lg border border-gray-200 bg-white"><option value="">Select category</option><option value="Pandal"> Pandal & Decoration</option><option value="Idol">🗿 Idol & Puja Items</option><option value="Prasad">🍬 Prasad & Food</option><option value="Flowers"> Flowers & Garlands</option><option value="Music">🎵 Music & Entertainment</option><option value="Lighting">💡 Lighting & Electricity</option><option value="Visarjan">🌊 Visarjan Procession</option><option value="Other"> Other</option></select></div>
           <div class="grid grid-cols-2 gap-3">
-            <div><label class="text-xs font-semibold text-gray-600 uppercase">Amount (₹)</label><input type="number" id="expenseAmount" required min="1" placeholder="1000" class="w-full mt-1 px-4 py-2.5 rounded-lg border border-gray-200 bg-white" /></div>
+            <div><label class="text-xs font-semibold text-gray-600 uppercase">Amount ()</label><input type="number" id="expenseAmount" required min="1" placeholder="1000" class="w-full mt-1 px-4 py-2.5 rounded-lg border border-gray-200 bg-white" /></div>
             <div><label class="text-xs font-semibold text-gray-600 uppercase">Date</label><input type="date" id="expenseDate" required class="w-full mt-1 px-4 py-2.5 rounded-lg border border-gray-200 bg-white" /></div>
           </div>
           <div><label class="text-xs font-semibold text-gray-600 uppercase">Description (optional)</label><input type="text" id="expenseDesc" placeholder="e.g., Marigold garlands" class="w-full mt-1 px-4 py-2.5 rounded-lg border border-gray-200 bg-white" /></div>
@@ -521,7 +522,7 @@
   </div>
 
   <div id="tab-contributors" class="tab-content hidden">
-    <div class="glass-panel rounded-2xl p-6 shadow-lg"><h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2"><span>🏆</span> Top Contributors</h3><div id="contributorsList" class="space-y-3"></div></div>
+    <div class="glass-panel rounded-2xl p-6 shadow-lg"><h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2"><span></span> Top Contributors</h3><div id="contributorsList" class="space-y-3"></div></div>
   </div>
 
   <div id="tab-receipts" class="tab-content hidden">
@@ -549,7 +550,7 @@
           <div><button id="exportReceiptsExcelBtn" class="backup-btn btn-excel-purple"><span></span><span>Receipts Excel</span></button><p class="text-xs text-gray-500 mt-2 text-center">All generated receipts</p></div>
           <div><button id="exportAllExcelBtn" class="backup-btn btn-excel-blue"><span>📦</span><span>All Data Excel</span></button><p class="text-xs text-gray-500 mt-2 text-center">Everything in one workbook</p></div>
           <div><button id="exportSummaryExcelBtn" class="backup-btn btn-backup-json"><span>📋</span><span>Summary Report</span></button><p class="text-xs text-gray-500 mt-2 text-center">Financial summary & statistics</p></div>
-          <div><button id="exportMembersExcelBtn" class="backup-btn btn-excel-green"><span>👥</span><span>Members Excel</span></button><p class="text-xs text-gray-500 mt-2 text-center">Members with promised/deposited</p></div>
+          <div><button id="exportMembersExcelBtn" class="backup-btn btn-excel-green"><span></span><span>Members Excel</span></button><p class="text-xs text-gray-500 mt-2 text-center">Members with promised/deposited</p></div>
         </div>
       </div>
 
@@ -586,7 +587,7 @@
     <span class="om-symbol text-2xl">🕉</span>
     <span class="diya-flame">🪔</span>
   </div>
-  <p class="font-semibold">Ganpati Bappa Morya! 🙏</p>
+  <p class="font-semibold">Ganpati Bappa Morya! </p>
   <p class="text-xs mt-1 opacity-75">May Lord Ganesha bless this celebration</p>
 </footer>
 
@@ -604,10 +605,10 @@
             <div><label class="text-xs font-semibold text-gray-600 uppercase">Mandal Name</label><input type="text" id="settingMandalName" placeholder="e.g., श्री मंगलमूर्ती गणेश मंडळ" class="w-full mt-1 px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm" /></div>
             <div><label class="text-xs font-semibold text-gray-600 uppercase">Received By</label><input type="text" id="settingReceivedBy" placeholder="Treasurer Name" class="w-full mt-1 px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm" /></div>
           </div>
-          <div style="margin-top:10px;"><label class="text-xs font-semibold text-gray-600 uppercase">Receipt Language</label><select id="settingLanguage" class="w-full mt-1 px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm"><option value="en">🇬 English</option><option value="mr">🇮🇳 मराठी (Marathi)</option><option value="hi">🇮🇳 हिन्दी (Hindi)</option></select><p class="text-xs text-gray-500 mt-1">Changes labels of dynamic fields. Background image stays unchanged.</p></div>
+          <div style="margin-top:10px;"><label class="text-xs font-semibold text-gray-600 uppercase">Receipt Language</label><select id="settingLanguage" class="w-full mt-1 px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm"><option value="en"> English</option><option value="mr">🇳 मराठी (Marathi)</option><option value="hi">🇮🇳 हिन्दी (Hindi)</option></select><p class="text-xs text-gray-500 mt-1">Changes labels of dynamic fields. Background image stays unchanged.</p></div>
         </div>
         <div style="background:#fff7ed; border-radius:12px; padding:14px; margin-bottom:14px; border:1px solid #fed7aa;">
-          <h4 style="font-weight:700; color:#9a3412; margin-bottom:10px;">📷 Receipt Background</h4>
+          <h4 style="font-weight:700; color:#9a3412; margin-bottom:10px;"> Receipt Background</h4>
           <p class="text-xs text-gray-500 mb-2">Upload your exact receipt template. Text overlays on top.</p>
           <div id="uploadZone" class="upload-zone">
             <input type="file" id="bgImageInput" accept="image/*" class="hidden" />
@@ -716,8 +717,8 @@
     projectId: "ganesh-festival-1207c",
     storageBucket: "ganesh-festival-1207c.firebasestorage.app",
     messagingSenderId: "924036874653",
-    appId: "1:924036874653:web:6a30b2bf20f4e772e22f74",
-    measurementId: "G-LN4797LZXW"
+    appId: "1:924036874653:web:9fd0b63e208056e6e22f74",
+    measurementId: "G-ZSE6Z9DW11"
   };
 
   const firebaseApp = initializeApp(firebaseConfig);
@@ -911,7 +912,7 @@ function loadBgImageFromStorage() {
     img.src = dataUrl;
   });
 }
-function saveBgImageToStorage(dataUrl) { try { localStorage.setItem(BG_IMAGE_KEY, dataUrl); } catch(e) { showToast('⚠️ Image too large to store.', 'warn'); } }
+function saveBgImageToStorage(dataUrl) { try { localStorage.setItem(BG_IMAGE_KEY, dataUrl); } catch(e) { showToast('️ Image too large to store.', 'warn'); } }
 function removeBgImage() { localStorage.removeItem(BG_IMAGE_KEY); bgImage = null; updateUploadUI(); showToast('Background removed', 'info'); }
 function updateUploadUI() {
   const zone = document.getElementById('uploadZone');
@@ -1182,7 +1183,7 @@ function renderRecentActivity() {
   const container = document.getElementById('recentActivity');
   const all = [...appData.contributions.map(c => ({ ...c, type: 'contribution', category: 'Contribution' })), ...appData.expenses.map(e => ({ ...e, type: 'expense', category: e.category }))].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 10);
   if (all.length === 0) { container.innerHTML = '<div class="text-center text-gray-400 py-8">No transactions yet. Add your first contribution! </div>'; return; }
-  container.innerHTML = all.map(t => `<div class="transaction-item ${t.type} bg-white/70 rounded-lg p-3 flex items-center justify-between gap-3 fade-in"><div class="flex items-center gap-3 flex-1 min-w-0"><div class="w-10 h-10 rounded-full flex items-center justify-center text-lg ${t.type === 'contribution' ? 'bg-emerald-100' : 'bg-red-100'}">${t.type === 'contribution' ? '💰' : '🛍️'}</div><div class="min-w-0 flex-1"><div class="font-semibold text-sm text-gray-800 truncate">${t.type === 'contribution' ? t.name : t.category}</div><div class="text-xs text-gray-500 truncate">${t.type === 'contribution' ? (t.note || 'Contribution') : (t.description || 'Expense')}</div></div></div><div class="text-right flex-shrink-0"><div class="font-bold ${t.type === 'contribution' ? 'text-emerald-600' : 'text-red-600'}">${t.type === 'contribution' ? '+' : '-'}${formatCurrency(t.amount)}</div><div class="text-xs text-gray-500">${formatDate(t.date)}</div></div></div>`).join('');
+  container.innerHTML = all.map(t => `<div class="transaction-item ${t.type} bg-white/70 rounded-lg p-3 flex items-center justify-between gap-3 fade-in"><div class="flex items-center gap-3 flex-1 min-w-0"><div class="w-10 h-10 rounded-full flex items-center justify-center text-lg ${t.type === 'contribution' ? 'bg-emerald-100' : 'bg-red-100'}">${t.type === 'contribution' ? '💰' : '️'}</div><div class="min-w-0 flex-1"><div class="font-semibold text-sm text-gray-800 truncate">${t.type === 'contribution' ? t.name : t.category}</div><div class="text-xs text-gray-500 truncate">${t.type === 'contribution' ? (t.note || 'Contribution') : (t.description || 'Expense')}</div></div></div><div class="text-right flex-shrink-0"><div class="font-bold ${t.type === 'contribution' ? 'text-emerald-600' : 'text-red-600'}">${t.type === 'contribution' ? '+' : '-'}${formatCurrency(t.amount)}</div><div class="text-xs text-gray-500">${formatDate(t.date)}</div></div></div>`).join('');
 }
 
 function renderAllTransactions() {
@@ -1196,7 +1197,7 @@ function renderAllTransactions() {
   if (items.length === 0) { container.innerHTML = '<div class="text-center text-gray-400 py-8">No transactions match your filters</div>'; return; }
   container.innerHTML = items.map(t => {
     const hasReceipt = t.type === 'contribution' && receipts.some(r => r.contributionId === t.id);
-    return `<div class="transaction-item ${t.type} bg-white/70 rounded-lg p-3 flex items-center justify-between gap-3 fade-in"><div class="flex items-center gap-3 flex-1 min-w-0"><div class="w-10 h-10 rounded-full flex items-center justify-center text-lg ${t.type === 'contribution' ? 'bg-emerald-100' : 'bg-red-100'}">${t.type === 'contribution' ? '💰' : '🛍️'}</div><div class="min-w-0 flex-1"><div class="flex items-center gap-2 flex-wrap"><span class="font-semibold text-sm text-gray-800 truncate">${t.type === 'contribution' ? t.name : t.category}</span><span class="chip ${t.type === 'contribution' ? 'chip-income' : 'chip-expense'}">${t.category}</span>${hasReceipt ? '<span class="chip" style="background:#FEF3C7;color:#92400E;">🧾 Receipt</span>' : ''}</div><div class="text-xs text-gray-500 truncate">${t.type === 'contribution' ? (t.note || 'Contribution') : (t.description || 'Expense')}</div></div></div><div class="flex items-center gap-2 flex-shrink-0"><div class="text-right"><div class="font-bold ${t.type === 'contribution' ? 'text-emerald-600' : 'text-red-600'}">${t.type === 'contribution' ? '+' : '-'}${formatCurrency(t.amount)}</div><div class="text-xs text-gray-500">${formatDate(t.date)}</div></div>${t.type === 'contribution' ? `<button data-id="${t.id}" class="generate-receipt-btn text-amber-700 hover:text-amber-900 hover:bg-amber-50 p-2 rounded-lg transition" title="Generate Receipt">🧾</button>` : ''}<button data-id="${t.id}" data-type="${t.type}" class="delete-btn text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition" title="Delete">🗑️</button></div></div>`;
+    return `<div class="transaction-item ${t.type} bg-white/70 rounded-lg p-3 flex items-center justify-between gap-3 fade-in"><div class="flex items-center gap-3 flex-1 min-w-0"><div class="w-10 h-10 rounded-full flex items-center justify-center text-lg ${t.type === 'contribution' ? 'bg-emerald-100' : 'bg-red-100'}">${t.type === 'contribution' ? '💰' : '️'}</div><div class="min-w-0 flex-1"><div class="flex items-center gap-2 flex-wrap"><span class="font-semibold text-sm text-gray-800 truncate">${t.type === 'contribution' ? t.name : t.category}</span><span class="chip ${t.type === 'contribution' ? 'chip-income' : 'chip-expense'}">${t.category}</span>${hasReceipt ? '<span class="chip" style="background:#FEF3C7;color:#92400E;">🧾 Receipt</span>' : ''}</div><div class="text-xs text-gray-500 truncate">${t.type === 'contribution' ? (t.note || 'Contribution') : (t.description || 'Expense')}</div></div></div><div class="flex items-center gap-2 flex-shrink-0"><div class="text-right"><div class="font-bold ${t.type === 'contribution' ? 'text-emerald-600' : 'text-red-600'}">${t.type === 'contribution' ? '+' : '-'}${formatCurrency(t.amount)}</div><div class="text-xs text-gray-500">${formatDate(t.date)}</div></div>${t.type === 'contribution' ? `<button data-id="${t.id}" class="generate-receipt-btn text-amber-700 hover:text-amber-900 hover:bg-amber-50 p-2 rounded-lg transition" title="Generate Receipt">🧾</button>` : ''}<button data-id="${t.id}" data-type="${t.type}" class="delete-btn text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition" title="Delete">🗑️</button></div></div>`;
   }).join('');
   container.querySelectorAll('.delete-btn').forEach(btn => { btn.addEventListener('click', async () => { const id = btn.dataset.id; const type = btn.dataset.type; if (type === 'contribution') { await fbDeleteContribution(id); receipts = receipts.filter(r => r.contributionId !== id); if (window.firebaseDB && window.firebaseUtils) { for (const r of receipts.filter(r2 => r2.contributionId === id)) await fbDeleteReceipt(r2.id); } } else { await fbDeleteExpense(id); } refreshAll(); showToast('Transaction deleted', 'info'); }); });
   container.querySelectorAll('.generate-receipt-btn').forEach(btn => { btn.addEventListener('click', () => { const id = btn.dataset.id; const contrib = appData.contributions.find(c => c.id === id); if (contrib) openReceiptGenerator(contrib); }); });
@@ -1207,17 +1208,17 @@ function renderContributors() {
   const contribMap = {};
   appData.contributions.forEach(c => { const key = c.name.toLowerCase().trim(); if (!contribMap[key]) contribMap[key] = { name: c.name, total: 0, count: 0 }; contribMap[key].total += Number(c.amount); contribMap[key].count += 1; });
   const sorted = Object.values(contribMap).sort((a, b) => b.total - a.total);
-  const medals = ['🥇', '', '🥉'];
+  const medals = ['🥇', '', ''];
   if (sorted.length === 0) { container.innerHTML = '<div class="text-center text-gray-400 py-8">No contributors yet 🙏</div>'; return; }
   const maxAmount = sorted[0].total;
-  container.innerHTML = sorted.map((c, i) => { const pct = (c.total / maxAmount) * 100; return `<div class="bg-white/70 rounded-xl p-4 fade-in"><div class="flex items-center justify-between mb-2"><div class="flex items-center gap-3"><span class="text-2xl">${medals[i] || '🏅'}</span><div><div class="font-bold text-gray-800">${c.name}</div><div class="text-xs text-gray-500">${c.count} contribution${c.count > 1 ? 's' : ''}</div></div></div><div class="text-right"><div class="font-bold text-amber-700 text-lg">${formatCurrency(c.total)}</div></div></div><div class="w-full bg-amber-100 rounded-full h-2"><div class="h-2 rounded-full bg-gradient-to-r from-amber-400 to-amber-600" style="width: ${pct}%"></div></div></div>`; }).join('');
+  container.innerHTML = sorted.map((c, i) => { const pct = (c.total / maxAmount) * 100; return `<div class="bg-white/70 rounded-xl p-4 fade-in"><div class="flex items-center justify-between mb-2"><div class="flex items-center gap-3"><span class="text-2xl">${medals[i] || ''}</span><div><div class="font-bold text-gray-800">${c.name}</div><div class="text-xs text-gray-500">${c.count} contribution${c.count > 1 ? 's' : ''}</div></div></div><div class="text-right"><div class="font-bold text-amber-700 text-lg">${formatCurrency(c.total)}</div></div></div><div class="w-full bg-amber-100 rounded-full h-2"><div class="h-2 rounded-full bg-gradient-to-r from-amber-400 to-amber-600" style="width: ${pct}%"></div></div></div>`; }).join('');
 }
 
 function renderReceiptsList() {
   const container = document.getElementById('receiptsList');
   if (receipts.length === 0) { container.innerHTML = '<div class="text-center text-gray-400 py-10">🧾<br/><br/>No receipts generated yet.<br/><span class="text-xs">Generate a receipt from the Transactions tab.</span></div>'; return; }
   const sorted = [...receipts].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-  container.innerHTML = sorted.map(r => `<div class="receipt-history-card bg-white/80 rounded-xl p-4 fade-in border-l-4 border-amber-500"><div class="flex flex-wrap items-start justify-between gap-3 mb-3"><div class="flex-1 min-w-0"><div class="flex items-center gap-2 flex-wrap"><span class="font-bold text-gray-800 text-sm">${r.receiptNo}</span><span class="chip chip-income">${formatCurrency(r.amount)}</span></div><div class="text-sm font-semibold text-gray-700 mt-1">${r.donorName}</div><div class="text-xs text-gray-500 flex flex-wrap gap-2 mt-1">${r.mobile ? `<span>📱 ${r.mobile}</span>` : ''}<span>💳 ${r.paymentMode || 'Cash'}</span><span> ${formatDate(r.date)}</span></div></div></div><div class="flex flex-wrap gap-2"><button data-receipt-id="${r.id}" class="receipt-action-btn btn-view view-receipt-btn">️ View</button><button data-receipt-id="${r.id}" class="receipt-action-btn btn-dl download-receipt-btn">⬇️ Download</button><button data-receipt-id="${r.id}" class="receipt-action-btn btn-wa-sm whatsapp-receipt-btn">💬 WhatsApp</button><button data-receipt-id="${r.id}" class="receipt-action-btn btn-view regenerate-receipt-btn" style="background:#EDE9FE;color:#5B21B6;">🔄 Regenerate</button></div></div>`).join('');
+  container.innerHTML = sorted.map(r => `<div class="receipt-history-card bg-white/80 rounded-xl p-4 fade-in border-l-4 border-amber-500"><div class="flex flex-wrap items-start justify-between gap-3 mb-3"><div class="flex-1 min-w-0"><div class="flex items-center gap-2 flex-wrap"><span class="font-bold text-gray-800 text-sm">${r.receiptNo}</span><span class="chip chip-income">${formatCurrency(r.amount)}</span></div><div class="text-sm font-semibold text-gray-700 mt-1">${r.donorName}</div><div class="text-xs text-gray-500 flex flex-wrap gap-2 mt-1">${r.mobile ? `<span> ${r.mobile}</span>` : ''}<span>💳 ${r.paymentMode || 'Cash'}</span><span> ${formatDate(r.date)}</span></div></div></div><div class="flex flex-wrap gap-2"><button data-receipt-id="${r.id}" class="receipt-action-btn btn-view view-receipt-btn">️ View</button><button data-receipt-id="${r.id}" class="receipt-action-btn btn-dl download-receipt-btn">⬇️ Download</button><button data-receipt-id="${r.id}" class="receipt-action-btn btn-wa-sm whatsapp-receipt-btn">💬 WhatsApp</button><button data-receipt-id="${r.id}" class="receipt-action-btn btn-view regenerate-receipt-btn" style="background:#EDE9FE;color:#5B21B6;">🔄 Regenerate</button></div></div>`).join('');
   container.querySelectorAll('.view-receipt-btn').forEach(btn => btn.addEventListener('click', () => viewReceipt(btn.dataset.receiptId)));
   container.querySelectorAll('.download-receipt-btn').forEach(btn => btn.addEventListener('click', () => downloadReceiptById(btn.dataset.receiptId)));
   container.querySelectorAll('.whatsapp-receipt-btn').forEach(btn => btn.addEventListener('click', () => openWhatsAppForReceipt(btn.dataset.receiptId)));
@@ -1231,7 +1232,7 @@ function renderMembers() {
   if (members.length === 0) {
     container.innerHTML = '<tr><td colspan="8" class="text-center text-gray-400 py-10">👥<br/><br/>No members added yet.<br/><span class="text-xs">Click "Add Member" to get started.</span></td></tr>';
     document.getElementById('memberTotalPromised').textContent = '₹0';
-    document.getElementById('memberTotalDeposited').textContent = '₹0';
+    document.getElementById('memberTotalDeposited').textContent = '0';
     document.getElementById('memberTotalRemaining').textContent = '₹0';
     document.getElementById('memberTotalMembers').textContent = '0 members';
     return;
@@ -1267,7 +1268,7 @@ function refreshAll() {
 
 // ============ MEMBER MODALS ============
 function openAddMemberModal() { document.getElementById('memberModalTitle').textContent = 'Add Member'; document.getElementById('memberModalIcon').textContent = '➕'; document.getElementById('memberEditId').value = ''; document.getElementById('memberForm').reset(); document.getElementById('memberModal').classList.remove('hidden'); }
-function openEditMember(memberId) { const member = members.find(m => m.id === memberId); if (!member) return; document.getElementById('memberModalTitle').textContent = 'Edit Member'; document.getElementById('memberModalIcon').textContent = '✏️'; document.getElementById('memberEditId').value = member.id; document.getElementById('memberName').value = member.name || ''; document.getElementById('memberMobile').value = member.mobile || ''; document.getElementById('memberPromised').value = member.promised || 0; document.getElementById('memberModal').classList.remove('hidden'); }
+function openEditMember(memberId) { const member = members.find(m => m.id === memberId); if (!member) return; document.getElementById('memberModalTitle').textContent = 'Edit Member'; document.getElementById('memberModalIcon').textContent = '️'; document.getElementById('memberEditId').value = member.id; document.getElementById('memberName').value = member.name || ''; document.getElementById('memberMobile').value = member.mobile || ''; document.getElementById('memberPromised').value = member.promised || 0; document.getElementById('memberModal').classList.remove('hidden'); }
 function closeMemberModal() { document.getElementById('memberModal').classList.add('hidden'); }
 
 function viewMemberDetail(memberId) {
@@ -1407,7 +1408,7 @@ async function openReceiptPreview(receiptObj) {
   await renderReceiptToCanvas(receiptObj, canvas);
   try { currentReceiptBlob = await renderReceiptToBlob(receiptObj); } catch (err) { console.warn('Pre-generation failed:', err); currentReceiptBlob = null; }
 }
-function resetCopyButton() { const btn = document.getElementById('copyReceiptImageBtn'); const icon = document.getElementById('copyBtnIcon'); const text = document.getElementById('copyBtnText'); btn.classList.remove('copied'); icon.textContent = '📋'; text.textContent = 'Copy Receipt Image'; }
+function resetCopyButton() { const btn = document.getElementById('copyReceiptImageBtn'); const icon = document.getElementById('copyBtnIcon'); const text = document.getElementById('copyBtnText'); btn.classList.remove('copied'); icon.textContent = ''; text.textContent = 'Copy Receipt Image'; }
 function updateWorkflowStep(step) { const s1 = document.getElementById('step1'); const s2 = document.getElementById('step2'); const s3 = document.getElementById('step3'); s1.classList.remove('active'); s2.classList.remove('active'); s3.classList.remove('active'); if (step >= 1) s1.classList.add('active'); if (step >= 2) s2.classList.add('active'); if (step >= 3) s3.classList.add('active'); }
 function closeReceiptModal() { document.getElementById('receiptModal').classList.add('hidden'); document.body.style.overflow = ''; currentReceipt = null; currentReceiptBlob = null; }
 
@@ -1434,7 +1435,7 @@ async function copyReceiptImageToClipboard() {
     btn.classList.add('copied'); icon.textContent = '✅'; text.textContent = 'Receipt image copied!'; updateWorkflowStep(1);
     showToast('✓ Receipt image copied!', 'success');
     setTimeout(() => { if (currentReceipt) resetCopyButton(); }, 3000);
-  } catch (err) { console.error('Copy failed:', err); if (err && err.name === 'NotAllowedError') { showToast('⚠️ Permission denied. Please allow clipboard access.', 'warn'); } else { showToast('⚠️ Your browser does not support image copying. Please download the receipt instead.', 'warn'); } }
+  } catch (err) { console.error('Copy failed:', err); if (err && err.name === 'NotAllowedError') { showToast('⚠️ Permission denied. Please allow clipboard access.', 'warn'); } else { showToast('️ Your browser does not support image copying. Please download the receipt instead.', 'warn'); } }
 }
 
 function openWhatsAppForCurrentReceipt() { if (!currentReceipt) return; if (!currentReceipt.mobile) { showToast('⚠️ This receipt has no WhatsApp number.', 'warn'); return; } const waNumber = formatWhatsAppNumber(currentReceipt.mobile); if (!waNumber) { showToast('⚠️ Please enter a valid WhatsApp number first.', 'warn'); return; } updateWorkflowStep(2); const waUrl = `https://wa.me/${waNumber}`; window.open(waUrl, '_blank'); showToast(`💬 Opening ${currentReceipt.donorName}'s WhatsApp chat. Paste the copied receipt image there.`, 'info'); }
