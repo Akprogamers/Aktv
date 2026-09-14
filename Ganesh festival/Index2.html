@@ -133,9 +133,9 @@
                 <th class="p-2.5">पावती क्र.</th>
                 <th class="p-2.5">नाव</th>
                 <th class="p-2.5">अक्षरी रक्कम</th>
-                <th class="p-2.5">WhatsApp क्र.</th>
+                <th class="p-2.5">मोबाईल क्र.</th>
                 <th class="p-2.5 text-right">रक्कम</th>
-                <th class="p-2.5 text-center">पावती / कृती</th>
+                <th id="thDonationAction" class="p-2.5 text-center">कृती</th>
               </tr>
             </thead>
             <tbody id="donationList" class="divide-y divide-slate-100"></tbody>
@@ -192,11 +192,11 @@
               <tr class="bg-slate-100 text-slate-600 border-b">
                 <th class="p-2.5">सदस्य पावती क्र.</th>
                 <th class="p-2.5">सदस्य नाव</th>
-                <th class="p-2.5">मोबाईल</th>
+                <th class="p-2.5">मोबाईल क्र.</th>
                 <th class="p-2.5 text-right">कबूली</th>
                 <th class="p-2.5 text-right">जमा</th>
                 <th class="p-2.5 text-right">बाकी</th>
-                <th class="p-2.5 text-center">पावती / कृती</th>
+                <th id="thMemberAction" class="p-2.5 text-center">कृती</th>
               </tr>
             </thead>
             <tbody id="memberList" class="divide-y divide-slate-100"></tbody>
@@ -252,7 +252,7 @@
                 <th class="p-2.5">तपशील</th>
                 <th class="p-2.5">वर्गवारी</th>
                 <th class="p-2.5 text-right">रक्कम</th>
-                <th class="p-2.5 text-center">कृती</th>
+                <th id="thExpenseAction" class="p-2.5 text-center">कृती</th>
               </tr>
             </thead>
             <tbody id="expenseList" class="divide-y divide-slate-100"></tbody>
@@ -275,7 +275,7 @@
         </button>
       </div>
       <p class="text-xs text-slate-500 leading-relaxed">
-        पावती नोंदवणे आणि हिशोब एडिट करण्यासाठी पासवर्ड टाका (वापर न केल्यास किंवा १५ मिनिटांपेक्षा जास्त बाहेर राहिल्यास आपोआप लॉगआउट होईल):
+        पावती नोंदवणे आणि हिशोब एडिट करण्यासाठी पासवर्ड टाका (१५ मिनिटे इनअ‍ॅक्टिव्ह राहिल्यास आपोआप लॉगआउट होईल):
       </p>
       <div>
         <label class="text-xs font-semibold text-slate-600">पासवर्ड (डिफ़ॉल्ट: 1234)</label>
@@ -485,7 +485,7 @@
     </div>
   </div>
 
-  <!-- RECEIPT MODAL -->
+  <!-- RECEIPT MODAL (ONLY ACCESSIBLE BY ADMIN) -->
   <div id="receiptModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3">
     <div class="bg-white rounded-3xl max-w-xl w-full p-4 md:p-5 shadow-2xl relative space-y-4 max-h-[95vh] flex flex-col">
       <div class="flex justify-between items-center border-b pb-2">
@@ -640,16 +640,25 @@
       }
     }
 
-    // =========================================================================
+    // PHONE MASKING LOGIC (Starts with 2 digits, rest hidden, ends with 1 digit)
+    function formatMaskedPhone(phoneStr) {
+      if (!phoneStr) return "-";
+      const clean = phoneStr.toString().replace(/\D/g, "");
+      if (clean.length < 5) return clean; // Too short to mask properly
+
+      const start = clean.slice(0, 2);
+      const end = clean.slice(-1);
+      const maskedLength = clean.length - 3;
+      const stars = "*".repeat(maskedLength);
+      return `${start}${stars}${end}`;
+    }
+
     // STORAGE & INDEXED-DB PERSISTENCE ENGINE
-    // =========================================================================
     const MASTER_STORAGE_KEY = "GANESH_UTSAV_MASTER_STORAGE";
     const IDB_NAME = "GaneshAppDB";
     const IDB_STORE = "receiptTemplateStore";
 
     let currentAppMode = 'viewer';
-
-    // 15-Minute Session Limit Configuration (in milliseconds)
     const SESSION_TIMEOUT_MS = 15 * 60 * 1000; // 15 Minutes
     let sessionIntervalTimer = null;
 
@@ -715,7 +724,6 @@
 
     let activeReceiptData = null;
 
-    // INTELLIGENT DATA LOADER
     async function loadData() {
       let saved = localStorage.getItem(MASTER_STORAGE_KEY);
 
@@ -767,7 +775,6 @@
         appData.adminPassword = "1234";
       }
 
-      // Check 15-Minute Session Validity
       checkSessionValidity();
 
       renderCategoryDropdown();
@@ -776,7 +783,6 @@
       renderAll();
       updateNextReceiptNumber();
 
-      // Listen to continuous user activity to automatically refresh the 15-minute window
       setupActivityListeners();
     }
 
@@ -798,9 +804,7 @@
       updateNextReceiptNumber();
     }
 
-    // =========================================================================
     // 15-MINUTE SMART ROLLING INACTIVITY TIMEOUT ENGINE
-    // =========================================================================
     function checkSessionValidity() {
       const lastActive = localStorage.getItem("admin_last_active_time");
       const role = localStorage.getItem("app_persistent_role");
@@ -808,12 +812,10 @@
       if (role === 'admin' && lastActive) {
         const timePassed = Date.now() - parseInt(lastActive, 10);
         if (timePassed < SESSION_TIMEOUT_MS) {
-          // Within 15 minutes! Keep user logged in and update timestamp
           currentAppMode = 'admin';
           touchActivity();
           startSessionTimerLoop();
         } else {
-          // Exceeded 15 minutes! Safe Auto-logout
           currentAppMode = 'viewer';
           localStorage.removeItem("app_persistent_role");
           localStorage.removeItem("admin_last_active_time");
@@ -830,7 +832,6 @@
     }
 
     function setupActivityListeners() {
-      // Any user gesture resets the 15-minute rolling countdown
       const events = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart'];
       events.forEach(evt => {
         window.addEventListener(evt, () => {
@@ -858,7 +859,6 @@
         const remaining = SESSION_TIMEOUT_MS - timePassed;
 
         if (remaining <= 0) {
-          // Time expired! Auto logout
           clearInterval(sessionIntervalTimer);
           timerBadge.classList.add("hidden");
           currentAppMode = 'viewer';
@@ -867,7 +867,6 @@
           applyViewRoleMode();
           alert("सुरक्षेसाठी: १५ मिनिटे कोणताही वापर न झाल्यामुळे ॲडमिन मोड आपोआप लॉगआउट झाला आहे.");
         } else {
-          // Display MM:SS
           const totalSec = Math.floor(remaining / 1000);
           const mins = Math.floor(totalSec / 60);
           const secs = totalSec % 60;
@@ -876,7 +875,7 @@
       }, 1000);
     }
 
-    // ROLE MANAGEMENT
+    // ROLE MANAGEMENT (CONTROLS FORM, BUTTONS & MASKING)
     function applyViewRoleMode() {
       const badge = document.getElementById("roleIndicatorBadge");
       const btnLogin = document.getElementById("btnLoginAction");
@@ -887,6 +886,10 @@
       const donationFormCard = document.getElementById("adminDonationFormCard");
       const memberFormCard = document.getElementById("adminMemberFormCard");
       const expenseFormCard = document.getElementById("adminExpenseFormCard");
+
+      const thDonationAction = document.getElementById("thDonationAction");
+      const thMemberAction = document.getElementById("thMemberAction");
+      const thExpenseAction = document.getElementById("thExpenseAction");
 
       if (currentAppMode === 'admin') {
         badge.innerText = "व्यवस्थापक मोड (Admin)";
@@ -899,6 +902,11 @@
         donationFormCard.classList.remove("hidden");
         memberFormCard.classList.remove("hidden");
         expenseFormCard.classList.remove("hidden");
+
+        thDonationAction.classList.remove("hidden");
+        thMemberAction.classList.remove("hidden");
+        thExpenseAction.classList.remove("hidden");
+
         startSessionTimerLoop();
       } else {
         badge.innerText = "पब्लिक व्ह्यूवर मोड (Viewer Mode)";
@@ -912,6 +920,11 @@
         donationFormCard.classList.add("hidden");
         memberFormCard.classList.add("hidden");
         expenseFormCard.classList.add("hidden");
+
+        // In viewer mode, completely hide the entire Action column header since receipts & deletes are blocked
+        thDonationAction.classList.add("hidden");
+        thMemberAction.classList.add("hidden");
+        thExpenseAction.classList.add("hidden");
       }
 
       renderAll();
@@ -935,7 +948,7 @@
         touchActivity();
         closeLoginModal();
         applyViewRoleMode();
-        alert("व्यवस्थापक (Admin) लॉगिन यशस्वी! तुम्ही १५ मिनिटे ॲक्टिव्ह न राहिल्यास किंवा ॲप १५ मिनिटांपेक्षा जास्त बंद ठेवल्यास सुरक्षिततेसाठी आपोआप लॉगआउट होईल.");
+        alert("व्यवस्थापक (Admin) लॉगिन यशस्वी!");
       } else {
         alert("चुकीचा पासवर्ड! कृपया योग्य पासवर्ड प्रविष्ट करा.");
         document.getElementById("adminPasswordInput").value = "";
@@ -1003,7 +1016,7 @@
 
       appData.adminPassword = newPass;
       await saveData();
-      touchActivity(); // Reset 15-min window
+      touchActivity();
       closeChangePasswordModal();
       alert("अभिनंदन! व्यवस्थापक पासवर्ड यशस्वीरीत्या बदलण्यात आला आहे.");
     }
@@ -1081,6 +1094,7 @@
       }
     }
 
+    // ISOLATED SERIAL COUNTERS
     function generateNextReceiptNumber(isMember = false) {
       const prefix = isMember ? "GF2026-M" : "GF2026-";
       let maxNum = 0;
@@ -1337,7 +1351,7 @@
       }
     }
 
-    // RENDER LISTS
+    // RENDER LISTS: SECURED WITH CONDITIONAL ACTIONS & MASKED PHONE NUMBERS
     function renderAll() {
       const donTotal = appData.donations.reduce((sum, d) => sum + Number(d.amount), 0);
       const memPaidTotal = appData.members.reduce((sum, m) => sum + Number(m.paid), 0);
@@ -1357,47 +1371,53 @@
 
       // Donations Table
       document.getElementById("donCount").innerText = `एकूण: ${appData.donations.length}`;
-      document.getElementById("donationList").innerHTML = appData.donations.map(d => `
+      document.getElementById("donationList").innerHTML = appData.donations.map(d => {
+        // Display full phone for admin, masked phone (e.g. 98******10) for viewer
+        const phoneDisplay = isAdmin ? (d.mobile || '-') : formatMaskedPhone(d.mobile);
+
+        return `
         <tr class="hover:bg-amber-50/50">
           <td class="p-2.5 font-bold text-orange-700">${d.receipt}</td>
           <td class="p-2.5 font-semibold text-slate-800">${d.name}</td>
           <td class="p-2.5 text-slate-600">${d.amountWords || numberToMarathiWords(d.amount)}</td>
-          <td class="p-2.5 text-slate-600">${d.mobile || '-'}</td>
+          <td class="p-2.5 text-slate-600 font-mono">${phoneDisplay}</td>
           <td class="p-2.5 text-right font-bold text-emerald-700">₹${Number(d.amount).toLocaleString("en-IN")}</td>
-          <td class="p-2.5 text-center space-x-1 whitespace-nowrap">
-            <button onclick="openReceiptModal(${d.id}, false)" class="bg-orange-100 hover:bg-orange-200 text-orange-700 px-2.5 py-1 rounded-lg text-xs font-medium">
-              <i class="fa-solid fa-receipt"></i> पावती
-            </button>
-            ${isAdmin ? `
+          ${isAdmin ? `
+            <td class="p-2.5 text-center space-x-1 whitespace-nowrap">
+              <button onclick="openReceiptModal(${d.id}, false)" class="bg-orange-100 hover:bg-orange-200 text-orange-700 px-2.5 py-1 rounded-lg text-xs font-medium">
+                <i class="fa-solid fa-receipt"></i> पावती
+              </button>
               <button onclick="deleteDonation(${d.id})" class="text-rose-500 hover:text-rose-700 px-1.5 py-1 text-xs" title="डिलीट करा">
                 <i class="fa-solid fa-trash"></i>
               </button>
-            ` : ''}
-          </td>
+            </td>
+          ` : ''}
         </tr>
-      `).join("");
+      `}).join("");
 
       // Members Table
       document.getElementById("memCount").innerText = `एकूण: ${appData.members.length}`;
       document.getElementById("memberList").innerHTML = appData.members.map(m => {
         const due = Math.max(0, m.pledged - m.paid);
+        const phoneDisplay = isAdmin ? (m.mobile || '-') : formatMaskedPhone(m.mobile);
+
         return `
         <tr class="hover:bg-amber-50/50">
           <td class="p-2.5 font-bold text-amber-800">${m.receipt}</td>
           <td class="p-2.5 font-semibold text-slate-800">${m.name}</td>
-          <td class="p-2.5 text-slate-600">${m.mobile || '-'}</td>
+          <td class="p-2.5 text-slate-600 font-mono">${phoneDisplay}</td>
           <td class="p-2.5 text-right text-slate-600">₹${Number(m.pledged).toLocaleString("en-IN")}</td>
           <td class="p-2.5 text-right font-bold text-emerald-700">₹${Number(m.paid).toLocaleString("en-IN")}</td>
           <td class="p-2.5 text-right font-bold ${due > 0 ? 'text-amber-600' : 'text-slate-400'}">₹${due.toLocaleString("en-IN")}</td>
-          <td class="p-2.5 text-center space-x-1 whitespace-nowrap">
-            <button onclick="openReceiptModal(${m.id}, true)" class="bg-orange-100 hover:bg-orange-200 text-orange-700 px-2.5 py-1 rounded-lg text-xs font-medium">
-              <i class="fa-solid fa-receipt"></i> पावती
-            </button>
-            ${isAdmin ? `
+          ${isAdmin ? `
+            <td class="p-2.5 text-center space-x-1 whitespace-nowrap">
+              <button onclick="openReceiptModal(${m.id}, true)" class="bg-orange-100 hover:bg-orange-200 text-orange-700 px-2.5 py-1 rounded-lg text-xs font-medium">
+                <i class="fa-solid fa-receipt"></i> पावती
+              </button>
               <button onclick="addPaymentToMember(${m.id})" class="bg-amber-100 hover:bg-amber-200 text-amber-800 text-xs px-2 py-1 rounded-lg"><i class="fa-solid fa-plus"></i> जमा</button>
               <button onclick="deleteMember(${m.id})" class="text-rose-500 hover:text-rose-700 text-xs px-1.5 py-1"><i class="fa-solid fa-trash"></i></button>
-            ` : ''}
-          </td>
+            </td>
+          ` : ''}
         </tr>
       `}).join("");
 
@@ -1409,11 +1429,11 @@
           <td class="p-2.5 font-semibold text-slate-800">${x.title}</td>
           <td class="p-2.5 text-slate-600"><span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-xs">${x.category}</span></td>
           <td class="p-2.5 text-right font-bold text-rose-600">₹${Number(x.amount).toLocaleString("en-IN")}</td>
-          <td class="p-2.5 text-center">
-            ${isAdmin ? `
+          ${isAdmin ? `
+            <td class="p-2.5 text-center">
               <button onclick="deleteExpense(${x.id})" class="text-rose-500 hover:text-rose-700 text-xs px-2 py-1"><i class="fa-solid fa-trash"></i></button>
-            ` : `<span class="text-xs text-slate-400 font-mono">--</span>`}
-          </td>
+            </td>
+          ` : ''}
         </tr>
       `).join("");
     }
@@ -1601,6 +1621,12 @@
     }
 
     function openReceiptModal(id, isMember = false) {
+      // Security Check: Only Admin can open receipts
+      if (currentAppMode !== 'admin') {
+        alert("पावती पाहण्याचा अधिकार फक्त व्यवस्थापकांकडे (Admin) आहे!");
+        return;
+      }
+
       const data = isMember ? appData.members.find(m => m.id === id) : appData.donations.find(d => d.id === id);
       if (!data) return;
       
