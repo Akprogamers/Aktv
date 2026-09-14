@@ -15,12 +15,30 @@
     <div class="max-w-6xl mx-auto flex justify-between items-center">
       <div class="flex items-center space-x-2.5">
         <i class="fa-solid fa-om text-2xl text-yellow-300"></i>
-        <h1 class="text-lg md:text-xl font-bold tracking-wide">गणेशोत्सव व्यवस्थापक २०२६</h1>
+        <div>
+          <h1 class="text-lg md:text-xl font-bold tracking-wide leading-tight">गणेशोत्सव व्यवस्थापक २०२६</h1>
+          <div class="flex items-center gap-1.5 mt-0.5">
+            <span id="roleIndicatorBadge" class="text-[10px] bg-black/25 px-2 py-0.5 rounded-full font-medium tracking-wide uppercase">पब्लिक व्ह्यूवर मोड (Viewer Mode)</span>
+            <span id="sessionTimerBadge" class="hidden text-[10px] bg-emerald-900/60 text-emerald-200 px-2 py-0.5 rounded-full font-mono flex items-center gap-1">
+              <i class="fa-regular fa-clock"></i> <span id="sessionTimeRemaining">15:00</span>
+            </span>
+          </div>
+        </div>
       </div>
       
-      <button onclick="openMainSettingsDrawer()" class="bg-white/15 hover:bg-white/25 active:scale-95 text-white w-9 h-9 rounded-full flex items-center justify-center shadow transition" title="सेटिंग्ज व बॅकअप">
-        <i class="fa-solid fa-gear text-lg"></i>
-      </button>
+      <!-- Right Action Controls -->
+      <div class="flex items-center gap-2">
+        <button id="btnLoginAction" onclick="openLoginModal()" class="bg-white text-orange-700 hover:bg-orange-50 active:scale-95 text-xs font-bold px-3 py-2 rounded-xl shadow transition flex items-center gap-1.5">
+          <i class="fa-solid fa-lock"></i> व्यवस्थापक लॉगिन
+        </button>
+
+        <button id="btnSettingsAction" onclick="openMainSettingsDrawer()" class="hidden bg-white/15 hover:bg-white/25 active:scale-95 text-white w-9 h-9 rounded-full flex items-center justify-center shadow transition" title="सेटिंग्ज व बॅकअप">
+          <i class="fa-solid fa-gear text-lg"></i>
+        </button>
+        <button id="btnLogoutAction" onclick="adminLogout()" class="hidden bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-3 py-2 rounded-xl shadow transition flex items-center gap-1.5" title="लॉगआउट करा">
+          <i class="fa-solid fa-right-from-bracket"></i> लॉगआउट
+        </button>
+      </div>
     </div>
   </header>
 
@@ -61,10 +79,10 @@
 
     <!-- TAB 1: DONATIONS -->
     <section id="tab-donations" class="tab-content space-y-4">
-      <div class="bg-white p-4 md:p-5 rounded-2xl shadow-sm border border-orange-100 space-y-4">
+      <div id="adminDonationFormCard" class="hidden bg-white p-4 md:p-5 rounded-2xl shadow-sm border border-orange-100 space-y-4">
         <div class="flex justify-between items-center border-b pb-2.5">
           <h2 class="text-sm md:text-base font-bold text-slate-700 flex items-center gap-2">
-            <i class="fa-solid fa-plus-circle text-orange-500"></i> नवीन वर्गणी नोंदवा
+            <i class="fa-solid fa-plus-circle text-orange-500"></i> नवीन वर्गणी नोंदवा (Admin Entry)
           </h2>
           <button onclick="openCustomFieldManager()" class="bg-amber-100 hover:bg-amber-200 text-amber-800 text-xs px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition">
             <i class="fa-solid fa-sliders"></i> पावतीत नवीन कॉलम जोडा / काढा
@@ -128,10 +146,16 @@
 
     <!-- TAB 2: MEMBERS -->
     <section id="tab-members" class="tab-content hidden space-y-4">
-      <div class="bg-white p-4 md:p-5 rounded-2xl shadow-sm border border-orange-100">
-        <h2 class="text-sm md:text-base font-bold text-slate-700 mb-3 flex items-center gap-2">
-          <i class="fa-solid fa-user-plus text-orange-500"></i> नवीन सदस्य नोंदवा
-        </h2>
+      <div id="adminMemberFormCard" class="hidden bg-white p-4 md:p-5 rounded-2xl shadow-sm border border-orange-100">
+        <div class="flex flex-wrap justify-between items-center gap-2 mb-3">
+          <h2 class="text-sm md:text-base font-bold text-slate-700 flex items-center gap-2">
+            <i class="fa-solid fa-user-plus text-orange-500"></i> नवीन सदस्य नोंदवा (Admin Entry)
+          </h2>
+          <button onclick="openBulkReminderModal()" class="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow-md flex items-center gap-1.5 transition">
+            <i class="fa-brands fa-whatsapp text-sm"></i> सर्व मेंबर्सना एकदम रिमाइंडर पाठवा
+          </button>
+        </div>
+
         <form id="memberForm" onsubmit="addMember(event)" class="grid grid-cols-1 md:grid-cols-4 gap-3.5">
           <div>
             <label class="text-xs font-semibold text-slate-600">सदस्याचे नाव</label>
@@ -183,9 +207,9 @@
 
     <!-- TAB 3: EXPENSES -->
     <section id="tab-expenses" class="tab-content hidden space-y-4">
-      <div class="bg-white p-4 md:p-5 rounded-2xl shadow-sm border border-orange-100">
+      <div id="adminExpenseFormCard" class="hidden bg-white p-4 md:p-5 rounded-2xl shadow-sm border border-orange-100">
         <h2 class="text-sm md:text-base font-bold text-slate-700 mb-3 flex items-center gap-2">
-          <i class="fa-solid fa-money-bill-transfer text-orange-500"></i> खर्चाची नोंद करा
+          <i class="fa-solid fa-money-bill-transfer text-orange-500"></i> खर्चाची नोंद करा (Admin Entry)
         </h2>
         <form id="expenseForm" onsubmit="addExpense(event)" class="grid grid-cols-1 md:grid-cols-4 gap-3.5">
           <div>
@@ -217,7 +241,7 @@
 
       <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
         <div class="p-3.5 bg-slate-50 border-b flex justify-between items-center">
-          <h3 class="font-bold text-slate-700 text-sm">खर्च यादी</h3>
+          <h3 class="font-bold text-slate-700 text-sm">खर्च यादी (हिशोब तपशील)</h3>
           <span id="expCount" class="text-xs text-slate-500 font-medium">एकूण: 0</span>
         </div>
         <div class="overflow-x-auto max-h-96">
@@ -238,6 +262,134 @@
     </section>
 
   </main>
+
+  <!-- ADMIN LOGIN MODAL -->
+  <div id="loginModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl relative space-y-4">
+      <div class="flex justify-between items-center border-b pb-2">
+        <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
+          <i class="fa-solid fa-user-shield text-orange-600"></i> व्यवस्थापक लॉगिन (Admin)
+        </h3>
+        <button onclick="closeLoginModal()" class="text-slate-400 hover:text-slate-700 text-lg">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <p class="text-xs text-slate-500 leading-relaxed">
+        पावती नोंदवणे आणि हिशोब एडिट करण्यासाठी पासवर्ड टाका (वापर न केल्यास किंवा १५ मिनिटांपेक्षा जास्त बाहेर राहिल्यास आपोआप लॉगआउट होईल):
+      </p>
+      <div>
+        <label class="text-xs font-semibold text-slate-600">पासवर्ड (डिफ़ॉल्ट: 1234)</label>
+        <div class="relative mt-1">
+          <input type="password" id="adminPasswordInput" placeholder="पासवर्ड प्रविष्ट करा" class="w-full border rounded-xl p-2.5 pr-10 text-sm outline-none focus:ring-2 focus:ring-orange-500" onkeydown="if(event.key==='Enter') executeAdminLogin()" />
+          <button type="button" onclick="togglePasswordVisibility('adminPasswordInput', this)" class="absolute right-3 top-3 text-slate-400 hover:text-slate-600">
+            <i class="fa-solid fa-eye"></i>
+          </button>
+        </div>
+      </div>
+      <div class="pt-2 flex justify-end gap-2">
+        <button onclick="closeLoginModal()" class="bg-gray-100 hover:bg-gray-200 text-slate-700 px-4 py-2 rounded-xl text-xs font-medium">रद्द करा</button>
+        <button onclick="executeAdminLogin()" class="bg-orange-600 hover:bg-orange-700 text-white px-5 py-2 rounded-xl text-xs font-bold shadow">लॉगिन करा</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHANGE ADMIN PASSWORD MODAL -->
+  <div id="changePasswordModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl relative space-y-4">
+      <div class="flex justify-between items-center border-b pb-2">
+        <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
+          <i class="fa-solid fa-key text-purple-600"></i> व्यवस्थापक पासवर्ड बदला
+        </h3>
+        <button onclick="closeChangePasswordModal()" class="text-slate-400 hover:text-slate-700 text-lg">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form id="changePasswordForm" onsubmit="executeChangePassword(event)" class="space-y-3">
+        <div>
+          <label class="text-xs font-semibold text-slate-600">सध्याचा चालू पासवर्ड (कन्फर्मेशन)</label>
+          <div class="relative mt-1">
+            <input type="password" id="oldAdminPassword" required placeholder="चालू पासवर्ड टाका" class="w-full border rounded-xl p-2.5 pr-10 text-sm outline-none focus:ring-2 focus:ring-purple-500" />
+            <button type="button" onclick="togglePasswordVisibility('oldAdminPassword', this)" class="absolute right-3 top-3 text-slate-400 hover:text-slate-600">
+              <i class="fa-solid fa-eye"></i>
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label class="text-xs font-semibold text-slate-600">नवीन पासवर्ड (किमान ४ अक्षरे)</label>
+          <div class="relative mt-1">
+            <input type="password" id="newAdminPassword" required minlength="4" placeholder="नवीन पासवर्ड" class="w-full border rounded-xl p-2.5 pr-10 text-sm outline-none focus:ring-2 focus:ring-purple-500" />
+            <button type="button" onclick="togglePasswordVisibility('newAdminPassword', this)" class="absolute right-3 top-3 text-slate-400 hover:text-slate-600">
+              <i class="fa-solid fa-eye"></i>
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label class="text-xs font-semibold text-slate-600">नवीन पासवर्ड पुन्हा प्रविष्ट करा</label>
+          <div class="relative mt-1">
+            <input type="password" id="confirmAdminPassword" required minlength="4" placeholder="पुन्हा नवीन पासवर्ड" class="w-full border rounded-xl p-2.5 pr-10 text-sm outline-none focus:ring-2 focus:ring-purple-500" />
+            <button type="button" onclick="togglePasswordVisibility('confirmAdminPassword', this)" class="absolute right-3 top-3 text-slate-400 hover:text-slate-600">
+              <i class="fa-solid fa-eye"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="pt-2 flex justify-end gap-2">
+          <button type="button" onclick="closeChangePasswordModal()" class="bg-gray-100 hover:bg-gray-200 text-slate-700 px-4 py-2 rounded-xl text-xs font-medium">रद्द करा</button>
+          <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white px-5 py-2 rounded-xl text-xs font-bold shadow">पासवर्ड अपडेट करा</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- BULK REMINDER HUB MODAL -->
+  <div id="bulkReminderModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3">
+    <div class="bg-white rounded-3xl max-w-xl w-full p-5 shadow-2xl relative space-y-4 max-h-[92vh] flex flex-col">
+      <div class="flex justify-between items-center border-b pb-3">
+        <div class="flex items-center gap-2">
+          <div class="w-9 h-9 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
+            <i class="fa-brands fa-whatsapp text-lg"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-slate-800 text-base">सर्व मेंबर्सना बाकी वर्गणी रिमाइंडर</h3>
+            <p class="text-[11px] text-slate-400">ज्यांची रक्कम बाकी आहे त्यांची यादी</p>
+          </div>
+        </div>
+        <button onclick="closeBulkReminderModal()" class="text-slate-400 hover:text-slate-700 text-lg w-8 h-8 rounded-full flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-2xl p-3.5 space-y-2">
+        <div class="flex justify-between items-center">
+          <span class="font-bold text-emerald-950 text-xs flex items-center gap-1.5">
+            <i class="fa-solid fa-users text-emerald-600"></i> पर्याय १: मंडळाच्या WhatsApp ग्रुपमध्ये पाठवण्यासाठी
+          </span>
+          <button onclick="copyGroupReminderMessage()" id="btnCopyGroupRem" class="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs px-3 py-1.5 rounded-lg shadow transition flex items-center gap-1">
+            <i class="fa-regular fa-copy"></i> संपूर्ण मेसेज कॉपी करा
+          </button>
+        </div>
+        <p class="text-[11px] text-emerald-800 leading-relaxed">
+          हा मेसेज कॉपी करून तुम्ही मंडळाच्या ग्रुपवर किंवा ब्रॉडकास्टवर एका क्लिकमध्ये पाठवू शकता. यात सर्व सदस्यांची नावे आणि त्यांची येणे बाकी रक्कम एकाच मेसेजमध्ये तयार होईल.
+        </p>
+      </div>
+
+      <div class="flex-1 overflow-hidden flex flex-col space-y-2">
+        <div class="flex justify-between items-center text-xs text-slate-500 font-medium px-1">
+          <span>पर्याय २: प्रत्येकाला वैयक्तिक WhatsApp चॅटवर पाठवा:</span>
+          <span id="bulkDueCount" class="font-bold text-amber-600">0 मेंबर्स बाकी</span>
+        </div>
+
+        <div class="flex-1 overflow-y-auto border rounded-2xl p-2 space-y-2 bg-slate-50 divide-y divide-slate-100" id="bulkMemberListContainer"></div>
+      </div>
+
+      <div class="flex justify-end pt-1 border-t">
+        <button onclick="closeBulkReminderModal()" class="bg-slate-800 text-white px-5 py-2 rounded-xl text-xs font-bold">पूर्ण झाले / बंद करा</button>
+      </div>
+    </div>
+  </div>
 
   <!-- ALL-IN-ONE SETTINGS DRAWER -->
   <div id="mainSettingsModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3">
@@ -293,6 +445,19 @@
             <div class="text-left">
               <span class="font-bold text-slate-800 block text-xs md:text-sm">Excel फाईल डाउनलोड (.xlsx)</span>
               <span class="text-[11px] text-slate-500">वर्गणी, मेंबर्स व खर्चाचा पूर्ण हिशोब</span>
+            </div>
+          </div>
+          <i class="fa-solid fa-chevron-right text-slate-400 group-hover:translate-x-0.5 transition"></i>
+        </button>
+
+        <button onclick="openChangePasswordModal()" class="w-full p-3 bg-purple-50/80 hover:bg-purple-100/80 border border-purple-200 rounded-2xl flex items-center justify-between transition group">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-purple-500/10 text-purple-700 flex items-center justify-center text-base">
+              <i class="fa-solid fa-key"></i>
+            </div>
+            <div class="text-left">
+              <span class="font-bold text-slate-800 block text-xs md:text-sm">व्यवस्थापक पासवर्ड एडिट / बदला</span>
+              <span class="text-[11px] text-slate-500">चालू पासवर्ड टाकून नवीन पासवर्ड सेट करा</span>
             </div>
           </div>
           <i class="fa-solid fa-chevron-right text-slate-400 group-hover:translate-x-0.5 transition"></i>
@@ -389,7 +554,7 @@
     </div>
   </div>
 
-  <!-- SETTINGS MODAL (SLIDERS FOR ALL TEXT POSITIONS & SIZES) -->
+  <!-- SETTINGS MODAL -->
   <div id="settingsModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-2 md:p-4">
     <div class="bg-white rounded-3xl max-w-6xl w-full p-4 md:p-5 shadow-2xl relative space-y-3 max-h-[96vh] flex flex-col">
       <div class="flex justify-between items-center border-b pb-2">
@@ -476,11 +641,17 @@
     }
 
     // =========================================================================
-    // PERMANENT STORAGE ENGINE (INDEXED-DB + LOCALSTORAGE RESILIENT SYNC)
+    // STORAGE & INDEXED-DB PERSISTENCE ENGINE
     // =========================================================================
     const MASTER_STORAGE_KEY = "GANESH_UTSAV_MASTER_STORAGE";
     const IDB_NAME = "GaneshAppDB";
     const IDB_STORE = "receiptTemplateStore";
+
+    let currentAppMode = 'viewer';
+
+    // 15-Minute Session Limit Configuration (in milliseconds)
+    const SESSION_TIMEOUT_MS = 15 * 60 * 1000; // 15 Minutes
+    let sessionIntervalTimer = null;
 
     function getIDB() {
       return new Promise((resolve, reject) => {
@@ -538,7 +709,8 @@
       customFields: [],
       receiptConfig: JSON.parse(JSON.stringify(DEFAULT_CONFIG)),
       customConfigs: {},
-      expenseCategories: ["मंडप & डेकोरेशन", "साउंड & लाईट", "प्रसाद & जेवण", "पूजा & विसर्जन", "गणपती मूर्ती"]
+      expenseCategories: ["मंडप & डेकोरेशन", "साउंड & लाईट", "प्रसाद & जेवण", "पूजा & विसर्जन", "गणपती मूर्ती"],
+      adminPassword: "1234"
     };
 
     let activeReceiptData = null;
@@ -591,11 +763,21 @@
       if (!appData.expenseCategories || appData.expenseCategories.length === 0) {
         appData.expenseCategories = ["मंडप & डेकोरेशन", "साउंड & लाईट", "प्रसाद & जेवण", "पूजा & विसर्जन", "गणपती मूर्ती"];
       }
+      if (!appData.adminPassword) {
+        appData.adminPassword = "1234";
+      }
+
+      // Check 15-Minute Session Validity
+      checkSessionValidity();
 
       renderCategoryDropdown();
       renderDynamicFormFields();
+      applyViewRoleMode();
       renderAll();
       updateNextReceiptNumber();
+
+      // Listen to continuous user activity to automatically refresh the 15-minute window
+      setupActivityListeners();
     }
 
     async function saveData() {
@@ -614,6 +796,216 @@
       renderDynamicFormFields();
       renderAll();
       updateNextReceiptNumber();
+    }
+
+    // =========================================================================
+    // 15-MINUTE SMART ROLLING INACTIVITY TIMEOUT ENGINE
+    // =========================================================================
+    function checkSessionValidity() {
+      const lastActive = localStorage.getItem("admin_last_active_time");
+      const role = localStorage.getItem("app_persistent_role");
+
+      if (role === 'admin' && lastActive) {
+        const timePassed = Date.now() - parseInt(lastActive, 10);
+        if (timePassed < SESSION_TIMEOUT_MS) {
+          // Within 15 minutes! Keep user logged in and update timestamp
+          currentAppMode = 'admin';
+          touchActivity();
+          startSessionTimerLoop();
+        } else {
+          // Exceeded 15 minutes! Safe Auto-logout
+          currentAppMode = 'viewer';
+          localStorage.removeItem("app_persistent_role");
+          localStorage.removeItem("admin_last_active_time");
+        }
+      } else {
+        currentAppMode = 'viewer';
+      }
+    }
+
+    function touchActivity() {
+      if (currentAppMode === 'admin') {
+        localStorage.setItem("admin_last_active_time", Date.now().toString());
+      }
+    }
+
+    function setupActivityListeners() {
+      // Any user gesture resets the 15-minute rolling countdown
+      const events = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart'];
+      events.forEach(evt => {
+        window.addEventListener(evt, () => {
+          if (currentAppMode === 'admin') touchActivity();
+        }, { passive: true });
+      });
+    }
+
+    function startSessionTimerLoop() {
+      if (sessionIntervalTimer) clearInterval(sessionIntervalTimer);
+
+      const timerBadge = document.getElementById("sessionTimerBadge");
+      const timeRemainingEl = document.getElementById("sessionTimeRemaining");
+      timerBadge.classList.remove("hidden");
+
+      sessionIntervalTimer = setInterval(() => {
+        if (currentAppMode !== 'admin') {
+          clearInterval(sessionIntervalTimer);
+          timerBadge.classList.add("hidden");
+          return;
+        }
+
+        const lastActive = parseInt(localStorage.getItem("admin_last_active_time") || "0", 10);
+        const timePassed = Date.now() - lastActive;
+        const remaining = SESSION_TIMEOUT_MS - timePassed;
+
+        if (remaining <= 0) {
+          // Time expired! Auto logout
+          clearInterval(sessionIntervalTimer);
+          timerBadge.classList.add("hidden");
+          currentAppMode = 'viewer';
+          localStorage.removeItem("app_persistent_role");
+          localStorage.removeItem("admin_last_active_time");
+          applyViewRoleMode();
+          alert("सुरक्षेसाठी: १५ मिनिटे कोणताही वापर न झाल्यामुळे ॲडमिन मोड आपोआप लॉगआउट झाला आहे.");
+        } else {
+          // Display MM:SS
+          const totalSec = Math.floor(remaining / 1000);
+          const mins = Math.floor(totalSec / 60);
+          const secs = totalSec % 60;
+          timeRemainingEl.innerText = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+        }
+      }, 1000);
+    }
+
+    // ROLE MANAGEMENT
+    function applyViewRoleMode() {
+      const badge = document.getElementById("roleIndicatorBadge");
+      const btnLogin = document.getElementById("btnLoginAction");
+      const btnSettings = document.getElementById("btnSettingsAction");
+      const btnLogout = document.getElementById("btnLogoutAction");
+      const timerBadge = document.getElementById("sessionTimerBadge");
+
+      const donationFormCard = document.getElementById("adminDonationFormCard");
+      const memberFormCard = document.getElementById("adminMemberFormCard");
+      const expenseFormCard = document.getElementById("adminExpenseFormCard");
+
+      if (currentAppMode === 'admin') {
+        badge.innerText = "व्यवस्थापक मोड (Admin)";
+        badge.className = "text-[10px] bg-emerald-700 px-2 py-0.5 rounded-full font-bold tracking-wide uppercase shadow";
+
+        btnLogin.classList.add("hidden");
+        btnSettings.classList.remove("hidden");
+        btnLogout.classList.remove("hidden");
+
+        donationFormCard.classList.remove("hidden");
+        memberFormCard.classList.remove("hidden");
+        expenseFormCard.classList.remove("hidden");
+        startSessionTimerLoop();
+      } else {
+        badge.innerText = "पब्लिक व्ह्यूवर मोड (Viewer Mode)";
+        badge.className = "text-[10px] bg-black/25 px-2 py-0.5 rounded-full font-medium tracking-wide uppercase";
+
+        btnLogin.classList.remove("hidden");
+        btnSettings.classList.add("hidden");
+        btnLogout.classList.add("hidden");
+        timerBadge.classList.add("hidden");
+
+        donationFormCard.classList.add("hidden");
+        memberFormCard.classList.add("hidden");
+        expenseFormCard.classList.add("hidden");
+      }
+
+      renderAll();
+    }
+
+    function openLoginModal() {
+      document.getElementById("adminPasswordInput").value = "";
+      document.getElementById("loginModal").classList.remove("hidden");
+      setTimeout(() => document.getElementById("adminPasswordInput").focus(), 150);
+    }
+
+    function closeLoginModal() {
+      document.getElementById("loginModal").classList.add("hidden");
+    }
+
+    function executeAdminLogin() {
+      const enteredPass = document.getElementById("adminPasswordInput").value.trim();
+      if (enteredPass === appData.adminPassword) {
+        currentAppMode = 'admin';
+        localStorage.setItem("app_persistent_role", "admin");
+        touchActivity();
+        closeLoginModal();
+        applyViewRoleMode();
+        alert("व्यवस्थापक (Admin) लॉगिन यशस्वी! तुम्ही १५ मिनिटे ॲक्टिव्ह न राहिल्यास किंवा ॲप १५ मिनिटांपेक्षा जास्त बंद ठेवल्यास सुरक्षिततेसाठी आपोआप लॉगआउट होईल.");
+      } else {
+        alert("चुकीचा पासवर्ड! कृपया योग्य पासवर्ड प्रविष्ट करा.");
+        document.getElementById("adminPasswordInput").value = "";
+        document.getElementById("adminPasswordInput").focus();
+      }
+    }
+
+    function adminLogout() {
+      if (confirm("तुम्हाला ॲडमिन मोडमधून लॉगआउट करून पब्लिक व्ह्यूवर मोडवर जायचे आहे का?")) {
+        currentAppMode = 'viewer';
+        localStorage.removeItem("app_persistent_role");
+        localStorage.removeItem("admin_last_active_time");
+        if (sessionIntervalTimer) clearInterval(sessionIntervalTimer);
+        applyViewRoleMode();
+        alert("तुम्ही यशस्वीरीत्या लॉगआउट झाला आहात! आता पुन्हा पब्लिक व्ह्यूवर मोड चालू झाला आहे.");
+      }
+    }
+
+    function togglePasswordVisibility(inputId, btn) {
+      const input = document.getElementById(inputId);
+      const icon = btn.querySelector("i");
+      if (input.type === "password") {
+        input.type = "text";
+        icon.classList.replace("fa-eye", "fa-eye-slash");
+      } else {
+        input.type = "password";
+        icon.classList.replace("fa-eye-slash", "fa-eye");
+      }
+    }
+
+    function openChangePasswordModal() {
+      closeMainSettingsDrawer();
+      document.getElementById("changePasswordForm").reset();
+      document.getElementById("changePasswordModal").classList.remove("hidden");
+      setTimeout(() => document.getElementById("oldAdminPassword").focus(), 150);
+    }
+
+    function closeChangePasswordModal() {
+      document.getElementById("changePasswordModal").classList.add("hidden");
+    }
+
+    async function executeChangePassword(e) {
+      e.preventDefault();
+      const oldPass = document.getElementById("oldAdminPassword").value.trim();
+      const newPass = document.getElementById("newAdminPassword").value.trim();
+      const confirmPass = document.getElementById("confirmAdminPassword").value.trim();
+
+      if (oldPass !== appData.adminPassword) {
+        alert("सध्याचा चालू पासवर्ड चुकीचा आहे!");
+        document.getElementById("oldAdminPassword").focus();
+        return;
+      }
+
+      if (newPass.length < 4) {
+        alert("नवीन पासवर्ड किमान ४ अक्षरांचा किंवा अंकांचा असावा!");
+        document.getElementById("newAdminPassword").focus();
+        return;
+      }
+
+      if (newPass !== confirmPass) {
+        alert("नवीन पासवर्ड आणि कन्फर्म पासवर्ड जुळत नाहीत!");
+        document.getElementById("confirmAdminPassword").focus();
+        return;
+      }
+
+      appData.adminPassword = newPass;
+      await saveData();
+      touchActivity(); // Reset 15-min window
+      closeChangePasswordModal();
+      alert("अभिनंदन! व्यवस्थापक पासवर्ड यशस्वीरीत्या बदलण्यात आला आहे.");
     }
 
     // MAIN SETTINGS DRAWER FUNCTIONS
@@ -689,7 +1081,6 @@
       }
     }
 
-    // ISOLATED SERIAL COUNTERS
     function generateNextReceiptNumber(isMember = false) {
       const prefix = isMember ? "GF2026-M" : "GF2026-";
       let maxNum = 0;
@@ -764,6 +1155,11 @@
     // DONATIONS
     function addDonation(e) {
       e.preventDefault();
+      if (currentAppMode !== 'admin') {
+        alert("केवळ व्यवस्थापक नवीन पावती नोंदवू शकतात!");
+        return;
+      }
+
       const rec = document.getElementById("donReceipt").value;
       const name = document.getElementById("donName").value.trim();
       const amount = parseFloat(document.getElementById("donAmount").value) || 0;
@@ -797,6 +1193,10 @@
     }
 
     function deleteDonation(id) {
+      if (currentAppMode !== 'admin') {
+        alert("केवळ व्यवस्थापक नोंदी डिलीट करू शकतात!");
+        return;
+      }
       if (confirm("ही पावती नोंद काढून टाकायची आहे का?")) {
         appData.donations = appData.donations.filter(d => d.id !== id);
         saveData();
@@ -806,6 +1206,11 @@
     // MEMBERS
     function addMember(e) {
       e.preventDefault();
+      if (currentAppMode !== 'admin') {
+        alert("केवळ व्यवस्थापक सदस्य जोडू शकतात!");
+        return;
+      }
+
       const name = document.getElementById("memName").value.trim();
       const pledged = parseFloat(document.getElementById("memPledged").value) || 0;
       const paid = parseFloat(document.getElementById("memPaid").value) || 0;
@@ -834,6 +1239,10 @@
     }
 
     function addPaymentToMember(id) {
+      if (currentAppMode !== 'admin') {
+        alert("केवळ व्यवस्थापक रक्कम जमा करू शकतात!");
+        return;
+      }
       const mem = appData.members.find(m => m.id === id);
       if (!mem) return;
       const extra = prompt(`${mem.name} यांच्याकडून जमा झालेली रक्कम:`, "0");
@@ -847,6 +1256,10 @@
     }
 
     function deleteMember(id) {
+      if (currentAppMode !== 'admin') {
+        alert("केवळ व्यवस्थापक सदस्य काढून टाकू शकतात!");
+        return;
+      }
       if (confirm("हा सदस्य काढून टाकायचा आहे का?")) {
         appData.members = appData.members.filter(m => m.id !== id);
         saveData();
@@ -894,6 +1307,11 @@
 
     function addExpense(e) {
       e.preventDefault();
+      if (currentAppMode !== 'admin') {
+        alert("केवळ व्यवस्थापक खर्च नोंदवू शकतात!");
+        return;
+      }
+
       const title = document.getElementById("expTitle").value.trim();
       const cat = document.getElementById("expCategory").value;
       const amt = parseFloat(document.getElementById("expAmount").value) || 0;
@@ -909,6 +1327,10 @@
     }
 
     function deleteExpense(id) {
+      if (currentAppMode !== 'admin') {
+        alert("केवळ व्यवस्थापक खर्च डिलीट करू शकतात!");
+        return;
+      }
       if (confirm("हा खर्च काढून टाकायचा आहे का?")) {
         appData.expenses = appData.expenses.filter(x => x.id !== id);
         saveData();
@@ -931,6 +1353,8 @@
       document.getElementById("statNetBalance").innerText = `₹${netBalance.toLocaleString("en-IN")}`;
       document.getElementById("statMemberDue").innerText = `₹${totalDue.toLocaleString("en-IN")}`;
 
+      const isAdmin = (currentAppMode === 'admin');
+
       // Donations Table
       document.getElementById("donCount").innerText = `एकूण: ${appData.donations.length}`;
       document.getElementById("donationList").innerHTML = appData.donations.map(d => `
@@ -944,9 +1368,11 @@
             <button onclick="openReceiptModal(${d.id}, false)" class="bg-orange-100 hover:bg-orange-200 text-orange-700 px-2.5 py-1 rounded-lg text-xs font-medium">
               <i class="fa-solid fa-receipt"></i> पावती
             </button>
-            <button onclick="deleteDonation(${d.id})" class="text-rose-500 hover:text-rose-700 px-1.5 py-1 text-xs">
-              <i class="fa-solid fa-trash"></i>
-            </button>
+            ${isAdmin ? `
+              <button onclick="deleteDonation(${d.id})" class="text-rose-500 hover:text-rose-700 px-1.5 py-1 text-xs" title="डिलीट करा">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            ` : ''}
           </td>
         </tr>
       `).join("");
@@ -967,8 +1393,10 @@
             <button onclick="openReceiptModal(${m.id}, true)" class="bg-orange-100 hover:bg-orange-200 text-orange-700 px-2.5 py-1 rounded-lg text-xs font-medium">
               <i class="fa-solid fa-receipt"></i> पावती
             </button>
-            <button onclick="addPaymentToMember(${m.id})" class="bg-amber-100 hover:bg-amber-200 text-amber-800 text-xs px-2 py-1 rounded-lg"><i class="fa-solid fa-plus"></i> जमा</button>
-            <button onclick="deleteMember(${m.id})" class="text-rose-500 hover:text-rose-700 text-xs px-1.5 py-1"><i class="fa-solid fa-trash"></i></button>
+            ${isAdmin ? `
+              <button onclick="addPaymentToMember(${m.id})" class="bg-amber-100 hover:bg-amber-200 text-amber-800 text-xs px-2 py-1 rounded-lg"><i class="fa-solid fa-plus"></i> जमा</button>
+              <button onclick="deleteMember(${m.id})" class="text-rose-500 hover:text-rose-700 text-xs px-1.5 py-1"><i class="fa-solid fa-trash"></i></button>
+            ` : ''}
           </td>
         </tr>
       `}).join("");
@@ -982,10 +1410,103 @@
           <td class="p-2.5 text-slate-600"><span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-xs">${x.category}</span></td>
           <td class="p-2.5 text-right font-bold text-rose-600">₹${Number(x.amount).toLocaleString("en-IN")}</td>
           <td class="p-2.5 text-center">
-            <button onclick="deleteExpense(${x.id})" class="text-rose-500 hover:text-rose-700 text-xs px-2 py-1"><i class="fa-solid fa-trash"></i></button>
+            ${isAdmin ? `
+              <button onclick="deleteExpense(${x.id})" class="text-rose-500 hover:text-rose-700 text-xs px-2 py-1"><i class="fa-solid fa-trash"></i></button>
+            ` : `<span class="text-xs text-slate-400 font-mono">--</span>`}
           </td>
         </tr>
       `).join("");
+    }
+
+    // BULK REMINDER HUB LOGIC
+    function getDueMembersList() {
+      return appData.members.filter(m => (m.pledged - m.paid) > 0);
+    }
+
+    function openBulkReminderModal() {
+      const dueList = getDueMembersList();
+      const countEl = document.getElementById("bulkDueCount");
+      const container = document.getElementById("bulkMemberListContainer");
+      const btnCopy = document.getElementById("btnCopyGroupRem");
+
+      countEl.innerText = `${dueList.length} मेंबर्स बाकी`;
+      btnCopy.innerHTML = `<i class="fa-regular fa-copy"></i> संपूर्ण मेसेज कॉपी करा`;
+
+      if (dueList.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-6 text-slate-400">
+            <i class="fa-solid fa-circle-check text-emerald-500 text-3xl mb-1"></i>
+            <p class="text-xs">सर्व मेंबर्सची वर्गणी जमा झाली आहे! कोणाचीही बाकी नाही.</p>
+          </div>
+        `;
+      } else {
+        container.innerHTML = dueList.map(m => {
+          const due = m.pledged - m.paid;
+          return `
+            <div class="flex items-center justify-between p-2.5 bg-white rounded-xl shadow-sm border">
+              <div>
+                <span class="font-bold text-slate-800 text-xs block">${m.name}</span>
+                <span class="text-[10px] text-slate-500">कबूली: ₹${m.pledged} | जमा: ₹${m.paid} | <b class="text-amber-600">बाकी: ₹${due}</b></span>
+              </div>
+              <button onclick="sendSingleReminder('${m.name}', ${m.pledged}, ${m.paid}, ${due}, '${m.mobile || ''}')" class="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs px-3 py-1.5 rounded-lg font-bold flex items-center gap-1 transition">
+                <i class="fa-brands fa-whatsapp"></i> पाठवा ➔
+              </button>
+            </div>
+          `;
+        }).join("");
+      }
+
+      document.getElementById("bulkReminderModal").classList.remove("hidden");
+    }
+
+    function closeBulkReminderModal() {
+      document.getElementById("bulkReminderModal").classList.add("hidden");
+    }
+
+    function sendSingleReminder(name, pledged, paid, due, mobile) {
+      let phone = mobile ? mobile.replace(/\D/g, "") : "";
+      if (phone.length === 10) phone = "91" + phone;
+
+      const text = `नमस्कार ${name} जी (मंडळ सदस्य),\n\nसार्वजनिक गणेशोत्सवासाठी आपल्या कबूली वर्गणीपैकी उर्वरित *₹${due}/-* रक्कम जमा करावयाची बाकी आहे.\n\n📊 *वर्गणी तपशील:*\n• कबूली रक्कम: ₹${pledged}/-\n• जमा रक्कम: ₹${paid}/-\n• *येणे बाकी रक्कम: ₹${due}/-*\n\nउत्सवाचे नियोजन सुरळीत होण्यासाठी कृपया उर्वरित रक्कम लवकरात लवकर मंडळाकडे जमा करावी ही नम्र विनंती. बाप्पाचा आशीर्वाद आपल्या पाठीशी राहो! 🙏✨`;
+
+      const waUrl = phone 
+        ? `https://wa.me/${phone}?text=${encodeURIComponent(text)}`
+        : `https://wa.me/?text=${encodeURIComponent(text)}`;
+
+      window.open(waUrl, "_blank");
+    }
+
+    async function copyGroupReminderMessage() {
+      const dueList = getDueMembersList();
+      const btn = document.getElementById("btnCopyGroupRem");
+
+      if (dueList.length === 0) {
+        alert("कोणाचीही वर्गणी बाकी नाही!");
+        return;
+      }
+
+      const totalPending = dueList.reduce((sum, m) => sum + (m.pledged - m.paid), 0);
+
+      let msg = `🚩 *सार्वजनिक गणेशोत्सव मंडळ २०२६* 🚩\n\n*सर्व सन्माननीय सदस्यांना नम्र आवाहन:*\nउत्सवाच्या खर्चाचे नियोजन सुरळीत होण्यासाठी ज्या सदस्यांची कबूली वर्गणी बाकी आहे, त्यांनी कृपया आपली रक्कम लवकरात लवकर मंडळाकडे जमा करावी.\n\n📋 *बाकी वर्गणीदार सदस्य यादी:*\n`;
+
+      dueList.forEach((m, idx) => {
+        const due = m.pledged - m.paid;
+        msg += `${idx + 1}. ${m.name} : *₹${due}/-* बाकी (कबूली: ₹${m.pledged})\n`;
+      });
+
+      msg += `\n💰 *एकूण येणे बाकी: ₹${totalPending}/-*\n\nआपले सहकार्य उत्सवाची शोभा वाढवेल. बाप्पा सर्वांचे कल्याण करो! गणपती बाप्पा मोरया! 🙏✨`;
+
+      try {
+        await navigator.clipboard.writeText(msg);
+        btn.innerHTML = `<i class="fa-solid fa-check"></i> कॉपी झाला! ग्रुपवर पेस्ट करा`;
+        btn.classList.replace("bg-emerald-600", "bg-emerald-700");
+        setTimeout(() => {
+          btn.innerHTML = `<i class="fa-regular fa-copy"></i> संपूर्ण मेसेज कॉपी करा`;
+          btn.classList.replace("bg-emerald-700", "bg-emerald-600");
+        }, 3000);
+      } catch (e) {
+        alert("कॉपी करताना त्रुटी आली. कृपया टेक्स्ट मॅन्युअली निवडा.");
+      }
     }
 
     // CANVAS DRAW ENGINE
@@ -1197,7 +1718,6 @@
       renderConfigPreview();
     }
 
-    // Safe DOM value reader with fallbacks to avoid JS runtime crashes
     function getSafeNumber(id, defaultVal) {
       const el = document.getElementById(id);
       if (!el) return defaultVal;
@@ -1258,7 +1778,6 @@
       drawCanvasWithData(canvas, dummyData, configs.receiptConfig, configs.customConfigs, appData.customFields);
     }
 
-    // 100% RELIABLE & BULLETPROOF SAVE ACTION: GUARANTEES MODAL CLOSING
     async function savePositions() {
       const btn = document.getElementById("btnSaveConfigAction");
       if (btn) btn.innerText = "सेव्ह करत आहे...";
@@ -1268,10 +1787,10 @@
         appData.receiptConfig = configs.receiptConfig;
         appData.customConfigs = configs.customConfigs;
         await saveData();
+        touchActivity();
       } catch (err) {
         console.error("Error while saving positions:", err);
       } finally {
-        // Guarantee closing modal and restoring button
         if (btn) btn.innerText = "सेटिंग्ज सेव्ह करा";
         closeSettingsModal();
         alert("सर्व सेटिंग्ज यशस्वीरित्या सेव्ह झाल्या!");
