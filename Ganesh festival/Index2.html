@@ -18,12 +18,6 @@
         <h1 class="text-lg md:text-xl font-bold">गणेशोत्सव व्यवस्थापक २०२६</h1>
       </div>
       <div class="flex items-center flex-wrap gap-2">
-        <!-- Permission Indicator Pill -->
-        <button id="permStatusBadge" onclick="showPermissionModal()" class="bg-black/20 hover:bg-black/30 text-white text-xs px-2.5 py-1.5 rounded-full flex items-center gap-1.5 transition">
-          <span class="w-2 h-2 rounded-full bg-amber-400" id="permDot"></span>
-          <span id="permText">क्लिपबोर्ड परमिशन तपासा</span>
-        </button>
-
         <button onclick="openSettingsModal()" class="bg-amber-800 hover:bg-amber-900 text-white text-xs px-2.5 py-1.5 rounded shadow flex items-center gap-1 transition">
           <i class="fa-solid fa-sliders"></i> पावती मजकूर व रंग
         </button>
@@ -93,19 +87,19 @@
           </div>
           <div>
             <label class="text-xs font-semibold text-slate-600">वर्गणीदाराचे नाव</label>
-            <input type="text" id="donName" required class="w-full mt-1 border rounded p-2 text-sm focus:ring-1 focus:ring-orange-500 outline-none" />
+            <input type="text" id="donName" required placeholder="उदा. सचिन पाटील" class="w-full mt-1 border rounded p-2 text-sm focus:ring-1 focus:ring-orange-500 outline-none" />
           </div>
           <div>
             <label class="text-xs font-semibold text-slate-600">रक्कम (₹)</label>
-            <input type="number" id="donAmount" required min="1" class="w-full mt-1 border rounded p-2 text-sm focus:ring-1 focus:ring-orange-500 outline-none" />
+            <input type="number" id="donAmount" required min="1" oninput="updateWordsPreview(this.value)" placeholder="उदा. 5001" class="w-full mt-1 border rounded p-2 text-sm focus:ring-1 focus:ring-orange-500 outline-none" />
           </div>
           <div>
             <label class="text-xs font-semibold text-slate-600">WhatsApp मोबाईल क्र.</label>
             <input type="tel" id="donMobile" placeholder="उदा. 9876543210" class="w-full mt-1 border rounded p-2 text-sm focus:ring-1 focus:ring-orange-500 outline-none" />
           </div>
           <div class="md:col-span-3">
-            <label class="text-xs font-semibold text-slate-600">पत्ता किंवा घर क्र. (Address)</label>
-            <input type="text" id="donAddress" class="w-full mt-1 border rounded p-2 text-sm focus:ring-1 focus:ring-orange-500 outline-none" />
+            <label class="text-xs font-semibold text-slate-600">अक्षरी रक्कम (मराठीत ऑटोमॅटिक)</label>
+            <input type="text" id="donAmountWords" readonly class="w-full mt-1 border bg-slate-50 font-medium text-slate-700 rounded p-2 text-sm outline-none cursor-not-allowed" placeholder="रक्कम टाकल्यावर येथे मराठीत अक्षरी रक्कम दिसेल" />
           </div>
           <div class="flex items-end">
             <button type="submit" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-medium py-2 rounded text-sm transition">
@@ -126,7 +120,7 @@
               <tr class="bg-slate-100 text-slate-600 border-b">
                 <th class="p-2.5">पावती क्र.</th>
                 <th class="p-2.5">नाव</th>
-                <th class="p-2.5">पत्ता</th>
+                <th class="p-2.5">अक्षरी रक्कम</th>
                 <th class="p-2.5">WhatsApp क्र.</th>
                 <th class="p-2.5 text-right">रक्कम</th>
                 <th class="p-2.5 text-center">पावती / कृती</th>
@@ -244,8 +238,8 @@
 
   </main>
 
-  <!-- RECEIPT MODAL (FAST-COPY & DIRECT WHATSAPP) -->
-  <div id="receiptModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3">
+  <!-- RECEIPT MODAL -->
+  <div id="receiptModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3">
     <div class="bg-white rounded-2xl max-w-xl w-full p-4 md:p-5 shadow-2xl relative space-y-4 max-h-[95vh] flex flex-col">
       <div class="flex justify-between items-center border-b pb-2">
         <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
@@ -260,39 +254,10 @@
         <canvas id="receiptCanvas" class="max-w-full h-auto rounded shadow-sm border"></canvas>
       </div>
 
-      <!-- Action Buttons -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-        <button id="btnInstantCopy" onclick="instantCopyReceiptImage()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition text-sm shadow">
-          <i class="fa-regular fa-copy text-yellow-400 text-lg"></i> <span id="copyBtnLabel">१. Copy Image</span>
-        </button>
-        <button onclick="openTargetWhatsApp()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition text-sm shadow">
-          <i class="fa-brands fa-whatsapp text-xl"></i> <span>२. Open WhatsApp</span>
-        </button>
-      </div>
-      <p class="text-[11px] text-center text-slate-500 font-medium">
-        आधी <b>'१. Copy Image'</b> दाबा, नंतर <b>'२. Open WhatsApp'</b> दाबल्यावर तिथे जाऊन फक्त <b>Paste (Ctrl+V)</b> करा.
-      </p>
-    </div>
-  </div>
-
-  <!-- CLIPBOARD PERMISSION PROMPT MODAL (OPENS ON APP START) -->
-  <div id="permissionModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 text-center">
-      <div class="w-14 h-14 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto text-2xl shadow-inner">
-        <i class="fa-solid fa-clipboard-check"></i>
-      </div>
-      <div class="space-y-1">
-        <h3 class="text-lg font-bold text-slate-800">क्लिपबोर्ड परमिशन आवश्यक आहे</h3>
-        <p class="text-xs text-slate-500 leading-relaxed">
-          पावती एका क्लिकमध्ये कॉपी करून व्हॉट्सॲपवर पाठवण्यासाठी ब्राउझरची क्लिपबोर्ड परमिशन <b>Allow</b> करावी लागेल.
-        </p>
-      </div>
-      <div class="space-y-2 pt-2">
-        <button onclick="requestClipboardPermission()" class="w-full bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white font-bold py-3 px-4 rounded-xl text-sm shadow-md transition flex items-center justify-center gap-2">
-          <i class="fa-solid fa-check"></i> परमिशन मंजूर करा (Allow Permission)
-        </button>
-        <button onclick="dismissPermissionModal()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-medium py-2 rounded-lg text-xs transition">
-          नंतर करू
+      <!-- DIRECT SEND BUTTON -->
+      <div class="space-y-2 pt-1">
+        <button id="btnSmartCopyWhatsApp" onclick="smartCopyAndOpenWhatsApp()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 px-4 rounded-xl flex items-center justify-center gap-2.5 shadow-lg transition text-base md:text-lg">
+          <i class="fa-brands fa-whatsapp text-2xl"></i> <span id="btnSmartText">Send to WhatsApp</span>
         </button>
       </div>
     </div>
@@ -303,8 +268,8 @@
     <div class="bg-white rounded-2xl max-w-6xl w-full p-4 shadow-2xl relative space-y-3 max-h-[96vh] flex flex-col">
       <div class="flex justify-between items-center border-b pb-2">
         <div>
-          <h3 class="font-bold text-slate-800 text-base">प्रत्येक टेक्स्टची जागा, साईज व रंग सेट करा</h3>
-          <p class="text-xs text-slate-500">स्लायडर हलवा, लाईव्ह प्रिव्ह्यू तपासा आणि सेव्ह करा.</p>
+          <h3 class="font-bold text-slate-800 text-base">प्रत्येक मजकुराची जागा, साईज व रंग सेट करा</h3>
+          <p class="text-xs text-slate-500">स्लायडर हलवा, अक्षरी रकमेची जागा तपासा आणि सेव्ह करा.</p>
         </div>
         <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-slate-700 text-lg">
           <i class="fa-solid fa-xmark"></i>
@@ -359,7 +324,7 @@
           <!-- 4. Amount -->
           <div class="p-2 bg-orange-50/70 rounded-lg border border-orange-200 space-y-1">
             <div class="flex justify-between items-center font-bold text-orange-900">
-              <span>४. रक्कम (Amount ₹)</span>
+              <span>४. रक्कम अंकी (Amount ₹)</span>
               <input type="color" id="cfg_amt_color" onchange="onConfigChange()" class="w-6 h-6 rounded border cursor-pointer">
             </div>
             <div class="grid grid-cols-3 gap-2">
@@ -369,16 +334,16 @@
             </div>
           </div>
 
-          <!-- 5. Address -->
+          <!-- 5. Amount in Words (मराठीत अक्षरी रक्कम) -->
           <div class="p-2 bg-orange-50/70 rounded-lg border border-orange-200 space-y-1">
             <div class="flex justify-between items-center font-bold text-orange-900">
-              <span>५. पत्ता (Address)</span>
-              <input type="color" id="cfg_addr_color" onchange="onConfigChange()" class="w-6 h-6 rounded border cursor-pointer">
+              <span>५. अक्षरी रक्कम (Amount in Words)</span>
+              <input type="color" id="cfg_words_color" onchange="onConfigChange()" class="w-6 h-6 rounded border cursor-pointer">
             </div>
             <div class="grid grid-cols-3 gap-2">
-              <label>X%: <input type="range" min="0" max="100" id="cfg_addr_x" oninput="onConfigChange()" class="w-full"></label>
-              <label>Y%: <input type="range" min="0" max="100" id="cfg_addr_y" oninput="onConfigChange()" class="w-full"></label>
-              <label>Size: <input type="number" min="10" max="80" id="cfg_addr_size" oninput="onConfigChange()" class="w-full border rounded p-1"></label>
+              <label>X%: <input type="range" min="0" max="100" id="cfg_words_x" oninput="onConfigChange()" class="w-full"></label>
+              <label>Y%: <input type="range" min="0" max="100" id="cfg_words_y" oninput="onConfigChange()" class="w-full"></label>
+              <label>Size: <input type="number" min="10" max="80" id="cfg_words_size" oninput="onConfigChange()" class="w-full border rounded p-1"></label>
             </div>
           </div>
         </div>
@@ -392,12 +357,80 @@
   </div>
 
   <script>
+    function numberToMarathiWords(num) {
+      const n = parseInt(num, 10);
+      if (isNaN(n) || n === 0) return "शून्य रुपये फक्त";
+
+      const units = [
+        "", "एक", "दोन", "तीन", "चार", "पाच", "सहा", "सात", "आठ", "नऊ",
+        "दहा", "अकरा", "बारा", "तेरा", "चौदा", "पंधरा", "सोळा", "सतरा", "अठरा", "एकोणीस",
+        "वीस", "एकवीस", "बावीस", "तेवीस", "चोवीस", "पंचवीस", "सव्वीस", "सत्तावीस", "अठ्ठावीस", "एकोणतीस",
+        "तीस", "एकतीस", "बत्तीस", "तेहेतीस", "चौतीस", "पस्तीस", "छत्तीस", "सदतीस", "अडतीस", "एकेचाळीस",
+        "चाळीस", "एक्केचाळीस", "बेचाळीस", "त्रेचाळीस", "चव्वेचाळीस", "पंचेचाळीस", "शेहेचाळीस", "सत्तेचाळीस", "अठ्ठेचाळीस", "एकोणपन्नास",
+        "पन्नास", "एक्कावन्न", "बावन्न", "त्रेपन्न", "चोपन्न", "पंचावन्न", "छप्पन्न", "सत्तावन्न", "अठ्ठावन्न", "एकोणसाठ",
+        "साठ", "एकसष्ठ", "बासष्ठ", "त्रेसष्ठ", "चौसष्ठ", "पासष्ठ", "सहासष्ठ", "सदुसष्ठ", "अडुसष्ठ", "एकोणसत्तर",
+        "सत्तर", "एकाहत्तर", "बाहत्तर", "त्र्याहत्तर", "चौर्‍याहत्तर", "पंच्याहत्तर", "शहात्तर", "सत्त्याहत्तर", "अठ्ठ्याहत्तर", "एकोणऐंशी",
+        "ऐंशी", "एक्क्यांशी", "ब्यांशी", "त्र्यांशी", "चौऱ्यांशी", "पंच्यांशी", "शहांशी", "सत्त्यांशी", "अठ्ठ्यांशी", "एकोणनव्वद",
+        "नव्वद", "एक्याण्णव", "ब्याण्णव", "त्र्याण्णव", "चौऱ्याण्णव", "पंच्याण्णव", "शहाण्णव", "सत्त्याण्णव", "अठ्ठ्याण्णव", "नव्व्याण्णव"
+      ];
+
+      function convertBelowThousand(val) {
+        let str = "";
+        if (val >= 100) {
+          const hundredDigit = Math.floor(val / 100);
+          if (hundredDigit === 1) {
+            str += "एकशे ";
+          } else {
+            str += units[hundredDigit] + "शे ";
+          }
+          val %= 100;
+        }
+        if (val > 0) {
+          str += units[val] + " ";
+        }
+        return str.trim();
+      }
+
+      let result = "";
+      let remaining = n;
+
+      if (remaining >= 10000000) {
+        const crore = Math.floor(remaining / 10000000);
+        result += convertBelowThousand(crore) + " कोटी ";
+        remaining %= 10000000;
+      }
+      if (remaining >= 100000) {
+        const lakh = Math.floor(remaining / 100000);
+        result += convertBelowThousand(lakh) + " लाख ";
+        remaining %= 100000;
+      }
+      if (remaining >= 1000) {
+        const thousand = Math.floor(remaining / 1000);
+        result += convertBelowThousand(thousand) + " हजार ";
+        remaining %= 1000;
+      }
+      if (remaining > 0) {
+        result += convertBelowThousand(remaining);
+      }
+
+      return result.trim() + " रुपये फक्त";
+    }
+
+    function updateWordsPreview(val) {
+      const target = document.getElementById("donAmountWords");
+      if (val && !isNaN(val)) {
+        target.value = numberToMarathiWords(val);
+      } else {
+        target.value = "";
+      }
+    }
+
     const DEFAULT_CONFIG = {
-      rec:  { x: 75, y: 18, size: 22, color: "#9a3412" },
-      date: { x: 75, y: 24, size: 20, color: "#334155" },
-      name: { x: 25, y: 40, size: 28, color: "#0f172a" },
-      amt:  { x: 25, y: 52, size: 30, color: "#065f46" },
-      addr: { x: 25, y: 63, size: 20, color: "#475569" }
+      rec:   { x: 75, y: 18, size: 22, color: "#9a3412" },
+      date:  { x: 75, y: 24, size: 20, color: "#334155" },
+      name:  { x: 25, y: 40, size: 28, color: "#0f172a" },
+      amt:   { x: 25, y: 52, size: 30, color: "#065f46" },
+      words: { x: 25, y: 63, size: 20, color: "#475569" }
     };
 
     let appData = {
@@ -410,7 +443,6 @@
 
     let activeReceiptData = null;
 
-    // Load Data & Check Permissions
     function loadData() {
       const saved = localStorage.getItem("ganesh_festival_data_2026");
       if (saved) {
@@ -419,13 +451,15 @@
           if (!appData.receiptConfig || !appData.receiptConfig.rec) {
             appData.receiptConfig = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
           }
+          if (!appData.receiptConfig.words) {
+            appData.receiptConfig.words = { ...DEFAULT_CONFIG.words };
+          }
         } catch (e) {
           console.error("Parse Error", e);
         }
       }
       renderAll();
       updateNextReceiptNumber();
-      checkInitialClipboardPermission();
     }
 
     function saveData() {
@@ -434,81 +468,6 @@
       updateNextReceiptNumber();
     }
 
-    // ==========================================
-    // CLIPBOARD PERMISSION ENGINE
-    // ==========================================
-    async function checkInitialClipboardPermission() {
-      if (!navigator.permissions || !navigator.permissions.query) {
-        updatePermissionBadge("supported");
-        return;
-      }
-
-      try {
-        const status = await navigator.permissions.query({ name: "clipboard-write" });
-        if (status.state === "granted") {
-          updatePermissionBadge("granted");
-        } else if (status.state === "prompt") {
-          updatePermissionBadge("prompt");
-          // Show modal only if not previously dismissed in this session
-          if (!sessionStorage.getItem("permModalDismissed")) {
-            showPermissionModal();
-          }
-        } else {
-          updatePermissionBadge("denied");
-        }
-
-        status.onchange = () => {
-          checkInitialClipboardPermission();
-        };
-      } catch (e) {
-        console.log("Permission query bypass:", e);
-        updatePermissionBadge("supported");
-      }
-    }
-
-    function showPermissionModal() {
-      document.getElementById("permissionModal").classList.remove("hidden");
-    }
-
-    function dismissPermissionModal() {
-      document.getElementById("permissionModal").classList.add("hidden");
-      sessionStorage.setItem("permModalDismissed", "true");
-    }
-
-    async function requestClipboardPermission() {
-      try {
-        // Trigger browser's permission prompt through an actual gesture
-        const textBlob = new Blob([" "], { type: "text/plain" });
-        if (navigator.clipboard && window.ClipboardItem) {
-          await navigator.clipboard.write([new ClipboardItem({ "text/plain": textBlob })]);
-        }
-        updatePermissionBadge("granted");
-        dismissPermissionModal();
-        alert("क्लिपबोर्ड परमिशन यशस्वीरीत्या मंजूर झाली! आता इमेज थेट कॉपी होईल.");
-      } catch (err) {
-        console.warn("Permission activation error:", err);
-        dismissPermissionModal();
-        alert("ब्राउझरने परमिशन विचारली असल्यास 'Allow' करा. जर 'Blocked' असेल तर ब्राउझरच्या ॲड्रेस बारमधील कुलूप (Lock) चिन्हावर जाऊन Clipboard चालू करा.");
-      }
-    }
-
-    function updatePermissionBadge(state) {
-      const dot = document.getElementById("permDot");
-      const text = document.getElementById("permText");
-
-      if (state === "granted") {
-        dot.className = "w-2 h-2 rounded-full bg-emerald-400";
-        text.innerText = "क्लिपबोर्ड परमिशन Active ✓";
-      } else if (state === "denied") {
-        dot.className = "w-2 h-2 rounded-full bg-rose-500";
-        text.innerText = "क्लिपबोर्ड Blocked (टॅप करा)";
-      } else {
-        dot.className = "w-2 h-2 rounded-full bg-amber-400";
-        text.innerText = "परमिशन सेट करा (टॅप करा)";
-      }
-    }
-
-    // Auto Receipt Number (GF2026-0001)
     function generateNextReceiptNumber() {
       const year = "2026";
       const prefix = `GF${year}-`;
@@ -563,20 +522,21 @@
       const name = document.getElementById("donName").value.trim();
       const amount = parseFloat(document.getElementById("donAmount").value) || 0;
       let mobile = document.getElementById("donMobile").value.trim().replace(/\D/g, "");
-      const addr = document.getElementById("donAddress").value.trim();
+      const amountWords = numberToMarathiWords(amount);
 
       const newEntry = {
         id: Date.now(),
         receipt: rec,
         name: name,
         amount: amount,
+        amountWords: amountWords,
         mobile: mobile,
-        address: addr,
         date: new Date().toLocaleDateString("en-IN")
       };
 
       appData.donations.push(newEntry);
       document.getElementById("donationForm").reset();
+      document.getElementById("donAmountWords").value = "";
       saveData();
       openReceiptModal(newEntry.id);
     }
@@ -653,7 +613,7 @@
         <tr class="hover:bg-amber-50/50">
           <td class="p-2.5 font-bold text-orange-700">${d.receipt}</td>
           <td class="p-2.5 font-semibold text-slate-800">${d.name}</td>
-          <td class="p-2.5 text-slate-600">${d.address || '-'}</td>
+          <td class="p-2.5 text-slate-600">${d.amountWords || numberToMarathiWords(d.amount)}</td>
           <td class="p-2.5 text-slate-600">${d.mobile || '-'}</td>
           <td class="p-2.5 text-right font-bold text-emerald-700">₹${Number(d.amount).toLocaleString("en-IN")}</td>
           <td class="p-2.5 text-center space-x-1 whitespace-nowrap">
@@ -697,9 +657,10 @@
       `).join("");
     }
 
-    // DRAW ENGINE (CANVAS)
+    // DRAW CANVAS ENGINE
     function drawCanvasWithData(canvas, data, cfg, onDone) {
       const ctx = canvas.getContext("2d");
+      const wordsText = data.amountWords || numberToMarathiWords(data.amount);
 
       if (appData.templateBase64) {
         const img = new Image();
@@ -725,9 +686,9 @@
           ctx.font = `bold ${cfg.amt.size}px sans-serif`;
           ctx.fillText(`₹ ${Number(data.amount).toLocaleString('en-IN')} /-`, (canvas.width * cfg.amt.x) / 100, (canvas.height * cfg.amt.y) / 100);
 
-          ctx.fillStyle = cfg.addr.color;
-          ctx.font = `bold ${cfg.addr.size}px sans-serif`;
-          ctx.fillText(data.address || '-', (canvas.width * cfg.addr.x) / 100, (canvas.height * cfg.addr.y) / 100);
+          ctx.fillStyle = cfg.words.color;
+          ctx.font = `bold ${cfg.words.size}px sans-serif`;
+          ctx.fillText(wordsText, (canvas.width * cfg.words.x) / 100, (canvas.height * cfg.words.y) / 100);
 
           if (onDone) onDone();
         };
@@ -762,13 +723,13 @@
         ctx.font = `bold ${cfg.name.size || 22}px sans-serif`;
         ctx.fillText(`नाव : ${data.name}`, 40, 205);
 
-        ctx.fillStyle = cfg.addr.color || "#475569";
-        ctx.font = `bold ${cfg.addr.size || 18}px sans-serif`;
-        ctx.fillText(`पत्ता : ${data.address || '-'}`, 40, 250);
+        ctx.fillStyle = cfg.words.color || "#475569";
+        ctx.font = `bold ${cfg.words.size || 18}px sans-serif`;
+        ctx.fillText(`अक्षरी रक्कम : ${wordsText}`, 40, 250);
 
         ctx.fillStyle = cfg.amt.color || "#065f46";
         ctx.font = `bold ${cfg.amt.size || 26}px sans-serif`;
-        ctx.fillText(`रक्कम : ₹ ${Number(data.amount).toLocaleString('en-IN')} /-`, 40, 340);
+        ctx.fillText(`रक्कम अंकी : ₹ ${Number(data.amount).toLocaleString('en-IN')} /-`, 40, 340);
 
         if (onDone) onDone();
       }
@@ -780,10 +741,8 @@
       activeReceiptData = data;
       document.getElementById("receiptModal").classList.remove("hidden");
       
-      const copyBtn = document.getElementById("btnInstantCopy");
-      const copyLabel = document.getElementById("copyBtnLabel");
-      copyLabel.innerText = "१. Copy Image";
-      copyBtn.classList.replace("bg-emerald-700", "bg-slate-800");
+      const btnText = document.getElementById("btnSmartText");
+      btnText.innerText = "Send to WhatsApp";
 
       const canvas = document.getElementById("receiptCanvas");
       drawCanvasWithData(canvas, data, appData.receiptConfig);
@@ -795,53 +754,40 @@
     }
 
     // ========================================================
-    // ZERO-DELAY PROMISE-BASED IMAGE CLIPBOARD COPY
+    // SEND TO WHATSAPP ACTION (COPY & OPEN)
     // ========================================================
-    async function instantCopyReceiptImage() {
-      const copyBtn = document.getElementById("btnInstantCopy");
-      const copyLabel = document.getElementById("copyBtnLabel");
-      const canvas = document.getElementById("receiptCanvas");
-
-      if (!navigator.clipboard || !window.ClipboardItem) {
-        alert("तुमचा ब्राउझर थेट इमेज कॉपी सपोर्ट करत नाही. कृपया Google Chrome किंवा Microsoft Edge वापरा.");
-        return;
-      }
-
-      try {
-        // High compatibility: Pass Blob directly as Promise to satisfy Browser User Gesture rule
-        const blobPromise = new Promise((resolve, reject) => {
-          canvas.toBlob(blob => {
-            if (blob) resolve(blob);
-            else reject(new Error("Canvas blob conversion failed"));
-          }, "image/png");
-        });
-
-        const item = new ClipboardItem({ "image/png": blobPromise });
-        await navigator.clipboard.write([item]);
-
-        // Success UI
-        copyLabel.innerText = "✓ इमेज कॉपी झाली!";
-        copyBtn.classList.replace("bg-slate-800", "bg-emerald-700");
-        updatePermissionBadge("granted");
-      } catch (err) {
-        console.error("Clipboard Error:", err);
-        // If permission wasn't granted yet, pop open permission modal
-        showPermissionModal();
-      }
-    }
-
-    function openTargetWhatsApp() {
+    async function smartCopyAndOpenWhatsApp() {
       if (!activeReceiptData) return;
+      const canvas = document.getElementById("receiptCanvas");
+      const btnText = document.getElementById("btnSmartText");
+
       let phone = activeReceiptData.mobile ? activeReceiptData.mobile.replace(/\D/g, "") : "";
       if (phone.length === 10) phone = "91" + phone;
 
-      const defaultMsg = `नमस्कार ${activeReceiptData.name} जी, गणेशोत्सवासाठी आपल्या ₹${activeReceiptData.amount}/- देणगीची अधिकृत पावती (पावती क्र. ${activeReceiptData.receipt}) जोडली आहे. धन्यवाद! बाप्पा आपल्या कुटुंबावर सदैव कृपा ठेवो. 🙏✨`;
+      const words = activeReceiptData.amountWords || numberToMarathiWords(activeReceiptData.amount);
+      const messageText = `नमस्कार ${activeReceiptData.name} जी, गणेशोत्सवासाठी आपल्या ₹${activeReceiptData.amount}/- (${words}) देणगीची अधिकृत डिजिटल पावती (पावती क्र. ${activeReceiptData.receipt}) जोडली आहे. धन्यवाद! बाप्पा आपल्या कुटुंबावर सदैव कृपा ठेवो. 🙏✨`;
 
-      const waUrl = phone 
-        ? `https://wa.me/${phone}?text=${encodeURIComponent(defaultMsg)}`
-        : `https://wa.me/?text=${encodeURIComponent(defaultMsg)}`;
+      // Copy image to clipboard
+      try {
+        if (navigator.clipboard && window.ClipboardItem) {
+          const blobPromise = new Promise(resolve => canvas.toBlob(resolve, "image/png"));
+          const item = new ClipboardItem({ "image/png": blobPromise });
+          await navigator.clipboard.write([item]);
+          btnText.innerText = "Opening WhatsApp...";
+        }
+      } catch (err) {
+        console.warn("Clipboard copy:", err);
+      }
 
-      window.open(waUrl, "_blank");
+      // Open WhatsApp chat directly
+      setTimeout(() => {
+        const waUrl = phone 
+          ? `https://wa.me/${phone}?text=${encodeURIComponent(messageText)}`
+          : `https://wa.me/?text=${encodeURIComponent(messageText)}`;
+        
+        window.open(waUrl, "_blank");
+        btnText.innerText = "Send to WhatsApp";
+      }, 350);
     }
 
     // Settings Modal
@@ -873,10 +819,10 @@
       document.getElementById("cfg_amt_size").value = cfg.amt.size;
       document.getElementById("cfg_amt_color").value = cfg.amt.color;
 
-      document.getElementById("cfg_addr_x").value = cfg.addr.x;
-      document.getElementById("cfg_addr_y").value = cfg.addr.y;
-      document.getElementById("cfg_addr_size").value = cfg.addr.size;
-      document.getElementById("cfg_addr_color").value = cfg.addr.color;
+      document.getElementById("cfg_words_x").value = cfg.words.x;
+      document.getElementById("cfg_words_y").value = cfg.words.y;
+      document.getElementById("cfg_words_size").value = cfg.words.size;
+      document.getElementById("cfg_words_color").value = cfg.words.color;
 
       renderConfigPreview();
     }
@@ -915,11 +861,11 @@
           size: parseInt(document.getElementById("cfg_amt_size").value, 10),
           color: document.getElementById("cfg_amt_color").value
         },
-        addr: {
-          x: parseFloat(document.getElementById("cfg_addr_x").value),
-          y: parseFloat(document.getElementById("cfg_addr_y").value),
-          size: parseInt(document.getElementById("cfg_addr_size").value, 10),
-          color: document.getElementById("cfg_addr_color").value
+        words: {
+          x: parseFloat(document.getElementById("cfg_words_x").value),
+          y: parseFloat(document.getElementById("cfg_words_y").value),
+          size: parseInt(document.getElementById("cfg_words_size").value, 10),
+          color: document.getElementById("cfg_words_color").value
         }
       };
     }
@@ -931,7 +877,7 @@
         date: "14/09/2026",
         name: "सचिन पाटील (डेमो नाव)",
         amount: 5001,
-        address: "घर क्र. १२, सांगली"
+        amountWords: "पाच हजार एक रुपये फक्त"
       };
       drawCanvasWithData(canvas, dummyData, getCurrentSliderConfig());
     }
@@ -940,7 +886,7 @@
       appData.receiptConfig = getCurrentSliderConfig();
       saveData();
       closeSettingsModal();
-      alert("सर्व जागा व रंग सेव्ह झाले!");
+      alert("सर्व मजकुराची जागा, साईज व रंग यशस्वी सेव्ह झाले!");
     }
 
     function resetPositionDefaults() {
@@ -955,8 +901,8 @@
         "पावती क्र.": d.receipt,
         "नाव": d.name,
         "रक्कम (₹)": d.amount,
+        "अक्षरी रक्कम (मराठी)": d.amountWords || numberToMarathiWords(d.amount),
         "मोबाईल": d.mobile,
-        "पत्ता": d.address,
         "तारीख": d.date
       }));
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(donData), "Donations");
