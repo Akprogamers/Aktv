@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>गणेशोत्सव व्यवस्थापक २०२६</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+</head>
+<body class="bg-amber-50 min-h-screen text-slate-800 font-sans pb-16">
+
+  <!-- Header -->
+  <header class="bg-gradient-to-r from-orange-600 to-amber-600 text-white p-4 shadow-lg sticky top-0 z-40">
+    <div class="max-w-6xl mx-auto flex flex-wrap justify-between items-center gap-2">
+      <div class="flex items-center space-x-2">
+        <i class="fa-solid fa-om text-2xl text-yellow-300"></i>
+        <h1 class="text-lg md:text-xl font-bold">गणेशोत्सव व्यवस्थापक २०२६</h1>
+      </div>
+      <div class="flex items-center flex-wrap gap-2">
+        <!-- Permission Indicator Pill -->
+        <button id="permStatusBadge" onclick="showPermissionModal()" class="bg-black/20 hover:bg-black/30 text-white text-xs px-2.5 py-1.5 rounded-full flex items-center gap-1.5 transition">
+          <span class="w-2 h-2 rounded-full bg-amber-400" id="permDot"></span>
+          <span id="permText">क्लिपबोर्ड परमिशन तपासा</span>
+        </button>
+
+        <button onclick="openSettingsModal()" class="bg-amber-800 hover:bg-amber-900 text-white text-xs px-2.5 py-1.5 rounded shadow flex items-center gap-1 transition">
+          <i class="fa-solid fa-sliders"></i> पावती मजकूर व रंग
+        </button>
+        <label class="bg-orange-700 hover:bg-orange-800 text-white text-xs px-2.5 py-1.5 rounded shadow flex items-center gap-1 cursor-pointer transition">
+          <i class="fa-solid fa-image"></i> पावती फोटो बदला
+          <input type="file" id="templateInput" class="hidden" accept="image/*" onchange="uploadReceiptTemplate(event)">
+        </label>
+        <button onclick="exportToExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-2.5 py-1.5 rounded shadow flex items-center gap-1 transition">
+          <i class="fa-solid fa-file-excel"></i> Excel
+        </button>
+        <button onclick="exportBackup()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-2.5 py-1.5 rounded shadow flex items-center gap-1 transition">
+          <i class="fa-solid fa-download"></i> Backup
+        </button>
+        <label class="bg-gray-700 hover:bg-gray-800 text-white text-xs px-2.5 py-1.5 rounded shadow flex items-center gap-1 cursor-pointer transition">
+          <i class="fa-solid fa-upload"></i> Restore
+          <input type="file" id="restoreFile" class="hidden" accept=".json" onchange="importBackup(event)">
+        </label>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto p-4 space-y-6">
+
+    <!-- KPI Summary -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div class="bg-white p-3 rounded-xl border border-orange-100 shadow-sm">
+        <span class="text-xs text-slate-500 font-medium">एकूण जमा (Donation + Members)</span>
+        <span id="statTotalIncome" class="text-lg md:text-xl font-bold text-emerald-600 block">₹0</span>
+      </div>
+      <div class="bg-white p-3 rounded-xl border border-orange-100 shadow-sm">
+        <span class="text-xs text-slate-500 font-medium">एकूण खर्च (Expenses)</span>
+        <span id="statTotalExpense" class="text-lg md:text-xl font-bold text-rose-600 block">₹0</span>
+      </div>
+      <div class="bg-white p-3 rounded-xl border border-orange-100 shadow-sm">
+        <span class="text-xs text-slate-500 font-medium">शिल्लक रक्कम (Net Balance)</span>
+        <span id="statNetBalance" class="text-lg md:text-xl font-bold text-blue-600 block">₹0</span>
+      </div>
+      <div class="bg-white p-3 rounded-xl border border-orange-100 shadow-sm">
+        <span class="text-xs text-slate-500 font-medium">मेंबर्स येणे बाकी (Pending)</span>
+        <span id="statMemberDue" class="text-lg md:text-xl font-bold text-amber-600 block">₹0</span>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="flex border-b border-orange-200 bg-white rounded-t-xl overflow-hidden shadow-sm">
+      <button onclick="switchTab('donations')" id="tabBtn-donations" class="tab-btn flex-1 py-3 text-center font-semibold text-orange-600 border-b-2 border-orange-600 flex items-center justify-center gap-2">
+        <i class="fa-solid fa-hand-holding-dollar"></i> घर-घर वर्गणी (Donations)
+      </button>
+      <button onclick="switchTab('members')" id="tabBtn-members" class="tab-btn flex-1 py-3 text-center font-semibold text-slate-500 border-b-2 border-transparent flex items-center justify-center gap-2">
+        <i class="fa-solid fa-users"></i> मंडळ सदस्य (Members)
+      </button>
+      <button onclick="switchTab('expenses')" id="tabBtn-expenses" class="tab-btn flex-1 py-3 text-center font-semibold text-slate-500 border-b-2 border-transparent flex items-center justify-center gap-2">
+        <i class="fa-solid fa-receipt"></i> खर्च नोंद (Expenses)
+      </button>
+    </div>
+
+    <!-- TAB 1: DONATIONS -->
+    <section id="tab-donations" class="tab-content space-y-4">
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-orange-100">
+        <h2 class="text-sm md:text-base font-bold text-slate-700 mb-3 flex items-center gap-2">
+          <i class="fa-solid fa-plus-circle text-orange-500"></i> नवीन वर्गणी नोंदवा
+        </h2>
+        <form id="donationForm" onsubmit="addDonation(event)" class="grid grid-cols-1 md:grid-cols-4 gap-3">
+          <div>
+            <label class="text-xs font-semibold text-slate-600">ऑटो पावती क्र. (Receipt No)</label>
+            <input type="text" id="donReceipt" readonly class="w-full mt-1 border bg-slate-100 font-bold text-orange-700 rounded p-2 text-sm outline-none cursor-not-allowed" />
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-slate-600">वर्गणीदाराचे नाव</label>
+            <input type="text" id="donName" required class="w-full mt-1 border rounded p-2 text-sm focus:ring-1 focus:ring-orange-500 outline-none" />
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-slate-600">रक्कम (₹)</label>
+            <input type="number" id="donAmount" required min="1" class="w-full mt-1 border rounded p-2 text-sm focus:ring-1 focus:ring-orange-500 outline-none" />
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-slate-600">WhatsApp मोबाईल क्र.</label>
+            <input type="tel" id="donMobile" placeholder="उदा. 9876543210" class="w-full mt-1 border rounded p-2 text-sm focus:ring-1 focus:ring-orange-500 outline-none" />
+          </div>
+          <div class="md:col-span-3">
+            <label class="text-xs font-semibold text-slate-600">पत्ता किंवा घर क्र. (Address)</label>
+            <input type="text" id="donAddress" class="w-full mt-1 border rounded p-2 text-sm focus:ring-1 focus:ring-orange-500 outline-none" />
+          </div>
+          <div class="flex items-end">
+            <button type="submit" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-medium py-2 rounded text-sm transition">
+              जमा करा व पावती द्या
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="p-3 bg-slate-50 border-b flex justify-between items-center">
+          <h3 class="font-bold text-slate-700 text-sm">कलेक्ट केलेल्या पावत्यांची यादी</h3>
+          <span id="donCount" class="text-xs text-slate-500 font-medium">एकूण: 0</span>
+        </div>
+        <div class="overflow-x-auto max-h-96">
+          <table class="w-full text-left border-collapse text-xs md:text-sm">
+            <thead>
+              <tr class="bg-slate-100 text-slate-600 border-b">
+                <th class="p-2.5">पावती क्र.</th>
+                <th class="p-2.5">नाव</th>
+                <th class="p-2.5">पत्ता</th>
+                <th class="p-2.5">WhatsApp क्र.</th>
+                <th class="p-2.5 text-right">रक्कम</th>
+                <th class="p-2.5 text-center">पावती / कृती</th>
+              </tr>
+            </thead>
+            <tbody id="donationList" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: MEMBERS -->
+    <section id="tab-members" class="tab-content hidden space-y-4">
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-orange-100">
+        <h2 class="text-sm md:text-base font-bold text-slate-700 mb-3 flex items-center gap-2">
+          <i class="fa-solid fa-user-plus text-orange-500"></i> नवीन सदस्य नोंदवा
+        </h2>
+        <form id="memberForm" onsubmit="addMember(event)" class="grid grid-cols-1 md:grid-cols-4 gap-3">
+          <div>
+            <label class="text-xs font-semibold text-slate-600">सदस्याचे नाव</label>
+            <input type="text" id="memName" required class="w-full mt-1 border rounded p-2 text-sm outline-none" />
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-slate-600">कबूली रक्कम (Pledged ₹)</label>
+            <input type="number" id="memPledged" required min="0" class="w-full mt-1 border rounded p-2 text-sm outline-none" />
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-slate-600">जमा रक्कम (Paid ₹)</label>
+            <input type="number" id="memPaid" required min="0" class="w-full mt-1 border rounded p-2 text-sm outline-none" />
+          </div>
+          <div class="flex items-end">
+            <button type="submit" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-medium py-2 rounded text-sm transition">
+              सदस्य जोडा
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="p-3 bg-slate-50 border-b flex justify-between items-center">
+          <h3 class="font-bold text-slate-700 text-sm">मंडळ सदस्य यादी</h3>
+          <span id="memCount" class="text-xs text-slate-500 font-medium">एकूण: 0</span>
+        </div>
+        <div class="overflow-x-auto max-h-96">
+          <table class="w-full text-left border-collapse text-xs md:text-sm">
+            <thead>
+              <tr class="bg-slate-100 text-slate-600 border-b">
+                <th class="p-2.5">सदस्य नाव</th>
+                <th class="p-2.5 text-right">कबूली</th>
+                <th class="p-2.5 text-right">जमा</th>
+                <th class="p-2.5 text-right">बाकी</th>
+                <th class="p-2.5 text-center">कृती</th>
+              </tr>
+            </thead>
+            <tbody id="memberList" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: EXPENSES -->
+    <section id="tab-expenses" class="tab-content hidden space-y-4">
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-orange-100">
+        <h2 class="text-sm md:text-base font-bold text-slate-700 mb-3 flex items-center gap-2">
+          <i class="fa-solid fa-money-bill-transfer text-orange-500"></i> खर्चाची नोंद करा
+        </h2>
+        <form id="expenseForm" onsubmit="addExpense(event)" class="grid grid-cols-1 md:grid-cols-4 gap-3">
+          <div>
+            <label class="text-xs font-semibold text-slate-600">तपशील</label>
+            <input type="text" id="expTitle" required placeholder="मंडप, प्रसाद, इ." class="w-full mt-1 border rounded p-2 text-sm outline-none" />
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-slate-600">वर्गवारी</label>
+            <select id="expCategory" class="w-full mt-1 border rounded p-2 text-sm outline-none">
+              <option value="मंडप & डेकोरेशन">मंडप & डेकोरेशन</option>
+              <option value="साउंड & लाईट">साउंड & लाईट</option>
+              <option value="प्रसाद & जेवण">प्रसाद & जेवण</option>
+              <option value="पूजा & विसर्जन">पूजा & विसर्जन</option>
+              <option value="इतर">इतर खर्च</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-slate-600">रक्कम (₹)</label>
+            <input type="number" id="expAmount" required min="1" class="w-full mt-1 border rounded p-2 text-sm outline-none" />
+          </div>
+          <div class="flex items-end">
+            <button type="submit" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-medium py-2 rounded text-sm transition">
+              खर्च सेव्ह करा
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="p-3 bg-slate-50 border-b flex justify-between items-center">
+          <h3 class="font-bold text-slate-700 text-sm">खर्च यादी</h3>
+          <span id="expCount" class="text-xs text-slate-500 font-medium">एकूण: 0</span>
+        </div>
+        <div class="overflow-x-auto max-h-96">
+          <table class="w-full text-left border-collapse text-xs md:text-sm">
+            <thead>
+              <tr class="bg-slate-100 text-slate-600 border-b">
+                <th class="p-2.5">तारीख</th>
+                <th class="p-2.5">तपशील</th>
+                <th class="p-2.5">वर्गवारी</th>
+                <th class="p-2.5 text-right">रक्कम</th>
+                <th class="p-2.5 text-center">कृती</th>
+              </tr>
+            </thead>
+            <tbody id="expenseList" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- RECEIPT MODAL (FAST-COPY & DIRECT WHATSAPP) -->
+  <div id="receiptModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3">
+    <div class="bg-white rounded-2xl max-w-xl w-full p-4 md:p-5 shadow-2xl relative space-y-4 max-h-[95vh] flex flex-col">
+      <div class="flex justify-between items-center border-b pb-2">
+        <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
+          <i class="fa-solid fa-receipt text-orange-600"></i> डिजिटल पावती
+        </h3>
+        <button onclick="closeReceiptModal()" class="text-slate-400 hover:text-slate-700 text-lg">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="flex-1 overflow-auto bg-slate-100 rounded-lg p-2 flex items-center justify-center min-h-[220px]">
+        <canvas id="receiptCanvas" class="max-w-full h-auto rounded shadow-sm border"></canvas>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+        <button id="btnInstantCopy" onclick="instantCopyReceiptImage()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition text-sm shadow">
+          <i class="fa-regular fa-copy text-yellow-400 text-lg"></i> <span id="copyBtnLabel">१. Copy Image</span>
+        </button>
+        <button onclick="openTargetWhatsApp()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition text-sm shadow">
+          <i class="fa-brands fa-whatsapp text-xl"></i> <span>२. Open WhatsApp</span>
+        </button>
+      </div>
+      <p class="text-[11px] text-center text-slate-500 font-medium">
+        आधी <b>'१. Copy Image'</b> दाबा, नंतर <b>'२. Open WhatsApp'</b> दाबल्यावर तिथे जाऊन फक्त <b>Paste (Ctrl+V)</b> करा.
+      </p>
+    </div>
+  </div>
+
+  <!-- CLIPBOARD PERMISSION PROMPT MODAL (OPENS ON APP START) -->
+  <div id="permissionModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 text-center">
+      <div class="w-14 h-14 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto text-2xl shadow-inner">
+        <i class="fa-solid fa-clipboard-check"></i>
+      </div>
+      <div class="space-y-1">
+        <h3 class="text-lg font-bold text-slate-800">क्लिपबोर्ड परमिशन आवश्यक आहे</h3>
+        <p class="text-xs text-slate-500 leading-relaxed">
+          पावती एका क्लिकमध्ये कॉपी करून व्हॉट्सॲपवर पाठवण्यासाठी ब्राउझरची क्लिपबोर्ड परमिशन <b>Allow</b> करावी लागेल.
+        </p>
+      </div>
+      <div class="space-y-2 pt-2">
+        <button onclick="requestClipboardPermission()" class="w-full bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white font-bold py-3 px-4 rounded-xl text-sm shadow-md transition flex items-center justify-center gap-2">
+          <i class="fa-solid fa-check"></i> परमिशन मंजूर करा (Allow Permission)
+        </button>
+        <button onclick="dismissPermissionModal()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-medium py-2 rounded-lg text-xs transition">
+          नंतर करू
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- POSITION & INDIVIDUAL FONT/COLOR SETTINGS MODAL -->
+  <div id="settingsModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-2 md:p-4">
+    <div class="bg-white rounded-2xl max-w-6xl w-full p-4 shadow-2xl relative space-y-3 max-h-[96vh] flex flex-col">
+      <div class="flex justify-between items-center border-b pb-2">
+        <div>
+          <h3 class="font-bold text-slate-800 text-base">प्रत्येक टेक्स्टची जागा, साईज व रंग सेट करा</h3>
+          <p class="text-xs text-slate-500">स्लायडर हलवा, लाईव्ह प्रिव्ह्यू तपासा आणि सेव्ह करा.</p>
+        </div>
+        <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-slate-700 text-lg">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1 overflow-y-auto">
+        <div class="lg:col-span-7 bg-slate-100 rounded-xl p-2 flex items-center justify-center border overflow-hidden">
+          <canvas id="previewConfigCanvas" class="max-w-full h-auto rounded shadow-sm border bg-white"></canvas>
+        </div>
+
+        <div class="lg:col-span-5 space-y-2 pr-1 text-xs">
+          <!-- 1. Receipt No -->
+          <div class="p-2 bg-orange-50/70 rounded-lg border border-orange-200 space-y-1">
+            <div class="flex justify-between items-center font-bold text-orange-900">
+              <span>१. पावती क्र. (Receipt No)</span>
+              <input type="color" id="cfg_rec_color" onchange="onConfigChange()" class="w-6 h-6 rounded border cursor-pointer">
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+              <label>X%: <input type="range" min="0" max="100" id="cfg_rec_x" oninput="onConfigChange()" class="w-full"></label>
+              <label>Y%: <input type="range" min="0" max="100" id="cfg_rec_y" oninput="onConfigChange()" class="w-full"></label>
+              <label>Size: <input type="number" min="10" max="80" id="cfg_rec_size" oninput="onConfigChange()" class="w-full border rounded p-1"></label>
+            </div>
+          </div>
+
+          <!-- 2. Date -->
+          <div class="p-2 bg-orange-50/70 rounded-lg border border-orange-200 space-y-1">
+            <div class="flex justify-between items-center font-bold text-orange-900">
+              <span>२. दिनांक (Date)</span>
+              <input type="color" id="cfg_date_color" onchange="onConfigChange()" class="w-6 h-6 rounded border cursor-pointer">
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+              <label>X%: <input type="range" min="0" max="100" id="cfg_date_x" oninput="onConfigChange()" class="w-full"></label>
+              <label>Y%: <input type="range" min="0" max="100" id="cfg_date_y" oninput="onConfigChange()" class="w-full"></label>
+              <label>Size: <input type="number" min="10" max="80" id="cfg_date_size" oninput="onConfigChange()" class="w-full border rounded p-1"></label>
+            </div>
+          </div>
+
+          <!-- 3. Name -->
+          <div class="p-2 bg-orange-50/70 rounded-lg border border-orange-200 space-y-1">
+            <div class="flex justify-between items-center font-bold text-orange-900">
+              <span>३. नाव (Name)</span>
+              <input type="color" id="cfg_name_color" onchange="onConfigChange()" class="w-6 h-6 rounded border cursor-pointer">
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+              <label>X%: <input type="range" min="0" max="100" id="cfg_name_x" oninput="onConfigChange()" class="w-full"></label>
+              <label>Y%: <input type="range" min="0" max="100" id="cfg_name_y" oninput="onConfigChange()" class="w-full"></label>
+              <label>Size: <input type="number" min="10" max="80" id="cfg_name_size" oninput="onConfigChange()" class="w-full border rounded p-1"></label>
+            </div>
+          </div>
+
+          <!-- 4. Amount -->
+          <div class="p-2 bg-orange-50/70 rounded-lg border border-orange-200 space-y-1">
+            <div class="flex justify-between items-center font-bold text-orange-900">
+              <span>४. रक्कम (Amount ₹)</span>
+              <input type="color" id="cfg_amt_color" onchange="onConfigChange()" class="w-6 h-6 rounded border cursor-pointer">
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+              <label>X%: <input type="range" min="0" max="100" id="cfg_amt_x" oninput="onConfigChange()" class="w-full"></label>
+              <label>Y%: <input type="range" min="0" max="100" id="cfg_amt_y" oninput="onConfigChange()" class="w-full"></label>
+              <label>Size: <input type="number" min="10" max="80" id="cfg_amt_size" oninput="onConfigChange()" class="w-full border rounded p-1"></label>
+            </div>
+          </div>
+
+          <!-- 5. Address -->
+          <div class="p-2 bg-orange-50/70 rounded-lg border border-orange-200 space-y-1">
+            <div class="flex justify-between items-center font-bold text-orange-900">
+              <span>५. पत्ता (Address)</span>
+              <input type="color" id="cfg_addr_color" onchange="onConfigChange()" class="w-6 h-6 rounded border cursor-pointer">
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+              <label>X%: <input type="range" min="0" max="100" id="cfg_addr_x" oninput="onConfigChange()" class="w-full"></label>
+              <label>Y%: <input type="range" min="0" max="100" id="cfg_addr_y" oninput="onConfigChange()" class="w-full"></label>
+              <label>Size: <input type="number" min="10" max="80" id="cfg_addr_size" oninput="onConfigChange()" class="w-full border rounded p-1"></label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2 border-t pt-2">
+        <button onclick="resetPositionDefaults()" class="bg-gray-200 hover:bg-gray-300 text-slate-700 px-3 py-1.5 rounded text-xs">डिफ़ॉल्ट सेट करा</button>
+        <button onclick="savePositions()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-1.5 rounded text-xs font-bold">सेटिंग्ज सेव्ह करा</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const DEFAULT_CONFIG = {
+      rec:  { x: 75, y: 18, size: 22, color: "#9a3412" },
+      date: { x: 75, y: 24, size: 20, color: "#334155" },
+      name: { x: 25, y: 40, size: 28, color: "#0f172a" },
+      amt:  { x: 25, y: 52, size: 30, color: "#065f46" },
+      addr: { x: 25, y: 63, size: 20, color: "#475569" }
+    };
+
+    let appData = {
+      donations: [],
+      members: [],
+      expenses: [],
+      templateBase64: null,
+      receiptConfig: JSON.parse(JSON.stringify(DEFAULT_CONFIG))
+    };
+
+    let activeReceiptData = null;
+
+    // Load Data & Check Permissions
+    function loadData() {
+      const saved = localStorage.getItem("ganesh_festival_data_2026");
+      if (saved) {
+        try {
+          appData = JSON.parse(saved);
+          if (!appData.receiptConfig || !appData.receiptConfig.rec) {
+            appData.receiptConfig = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+          }
+        } catch (e) {
+          console.error("Parse Error", e);
+        }
+      }
+      renderAll();
+      updateNextReceiptNumber();
+      checkInitialClipboardPermission();
+    }
+
+    function saveData() {
+      localStorage.setItem("ganesh_festival_data_2026", JSON.stringify(appData));
+      renderAll();
+      updateNextReceiptNumber();
+    }
+
+    // ==========================================
+    // CLIPBOARD PERMISSION ENGINE
+    // ==========================================
+    async function checkInitialClipboardPermission() {
+      if (!navigator.permissions || !navigator.permissions.query) {
+        updatePermissionBadge("supported");
+        return;
+      }
+
+      try {
+        const status = await navigator.permissions.query({ name: "clipboard-write" });
+        if (status.state === "granted") {
+          updatePermissionBadge("granted");
+        } else if (status.state === "prompt") {
+          updatePermissionBadge("prompt");
+          // Show modal only if not previously dismissed in this session
+          if (!sessionStorage.getItem("permModalDismissed")) {
+            showPermissionModal();
+          }
+        } else {
+          updatePermissionBadge("denied");
+        }
+
+        status.onchange = () => {
+          checkInitialClipboardPermission();
+        };
+      } catch (e) {
+        console.log("Permission query bypass:", e);
+        updatePermissionBadge("supported");
+      }
+    }
+
+    function showPermissionModal() {
+      document.getElementById("permissionModal").classList.remove("hidden");
+    }
+
+    function dismissPermissionModal() {
+      document.getElementById("permissionModal").classList.add("hidden");
+      sessionStorage.setItem("permModalDismissed", "true");
+    }
+
+    async function requestClipboardPermission() {
+      try {
+        // Trigger browser's permission prompt through an actual gesture
+        const textBlob = new Blob([" "], { type: "text/plain" });
+        if (navigator.clipboard && window.ClipboardItem) {
+          await navigator.clipboard.write([new ClipboardItem({ "text/plain": textBlob })]);
+        }
+        updatePermissionBadge("granted");
+        dismissPermissionModal();
+        alert("क्लिपबोर्ड परमिशन यशस्वीरीत्या मंजूर झाली! आता इमेज थेट कॉपी होईल.");
+      } catch (err) {
+        console.warn("Permission activation error:", err);
+        dismissPermissionModal();
+        alert("ब्राउझरने परमिशन विचारली असल्यास 'Allow' करा. जर 'Blocked' असेल तर ब्राउझरच्या ॲड्रेस बारमधील कुलूप (Lock) चिन्हावर जाऊन Clipboard चालू करा.");
+      }
+    }
+
+    function updatePermissionBadge(state) {
+      const dot = document.getElementById("permDot");
+      const text = document.getElementById("permText");
+
+      if (state === "granted") {
+        dot.className = "w-2 h-2 rounded-full bg-emerald-400";
+        text.innerText = "क्लिपबोर्ड परमिशन Active ✓";
+      } else if (state === "denied") {
+        dot.className = "w-2 h-2 rounded-full bg-rose-500";
+        text.innerText = "क्लिपबोर्ड Blocked (टॅप करा)";
+      } else {
+        dot.className = "w-2 h-2 rounded-full bg-amber-400";
+        text.innerText = "परमिशन सेट करा (टॅप करा)";
+      }
+    }
+
+    // Auto Receipt Number (GF2026-0001)
+    function generateNextReceiptNumber() {
+      const year = "2026";
+      const prefix = `GF${year}-`;
+      let maxNum = 0;
+
+      appData.donations.forEach(d => {
+        if (d.receipt && d.receipt.startsWith(prefix)) {
+          const numPart = parseInt(d.receipt.replace(prefix, ""), 10);
+          if (!isNaN(numPart) && numPart > maxNum) {
+            maxNum = numPart;
+          }
+        }
+      });
+
+      const nextNum = maxNum + 1;
+      const paddedNum = nextNum < 10000 ? String(nextNum).padStart(4, '0') : String(nextNum);
+      return `${prefix}${paddedNum}`;
+    }
+
+    function updateNextReceiptNumber() {
+      const recInput = document.getElementById("donReceipt");
+      if (recInput) recInput.value = generateNextReceiptNumber();
+    }
+
+    function switchTab(tab) {
+      document.querySelectorAll(".tab-content").forEach(el => el.classList.add("hidden"));
+      document.querySelectorAll(".tab-btn").forEach(btn => {
+        btn.classList.remove("text-orange-600", "border-orange-600");
+        btn.classList.add("text-slate-500", "border-transparent");
+      });
+      document.getElementById(`tab-${tab}`).classList.remove("hidden");
+      const active = document.getElementById(`tabBtn-${tab}`);
+      active.classList.add("text-orange-600", "border-orange-600");
+      active.classList.remove("text-slate-500", "border-transparent");
+    }
+
+    function uploadReceiptTemplate(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        appData.templateBase64 = e.target.result;
+        saveData();
+        alert("पावती फोटो यशस्वी सेव्ह झाला!");
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function addDonation(e) {
+      e.preventDefault();
+      const rec = document.getElementById("donReceipt").value;
+      const name = document.getElementById("donName").value.trim();
+      const amount = parseFloat(document.getElementById("donAmount").value) || 0;
+      let mobile = document.getElementById("donMobile").value.trim().replace(/\D/g, "");
+      const addr = document.getElementById("donAddress").value.trim();
+
+      const newEntry = {
+        id: Date.now(),
+        receipt: rec,
+        name: name,
+        amount: amount,
+        mobile: mobile,
+        address: addr,
+        date: new Date().toLocaleDateString("en-IN")
+      };
+
+      appData.donations.push(newEntry);
+      document.getElementById("donationForm").reset();
+      saveData();
+      openReceiptModal(newEntry.id);
+    }
+
+    function deleteDonation(id) {
+      if (confirm("ही पावती नोंद काढून टाकायची आहे का?")) {
+        appData.donations = appData.donations.filter(d => d.id !== id);
+        saveData();
+      }
+    }
+
+    function addMember(e) {
+      e.preventDefault();
+      const name = document.getElementById("memName").value.trim();
+      const pledged = parseFloat(document.getElementById("memPledged").value) || 0;
+      const paid = parseFloat(document.getElementById("memPaid").value) || 0;
+      appData.members.push({ id: Date.now(), name, pledged, paid });
+      document.getElementById("memberForm").reset();
+      saveData();
+    }
+
+    function addPaymentToMember(id) {
+      const mem = appData.members.find(m => m.id === id);
+      if (!mem) return;
+      const extra = prompt(`${mem.name} यांच्याकडून जमा झालेली रक्कम:`, "0");
+      const parsed = parseFloat(extra);
+      if (!isNaN(parsed) && parsed > 0) {
+        mem.paid += parsed;
+        saveData();
+      }
+    }
+
+    function deleteMember(id) {
+      if (confirm("हा सदस्य काढून टाकायचा आहे का?")) {
+        appData.members = appData.members.filter(m => m.id !== id);
+        saveData();
+      }
+    }
+
+    function addExpense(e) {
+      e.preventDefault();
+      const title = document.getElementById("expTitle").value.trim();
+      const cat = document.getElementById("expCategory").value;
+      const amt = parseFloat(document.getElementById("expAmount").value) || 0;
+      appData.expenses.push({ id: Date.now(), title, category: cat, amount: amt, date: new Date().toLocaleDateString("en-IN") });
+      document.getElementById("expenseForm").reset();
+      saveData();
+    }
+
+    function deleteExpense(id) {
+      if (confirm("हा खर्च काढून टाकायचा आहे का?")) {
+        appData.expenses = appData.expenses.filter(x => x.id !== id);
+        saveData();
+      }
+    }
+
+    function renderAll() {
+      const donTotal = appData.donations.reduce((sum, d) => sum + Number(d.amount), 0);
+      const memPaidTotal = appData.members.reduce((sum, m) => sum + Number(m.paid), 0);
+      const memPledgedTotal = appData.members.reduce((sum, m) => sum + Number(m.pledged), 0);
+      const expTotal = appData.expenses.reduce((sum, e) => sum + Number(e.amount), 0);
+
+      const totalIncome = donTotal + memPaidTotal;
+      const netBalance = totalIncome - expTotal;
+      const totalDue = Math.max(0, memPledgedTotal - memPaidTotal);
+
+      document.getElementById("statTotalIncome").innerText = `₹${totalIncome.toLocaleString("en-IN")}`;
+      document.getElementById("statTotalExpense").innerText = `₹${expTotal.toLocaleString("en-IN")}`;
+      document.getElementById("statNetBalance").innerText = `₹${netBalance.toLocaleString("en-IN")}`;
+      document.getElementById("statMemberDue").innerText = `₹${totalDue.toLocaleString("en-IN")}`;
+
+      document.getElementById("donCount").innerText = `एकूण: ${appData.donations.length}`;
+      document.getElementById("donationList").innerHTML = appData.donations.map(d => `
+        <tr class="hover:bg-amber-50/50">
+          <td class="p-2.5 font-bold text-orange-700">${d.receipt}</td>
+          <td class="p-2.5 font-semibold text-slate-800">${d.name}</td>
+          <td class="p-2.5 text-slate-600">${d.address || '-'}</td>
+          <td class="p-2.5 text-slate-600">${d.mobile || '-'}</td>
+          <td class="p-2.5 text-right font-bold text-emerald-700">₹${Number(d.amount).toLocaleString("en-IN")}</td>
+          <td class="p-2.5 text-center space-x-1 whitespace-nowrap">
+            <button onclick="openReceiptModal(${d.id})" class="bg-orange-100 hover:bg-orange-200 text-orange-700 px-2 py-1 rounded text-xs">
+              <i class="fa-solid fa-receipt"></i> पावती
+            </button>
+            <button onclick="deleteDonation(${d.id})" class="text-rose-500 hover:text-rose-700 px-1.5 py-1 text-xs">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </td>
+        </tr>
+      `).join("");
+
+      document.getElementById("memCount").innerText = `एकूण: ${appData.members.length}`;
+      document.getElementById("memberList").innerHTML = appData.members.map(m => {
+        const due = Math.max(0, m.pledged - m.paid);
+        return `
+        <tr class="hover:bg-amber-50/50">
+          <td class="p-2.5 font-semibold text-slate-800">${m.name}</td>
+          <td class="p-2.5 text-right text-slate-600">₹${Number(m.pledged).toLocaleString("en-IN")}</td>
+          <td class="p-2.5 text-right font-bold text-emerald-700">₹${Number(m.paid).toLocaleString("en-IN")}</td>
+          <td class="p-2.5 text-right font-bold ${due > 0 ? 'text-amber-600' : 'text-slate-400'}">₹${due.toLocaleString("en-IN")}</td>
+          <td class="p-2.5 text-center space-x-1 whitespace-nowrap">
+            <button onclick="addPaymentToMember(${m.id})" class="bg-amber-100 hover:bg-amber-200 text-amber-800 text-xs px-2 py-1 rounded"><i class="fa-solid fa-plus"></i> जमा</button>
+            <button onclick="deleteMember(${m.id})" class="text-rose-500 hover:text-rose-700 text-xs px-1.5 py-1"><i class="fa-solid fa-trash"></i></button>
+          </td>
+        </tr>
+      `}).join("");
+
+      document.getElementById("expCount").innerText = `एकूण: ${appData.expenses.length}`;
+      document.getElementById("expenseList").innerHTML = appData.expenses.map(x => `
+        <tr class="hover:bg-amber-50/50">
+          <td class="p-2.5 text-slate-500">${x.date}</td>
+          <td class="p-2.5 font-semibold text-slate-800">${x.title}</td>
+          <td class="p-2.5 text-slate-600"><span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-xs">${x.category}</span></td>
+          <td class="p-2.5 text-right font-bold text-rose-600">₹${Number(x.amount).toLocaleString("en-IN")}</td>
+          <td class="p-2.5 text-center">
+            <button onclick="deleteExpense(${x.id})" class="text-rose-500 hover:text-rose-700 text-xs px-2 py-1"><i class="fa-solid fa-trash"></i></button>
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    // DRAW ENGINE (CANVAS)
+    function drawCanvasWithData(canvas, data, cfg, onDone) {
+      const ctx = canvas.getContext("2d");
+
+      if (appData.templateBase64) {
+        const img = new Image();
+        img.src = appData.templateBase64;
+        img.onload = function() {
+          canvas.width = img.width;
+          canvas.height = img.height;
+          ctx.drawImage(img, 0, 0);
+
+          ctx.fillStyle = cfg.rec.color;
+          ctx.font = `bold ${cfg.rec.size}px sans-serif`;
+          ctx.fillText(data.receipt, (canvas.width * cfg.rec.x) / 100, (canvas.height * cfg.rec.y) / 100);
+
+          ctx.fillStyle = cfg.date.color;
+          ctx.font = `bold ${cfg.date.size}px sans-serif`;
+          ctx.fillText(data.date, (canvas.width * cfg.date.x) / 100, (canvas.height * cfg.date.y) / 100);
+
+          ctx.fillStyle = cfg.name.color;
+          ctx.font = `bold ${cfg.name.size}px sans-serif`;
+          ctx.fillText(data.name, (canvas.width * cfg.name.x) / 100, (canvas.height * cfg.name.y) / 100);
+
+          ctx.fillStyle = cfg.amt.color;
+          ctx.font = `bold ${cfg.amt.size}px sans-serif`;
+          ctx.fillText(`₹ ${Number(data.amount).toLocaleString('en-IN')} /-`, (canvas.width * cfg.amt.x) / 100, (canvas.height * cfg.amt.y) / 100);
+
+          ctx.fillStyle = cfg.addr.color;
+          ctx.font = `bold ${cfg.addr.size}px sans-serif`;
+          ctx.fillText(data.address || '-', (canvas.width * cfg.addr.x) / 100, (canvas.height * cfg.addr.y) / 100);
+
+          if (onDone) onDone();
+        };
+      } else {
+        canvas.width = 750;
+        canvas.height = 420;
+        ctx.fillStyle = "#fffaf0";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.lineWidth = 6;
+        ctx.strokeStyle = "#ea580c";
+        ctx.strokeRect(12, 12, canvas.width - 24, canvas.height - 24);
+
+        ctx.fillStyle = "#9a3412";
+        ctx.font = "bold 30px serif";
+        ctx.textAlign = "center";
+        ctx.fillText("॥ श्री गणेशाय नमः ॥", canvas.width / 2, 55);
+
+        ctx.fillStyle = "#ea580c";
+        ctx.font = "bold 26px sans-serif";
+        ctx.fillText("सार्वजनिक गणेशोत्सव मंडळ २०२६", canvas.width / 2, 95);
+
+        ctx.textAlign = "left";
+        ctx.fillStyle = cfg.rec.color || "#1e293b";
+        ctx.font = `bold ${cfg.rec.size || 18}px sans-serif`;
+        ctx.fillText(`पावती क्र. : ${data.receipt}`, 40, 150);
+
+        ctx.fillStyle = cfg.date.color || "#1e293b";
+        ctx.font = `bold ${cfg.date.size || 18}px sans-serif`;
+        ctx.fillText(`दिनांक : ${data.date}`, 500, 150);
+
+        ctx.fillStyle = cfg.name.color || "#0f172a";
+        ctx.font = `bold ${cfg.name.size || 22}px sans-serif`;
+        ctx.fillText(`नाव : ${data.name}`, 40, 205);
+
+        ctx.fillStyle = cfg.addr.color || "#475569";
+        ctx.font = `bold ${cfg.addr.size || 18}px sans-serif`;
+        ctx.fillText(`पत्ता : ${data.address || '-'}`, 40, 250);
+
+        ctx.fillStyle = cfg.amt.color || "#065f46";
+        ctx.font = `bold ${cfg.amt.size || 26}px sans-serif`;
+        ctx.fillText(`रक्कम : ₹ ${Number(data.amount).toLocaleString('en-IN')} /-`, 40, 340);
+
+        if (onDone) onDone();
+      }
+    }
+
+    function openReceiptModal(id) {
+      const data = appData.donations.find(d => d.id === id);
+      if (!data) return;
+      activeReceiptData = data;
+      document.getElementById("receiptModal").classList.remove("hidden");
+      
+      const copyBtn = document.getElementById("btnInstantCopy");
+      const copyLabel = document.getElementById("copyBtnLabel");
+      copyLabel.innerText = "१. Copy Image";
+      copyBtn.classList.replace("bg-emerald-700", "bg-slate-800");
+
+      const canvas = document.getElementById("receiptCanvas");
+      drawCanvasWithData(canvas, data, appData.receiptConfig);
+    }
+
+    function closeReceiptModal() {
+      document.getElementById("receiptModal").classList.add("hidden");
+      activeReceiptData = null;
+    }
+
+    // ========================================================
+    // ZERO-DELAY PROMISE-BASED IMAGE CLIPBOARD COPY
+    // ========================================================
+    async function instantCopyReceiptImage() {
+      const copyBtn = document.getElementById("btnInstantCopy");
+      const copyLabel = document.getElementById("copyBtnLabel");
+      const canvas = document.getElementById("receiptCanvas");
+
+      if (!navigator.clipboard || !window.ClipboardItem) {
+        alert("तुमचा ब्राउझर थेट इमेज कॉपी सपोर्ट करत नाही. कृपया Google Chrome किंवा Microsoft Edge वापरा.");
+        return;
+      }
+
+      try {
+        // High compatibility: Pass Blob directly as Promise to satisfy Browser User Gesture rule
+        const blobPromise = new Promise((resolve, reject) => {
+          canvas.toBlob(blob => {
+            if (blob) resolve(blob);
+            else reject(new Error("Canvas blob conversion failed"));
+          }, "image/png");
+        });
+
+        const item = new ClipboardItem({ "image/png": blobPromise });
+        await navigator.clipboard.write([item]);
+
+        // Success UI
+        copyLabel.innerText = "✓ इमेज कॉपी झाली!";
+        copyBtn.classList.replace("bg-slate-800", "bg-emerald-700");
+        updatePermissionBadge("granted");
+      } catch (err) {
+        console.error("Clipboard Error:", err);
+        // If permission wasn't granted yet, pop open permission modal
+        showPermissionModal();
+      }
+    }
+
+    function openTargetWhatsApp() {
+      if (!activeReceiptData) return;
+      let phone = activeReceiptData.mobile ? activeReceiptData.mobile.replace(/\D/g, "") : "";
+      if (phone.length === 10) phone = "91" + phone;
+
+      const defaultMsg = `नमस्कार ${activeReceiptData.name} जी, गणेशोत्सवासाठी आपल्या ₹${activeReceiptData.amount}/- देणगीची अधिकृत पावती (पावती क्र. ${activeReceiptData.receipt}) जोडली आहे. धन्यवाद! बाप्पा आपल्या कुटुंबावर सदैव कृपा ठेवो. 🙏✨`;
+
+      const waUrl = phone 
+        ? `https://wa.me/${phone}?text=${encodeURIComponent(defaultMsg)}`
+        : `https://wa.me/?text=${encodeURIComponent(defaultMsg)}`;
+
+      window.open(waUrl, "_blank");
+    }
+
+    // Settings Modal
+    function openSettingsModal() {
+      if (!appData.templateBase64) {
+        alert("आधी वर दिलेल्या 'पावती फोटो बदला' बटणवरून तुमच्या पावतीची इमेज निवडा!");
+        return;
+      }
+      document.getElementById("settingsModal").classList.remove("hidden");
+
+      const cfg = appData.receiptConfig;
+      document.getElementById("cfg_rec_x").value = cfg.rec.x;
+      document.getElementById("cfg_rec_y").value = cfg.rec.y;
+      document.getElementById("cfg_rec_size").value = cfg.rec.size;
+      document.getElementById("cfg_rec_color").value = cfg.rec.color;
+
+      document.getElementById("cfg_date_x").value = cfg.date.x;
+      document.getElementById("cfg_date_y").value = cfg.date.y;
+      document.getElementById("cfg_date_size").value = cfg.date.size;
+      document.getElementById("cfg_date_color").value = cfg.date.color;
+
+      document.getElementById("cfg_name_x").value = cfg.name.x;
+      document.getElementById("cfg_name_y").value = cfg.name.y;
+      document.getElementById("cfg_name_size").value = cfg.name.size;
+      document.getElementById("cfg_name_color").value = cfg.name.color;
+
+      document.getElementById("cfg_amt_x").value = cfg.amt.x;
+      document.getElementById("cfg_amt_y").value = cfg.amt.y;
+      document.getElementById("cfg_amt_size").value = cfg.amt.size;
+      document.getElementById("cfg_amt_color").value = cfg.amt.color;
+
+      document.getElementById("cfg_addr_x").value = cfg.addr.x;
+      document.getElementById("cfg_addr_y").value = cfg.addr.y;
+      document.getElementById("cfg_addr_size").value = cfg.addr.size;
+      document.getElementById("cfg_addr_color").value = cfg.addr.color;
+
+      renderConfigPreview();
+    }
+
+    function closeSettingsModal() {
+      document.getElementById("settingsModal").classList.add("hidden");
+    }
+
+    function onConfigChange() {
+      renderConfigPreview();
+    }
+
+    function getCurrentSliderConfig() {
+      return {
+        rec: {
+          x: parseFloat(document.getElementById("cfg_rec_x").value),
+          y: parseFloat(document.getElementById("cfg_rec_y").value),
+          size: parseInt(document.getElementById("cfg_rec_size").value, 10),
+          color: document.getElementById("cfg_rec_color").value
+        },
+        date: {
+          x: parseFloat(document.getElementById("cfg_date_x").value),
+          y: parseFloat(document.getElementById("cfg_date_y").value),
+          size: parseInt(document.getElementById("cfg_date_size").value, 10),
+          color: document.getElementById("cfg_date_color").value
+        },
+        name: {
+          x: parseFloat(document.getElementById("cfg_name_x").value),
+          y: parseFloat(document.getElementById("cfg_name_y").value),
+          size: parseInt(document.getElementById("cfg_name_size").value, 10),
+          color: document.getElementById("cfg_name_color").value
+        },
+        amt: {
+          x: parseFloat(document.getElementById("cfg_amt_x").value),
+          y: parseFloat(document.getElementById("cfg_amt_y").value),
+          size: parseInt(document.getElementById("cfg_amt_size").value, 10),
+          color: document.getElementById("cfg_amt_color").value
+        },
+        addr: {
+          x: parseFloat(document.getElementById("cfg_addr_x").value),
+          y: parseFloat(document.getElementById("cfg_addr_y").value),
+          size: parseInt(document.getElementById("cfg_addr_size").value, 10),
+          color: document.getElementById("cfg_addr_color").value
+        }
+      };
+    }
+
+    function renderConfigPreview() {
+      const canvas = document.getElementById("previewConfigCanvas");
+      const dummyData = {
+        receipt: "GF2026-0001",
+        date: "14/09/2026",
+        name: "सचिन पाटील (डेमो नाव)",
+        amount: 5001,
+        address: "घर क्र. १२, सांगली"
+      };
+      drawCanvasWithData(canvas, dummyData, getCurrentSliderConfig());
+    }
+
+    function savePositions() {
+      appData.receiptConfig = getCurrentSliderConfig();
+      saveData();
+      closeSettingsModal();
+      alert("सर्व जागा व रंग सेव्ह झाले!");
+    }
+
+    function resetPositionDefaults() {
+      appData.receiptConfig = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+      openSettingsModal();
+    }
+
+    // Excel Export
+    function exportToExcel() {
+      const wb = XLSX.utils.book_new();
+      const donData = appData.donations.map(d => ({
+        "पावती क्र.": d.receipt,
+        "नाव": d.name,
+        "रक्कम (₹)": d.amount,
+        "मोबाईल": d.mobile,
+        "पत्ता": d.address,
+        "तारीख": d.date
+      }));
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(donData), "Donations");
+
+      const memData = appData.members.map(m => ({
+        "सदस्य नाव": m.name,
+        "कबूली": m.pledged,
+        "जमा": m.paid,
+        "बाकी": Math.max(0, m.pledged - m.paid)
+      }));
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(memData), "Members");
+
+      const expData = appData.expenses.map(e => ({
+        "तारीख": e.date,
+        "तपशील": e.title,
+        "वर्गवारी": e.category,
+        "रक्कम (₹)": e.amount
+      }));
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(expData), "Expenses");
+
+      XLSX.writeFile(wb, "Ganesh_Mandal_2026_Report.xlsx");
+    }
+
+    // Backup & Restore
+    function exportBackup() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData, null, 2));
+      const a = document.createElement("a");
+      a.href = dataStr;
+      a.download = `Ganesh_2026_Backup_${new Date().toISOString().slice(0,10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
+
+    function importBackup(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const imported = JSON.parse(e.target.result);
+          if (imported && Array.isArray(imported.donations)) {
+            appData = imported;
+            saveData();
+            alert("बॅकअप लोड झाला!");
+          }
+        } catch (err) {
+          alert("फाईल वाचण्यात त्रुटी: " + err.message);
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    window.onload = loadData;
+  </script>
+</body>
+</html>
