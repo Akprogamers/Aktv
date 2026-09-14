@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>गणेशोत्सव व्यवस्थापक २०२६</title>
+  <title>सार्वजनिक गणेशोत्सव व्यवस्थापक २०२६</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -19,7 +19,7 @@
       </div>
       <div class="flex items-center flex-wrap gap-2">
         <button onclick="openSettingsModal()" class="bg-amber-800 hover:bg-amber-900 text-white text-xs px-2.5 py-1.5 rounded shadow flex items-center gap-1 transition">
-          <i class="fa-solid fa-sliders"></i> पावती मजकूर व रंग
+          <i class="fa-solid fa-sliders"></i> पावती मजकूर व रंग सेटिंग्ज
         </button>
         <label class="bg-orange-700 hover:bg-orange-800 text-white text-xs px-2.5 py-1.5 rounded shadow flex items-center gap-1 cursor-pointer transition">
           <i class="fa-solid fa-image"></i> पावती फोटो बदला
@@ -76,10 +76,16 @@
 
     <!-- TAB 1: DONATIONS -->
     <section id="tab-donations" class="tab-content space-y-4">
-      <div class="bg-white p-4 rounded-xl shadow-sm border border-orange-100">
-        <h2 class="text-sm md:text-base font-bold text-slate-700 mb-3 flex items-center gap-2">
-          <i class="fa-solid fa-plus-circle text-orange-500"></i> नवीन वर्गणी नोंदवा
-        </h2>
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-orange-100 space-y-4">
+        <div class="flex justify-between items-center border-b pb-2">
+          <h2 class="text-sm md:text-base font-bold text-slate-700 flex items-center gap-2">
+            <i class="fa-solid fa-plus-circle text-orange-500"></i> नवीन वर्गणी नोंदवा
+          </h2>
+          <button onclick="openCustomFieldManager()" class="bg-amber-100 hover:bg-amber-200 text-amber-800 text-xs px-2.5 py-1 rounded font-medium flex items-center gap-1 transition">
+            <i class="fa-solid fa-gear"></i> पावतीत नवीन कॉलम जोडा / काढा
+          </button>
+        </div>
+
         <form id="donationForm" onsubmit="addDonation(event)" class="grid grid-cols-1 md:grid-cols-4 gap-3">
           <div>
             <label class="text-xs font-semibold text-slate-600">ऑटो पावती क्र. (Receipt No)</label>
@@ -97,12 +103,16 @@
             <label class="text-xs font-semibold text-slate-600">WhatsApp मोबाईल क्र.</label>
             <input type="tel" id="donMobile" placeholder="उदा. 9876543210" class="w-full mt-1 border rounded p-2 text-sm focus:ring-1 focus:ring-orange-500 outline-none" />
           </div>
-          <div class="md:col-span-3">
+          <div class="md:col-span-2">
             <label class="text-xs font-semibold text-slate-600">अक्षरी रक्कम (मराठीत ऑटोमॅटिक)</label>
-            <input type="text" id="donAmountWords" readonly class="w-full mt-1 border bg-slate-50 font-medium text-slate-700 rounded p-2 text-sm outline-none cursor-not-allowed" placeholder="रक्कम टाकल्यावर येथे मराठीत अक्षरी रक्कम दिसेल" />
+            <input type="text" id="donAmountWords" readonly class="w-full mt-1 border bg-slate-50 font-medium text-slate-700 rounded p-2 text-sm outline-none cursor-not-allowed" placeholder="रक्कम टाकल्यावर येथे अक्षरी रक्कम दिसेल" />
           </div>
-          <div class="flex items-end">
-            <button type="submit" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-medium py-2 rounded text-sm transition">
+
+          <!-- Dynamic Custom Fields Container -->
+          <div id="dynamicFormFieldsContainer" class="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+
+          <div class="md:col-span-4 flex justify-end pt-2">
+            <button type="submit" class="w-full md:w-auto px-6 bg-orange-600 hover:bg-orange-700 text-white font-medium py-2 rounded text-sm transition shadow">
               जमा करा व पावती द्या
             </button>
           </div>
@@ -254,7 +264,6 @@
         <canvas id="receiptCanvas" class="max-w-full h-auto rounded shadow-sm border"></canvas>
       </div>
 
-      <!-- DIRECT SEND BUTTON -->
       <div class="space-y-2 pt-1">
         <button id="btnSmartCopyWhatsApp" onclick="smartCopyAndOpenWhatsApp()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 px-4 rounded-xl flex items-center justify-center gap-2.5 shadow-lg transition text-base md:text-lg">
           <i class="fa-brands fa-whatsapp text-2xl"></i> <span id="btnSmartText">Send to WhatsApp</span>
@@ -263,13 +272,38 @@
     </div>
   </div>
 
-  <!-- POSITION & INDIVIDUAL FONT/COLOR SETTINGS MODAL -->
+  <!-- CUSTOM FIELD MANAGER MODAL -->
+  <div id="customFieldModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-5 shadow-2xl relative space-y-4">
+      <div class="flex justify-between items-center border-b pb-2">
+        <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
+          <i class="fa-solid fa-list-check text-orange-600"></i> पावतीचे कस्टमाइझ्ड फील्ड्स व्यवस्थापन
+        </h3>
+        <button onclick="closeCustomFieldManager()" class="text-slate-400 hover:text-slate-700 text-lg">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="space-y-3 text-xs">
+        <p class="text-slate-500">तुमच्या मंडळाच्या गरजेनुसार पावतीवर नवीन माहिती (उदा. पत्ता, वर्गणी प्रकार इ.) जोडण्यासाठी येथे नाव टाका:</p>
+        <div class="flex gap-2">
+          <input type="text" id="newFieldName" placeholder="उदा. पत्ता / घर क्र." class="flex-1 border rounded p-2 text-sm outline-none focus:ring-1 focus:ring-orange-500" />
+          <button onclick="addNewCustomField()" class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded font-bold text-xs transition">जोडा (+)</button>
+        </div>
+        <div class="border rounded-lg p-2 bg-slate-50 max-h-48 overflow-y-auto space-y-2" id="customFieldsListContainer"></div>
+      </div>
+      <div class="flex justify-end pt-2 border-t">
+        <button onclick="closeCustomFieldManager()" class="bg-slate-800 text-white px-4 py-2 rounded text-xs font-bold">पूर्ण करा / सेव्ह</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTINGS MODAL (WITH SLIDERS FOR X, Y, AND SIZE) -->
   <div id="settingsModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-2 md:p-4">
     <div class="bg-white rounded-2xl max-w-6xl w-full p-4 shadow-2xl relative space-y-3 max-h-[96vh] flex flex-col">
       <div class="flex justify-between items-center border-b pb-2">
         <div>
           <h3 class="font-bold text-slate-800 text-base">प्रत्येक मजकुराची जागा, साईज व रंग सेट करा</h3>
-          <p class="text-xs text-slate-500">स्लायडर हलवा, अक्षरी रकमेची जागा तपासा आणि सेव्ह करा.</p>
+          <p class="text-xs text-slate-500">स्लायडर डावीकडे-उजवीकडे हलवून अक्षरे लहान-मोठी करा आणि जागा सेट करा.</p>
         </div>
         <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-slate-700 text-lg">
           <i class="fa-solid fa-xmark"></i>
@@ -281,71 +315,8 @@
           <canvas id="previewConfigCanvas" class="max-w-full h-auto rounded shadow-sm border bg-white"></canvas>
         </div>
 
-        <div class="lg:col-span-5 space-y-2 pr-1 text-xs">
-          <!-- 1. Receipt No -->
-          <div class="p-2 bg-orange-50/70 rounded-lg border border-orange-200 space-y-1">
-            <div class="flex justify-between items-center font-bold text-orange-900">
-              <span>१. पावती क्र. (Receipt No)</span>
-              <input type="color" id="cfg_rec_color" onchange="onConfigChange()" class="w-6 h-6 rounded border cursor-pointer">
-            </div>
-            <div class="grid grid-cols-3 gap-2">
-              <label>X%: <input type="range" min="0" max="100" id="cfg_rec_x" oninput="onConfigChange()" class="w-full"></label>
-              <label>Y%: <input type="range" min="0" max="100" id="cfg_rec_y" oninput="onConfigChange()" class="w-full"></label>
-              <label>Size: <input type="number" min="10" max="80" id="cfg_rec_size" oninput="onConfigChange()" class="w-full border rounded p-1"></label>
-            </div>
-          </div>
-
-          <!-- 2. Date -->
-          <div class="p-2 bg-orange-50/70 rounded-lg border border-orange-200 space-y-1">
-            <div class="flex justify-between items-center font-bold text-orange-900">
-              <span>२. दिनांक (Date)</span>
-              <input type="color" id="cfg_date_color" onchange="onConfigChange()" class="w-6 h-6 rounded border cursor-pointer">
-            </div>
-            <div class="grid grid-cols-3 gap-2">
-              <label>X%: <input type="range" min="0" max="100" id="cfg_date_x" oninput="onConfigChange()" class="w-full"></label>
-              <label>Y%: <input type="range" min="0" max="100" id="cfg_date_y" oninput="onConfigChange()" class="w-full"></label>
-              <label>Size: <input type="number" min="10" max="80" id="cfg_date_size" oninput="onConfigChange()" class="w-full border rounded p-1"></label>
-            </div>
-          </div>
-
-          <!-- 3. Name -->
-          <div class="p-2 bg-orange-50/70 rounded-lg border border-orange-200 space-y-1">
-            <div class="flex justify-between items-center font-bold text-orange-900">
-              <span>३. नाव (Name)</span>
-              <input type="color" id="cfg_name_color" onchange="onConfigChange()" class="w-6 h-6 rounded border cursor-pointer">
-            </div>
-            <div class="grid grid-cols-3 gap-2">
-              <label>X%: <input type="range" min="0" max="100" id="cfg_name_x" oninput="onConfigChange()" class="w-full"></label>
-              <label>Y%: <input type="range" min="0" max="100" id="cfg_name_y" oninput="onConfigChange()" class="w-full"></label>
-              <label>Size: <input type="number" min="10" max="80" id="cfg_name_size" oninput="onConfigChange()" class="w-full border rounded p-1"></label>
-            </div>
-          </div>
-
-          <!-- 4. Amount -->
-          <div class="p-2 bg-orange-50/70 rounded-lg border border-orange-200 space-y-1">
-            <div class="flex justify-between items-center font-bold text-orange-900">
-              <span>४. रक्कम अंकी (Amount ₹)</span>
-              <input type="color" id="cfg_amt_color" onchange="onConfigChange()" class="w-6 h-6 rounded border cursor-pointer">
-            </div>
-            <div class="grid grid-cols-3 gap-2">
-              <label>X%: <input type="range" min="0" max="100" id="cfg_amt_x" oninput="onConfigChange()" class="w-full"></label>
-              <label>Y%: <input type="range" min="0" max="100" id="cfg_amt_y" oninput="onConfigChange()" class="w-full"></label>
-              <label>Size: <input type="number" min="10" max="80" id="cfg_amt_size" oninput="onConfigChange()" class="w-full border rounded p-1"></label>
-            </div>
-          </div>
-
-          <!-- 5. Amount in Words (मराठीत अक्षरी रक्कम) -->
-          <div class="p-2 bg-orange-50/70 rounded-lg border border-orange-200 space-y-1">
-            <div class="flex justify-between items-center font-bold text-orange-900">
-              <span>५. अक्षरी रक्कम (Amount in Words)</span>
-              <input type="color" id="cfg_words_color" onchange="onConfigChange()" class="w-6 h-6 rounded border cursor-pointer">
-            </div>
-            <div class="grid grid-cols-3 gap-2">
-              <label>X%: <input type="range" min="0" max="100" id="cfg_words_x" oninput="onConfigChange()" class="w-full"></label>
-              <label>Y%: <input type="range" min="0" max="100" id="cfg_words_y" oninput="onConfigChange()" class="w-full"></label>
-              <label>Size: <input type="number" min="10" max="80" id="cfg_words_size" oninput="onConfigChange()" class="w-full border rounded p-1"></label>
-            </div>
-          </div>
+        <div class="lg:col-span-5 space-y-2.5 pr-1 text-xs" id="settingsSlidersContainer">
+          <!-- Dynamically populated config sliders for base + custom fields -->
         </div>
       </div>
 
@@ -378,16 +349,10 @@
         let str = "";
         if (val >= 100) {
           const hundredDigit = Math.floor(val / 100);
-          if (hundredDigit === 1) {
-            str += "एकशे ";
-          } else {
-            str += units[hundredDigit] + "शे ";
-          }
+          str += (hundredDigit === 1 ? "एकशे " : units[hundredDigit] + "शे ");
           val %= 100;
         }
-        if (val > 0) {
-          str += units[val] + " ";
-        }
+        if (val > 0) str += units[val] + " ";
         return str.trim();
       }
 
@@ -395,23 +360,18 @@
       let remaining = n;
 
       if (remaining >= 10000000) {
-        const crore = Math.floor(remaining / 10000000);
-        result += convertBelowThousand(crore) + " कोटी ";
+        result += convertBelowThousand(Math.floor(remaining / 10000000)) + " कोटी ";
         remaining %= 10000000;
       }
       if (remaining >= 100000) {
-        const lakh = Math.floor(remaining / 100000);
-        result += convertBelowThousand(lakh) + " लाख ";
+        result += convertBelowThousand(Math.floor(remaining / 100000)) + " लाख ";
         remaining %= 100000;
       }
       if (remaining >= 1000) {
-        const thousand = Math.floor(remaining / 1000);
-        result += convertBelowThousand(thousand) + " हजार ";
+        result += convertBelowThousand(Math.floor(remaining / 1000)) + " हजार ";
         remaining %= 1000;
       }
-      if (remaining > 0) {
-        result += convertBelowThousand(remaining);
-      }
+      if (remaining > 0) result += convertBelowThousand(remaining);
 
       return result.trim() + " रुपये फक्त";
     }
@@ -438,53 +398,106 @@
       members: [],
       expenses: [],
       templateBase64: null,
-      receiptConfig: JSON.parse(JSON.stringify(DEFAULT_CONFIG))
+      customFields: [],
+      receiptConfig: JSON.parse(JSON.stringify(DEFAULT_CONFIG)),
+      customConfigs: {}
     };
 
     let activeReceiptData = null;
 
     function loadData() {
-      const saved = localStorage.getItem("ganesh_festival_data_2026");
+      const saved = localStorage.getItem("ganesh_festival_data_2026_pro");
       if (saved) {
         try {
           appData = JSON.parse(saved);
-          if (!appData.receiptConfig || !appData.receiptConfig.rec) {
-            appData.receiptConfig = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
-          }
-          if (!appData.receiptConfig.words) {
-            appData.receiptConfig.words = { ...DEFAULT_CONFIG.words };
-          }
+          if (!appData.receiptConfig) appData.receiptConfig = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+          if (!appData.customFields) appData.customFields = [];
+          if (!appData.customConfigs) appData.customConfigs = {};
         } catch (e) {
           console.error("Parse Error", e);
         }
       }
+      renderDynamicFormFields();
       renderAll();
       updateNextReceiptNumber();
     }
 
     function saveData() {
-      localStorage.setItem("ganesh_festival_data_2026", JSON.stringify(appData));
+      localStorage.setItem("ganesh_festival_data_2026_pro", JSON.stringify(appData));
+      renderDynamicFormFields();
       renderAll();
       updateNextReceiptNumber();
     }
 
-    function generateNextReceiptNumber() {
-      const year = "2026";
-      const prefix = `GF${year}-`;
-      let maxNum = 0;
+    function renderDynamicFormFields() {
+      const container = document.getElementById("dynamicFormFieldsContainer");
+      if (!container) return;
+      container.innerHTML = appData.customFields.map(f => `
+        <div>
+          <label class="text-xs font-semibold text-slate-600">${f.label}</label>
+          <input type="text" name="custom_${f.id}" placeholder="${f.label} प्रविष्ट करा" class="w-full mt-1 border rounded p-2 text-sm outline-none focus:ring-1 focus:ring-orange-500 custom-field-input" data-field-id="${f.id}" />
+        </div>
+      `).join("");
+    }
 
+    function openCustomFieldManager() {
+      document.getElementById("customFieldModal").classList.remove("hidden");
+      renderCustomFieldsList();
+    }
+
+    function closeCustomFieldManager() {
+      document.getElementById("customFieldModal").classList.add("hidden");
+      saveData();
+    }
+
+    function renderCustomFieldsList() {
+      const listContainer = document.getElementById("customFieldsListContainer");
+      if (appData.customFields.length === 0) {
+        listContainer.innerHTML = `<p class="text-slate-400 text-center py-2">अजून कोणतेही कस्टम्ड कॉलम जोडलेले नाही.</p>`;
+        return;
+      }
+      listContainer.innerHTML = appData.customFields.map(f => `
+        <div class="flex justify-between items-center bg-white p-2 rounded border shadow-sm">
+          <span class="font-semibold text-slate-700">${f.label}</span>
+          <button onclick="removeCustomField('${f.id}')" class="text-rose-500 hover:text-rose-700 px-2 py-1 text-xs"><i class="fa-solid fa-trash"></i> डिलीट</button>
+        </div>
+      `).join("");
+    }
+
+    function addNewCustomField() {
+      const input = document.getElementById("newFieldName");
+      const val = input.value.trim();
+      if (!val) return;
+
+      const fieldId = 'field_' + Date.now();
+      appData.customFields.push({ id: fieldId, label: val });
+      appData.customConfigs[fieldId] = { x: 25, y: 72 + (appData.customFields.length * 8), size: 18, color: "#334155" };
+
+      input.value = "";
+      renderCustomFieldsList();
+      saveData();
+    }
+
+    function removeCustomField(id) {
+      if (confirm("हे फील्ड काढून टाकायचे आहे का?")) {
+        appData.customFields = appData.customFields.filter(f => f.id !== id);
+        delete appData.customConfigs[id];
+        renderCustomFieldsList();
+        saveData();
+      }
+    }
+
+    function generateNextReceiptNumber() {
+      const prefix = "GF2026-";
+      let maxNum = 0;
       appData.donations.forEach(d => {
         if (d.receipt && d.receipt.startsWith(prefix)) {
           const numPart = parseInt(d.receipt.replace(prefix, ""), 10);
-          if (!isNaN(numPart) && numPart > maxNum) {
-            maxNum = numPart;
-          }
+          if (!isNaN(numPart) && numPart > maxNum) maxNum = numPart;
         }
       });
-
       const nextNum = maxNum + 1;
-      const paddedNum = nextNum < 10000 ? String(nextNum).padStart(4, '0') : String(nextNum);
-      return `${prefix}${paddedNum}`;
+      return prefix + (nextNum < 10000 ? String(nextNum).padStart(4, '0') : String(nextNum));
     }
 
     function updateNextReceiptNumber() {
@@ -524,6 +537,12 @@
       let mobile = document.getElementById("donMobile").value.trim().replace(/\D/g, "");
       const amountWords = numberToMarathiWords(amount);
 
+      const customValues = {};
+      document.querySelectorAll(".custom-field-input").forEach(inp => {
+        const fId = inp.getAttribute("data-field-id");
+        customValues[fId] = inp.value.trim();
+      });
+
       const newEntry = {
         id: Date.now(),
         receipt: rec,
@@ -531,12 +550,14 @@
         amount: amount,
         amountWords: amountWords,
         mobile: mobile,
+        customValues: customValues,
         date: new Date().toLocaleDateString("en-IN")
       };
 
       appData.donations.push(newEntry);
       document.getElementById("donationForm").reset();
       document.getElementById("donAmountWords").value = "";
+      renderDynamicFormFields();
       saveData();
       openReceiptModal(newEntry.id);
     }
@@ -658,7 +679,7 @@
     }
 
     // DRAW CANVAS ENGINE
-    function drawCanvasWithData(canvas, data, cfg, onDone) {
+    function drawCanvasWithData(canvas, data, cfg, customConfigs, customFields, onDone) {
       const ctx = canvas.getContext("2d");
       const wordsText = data.amountWords || numberToMarathiWords(data.amount);
 
@@ -670,25 +691,32 @@
           canvas.height = img.height;
           ctx.drawImage(img, 0, 0);
 
-          ctx.fillStyle = cfg.rec.color;
-          ctx.font = `bold ${cfg.rec.size}px sans-serif`;
+          ctx.fillStyle = cfg.rec.color; ctx.font = `bold ${cfg.rec.size}px sans-serif`;
           ctx.fillText(data.receipt, (canvas.width * cfg.rec.x) / 100, (canvas.height * cfg.rec.y) / 100);
 
-          ctx.fillStyle = cfg.date.color;
-          ctx.font = `bold ${cfg.date.size}px sans-serif`;
+          ctx.fillStyle = cfg.date.color; ctx.font = `bold ${cfg.date.size}px sans-serif`;
           ctx.fillText(data.date, (canvas.width * cfg.date.x) / 100, (canvas.height * cfg.date.y) / 100);
 
-          ctx.fillStyle = cfg.name.color;
-          ctx.font = `bold ${cfg.name.size}px sans-serif`;
+          ctx.fillStyle = cfg.name.color; ctx.font = `bold ${cfg.name.size}px sans-serif`;
           ctx.fillText(data.name, (canvas.width * cfg.name.x) / 100, (canvas.height * cfg.name.y) / 100);
 
-          ctx.fillStyle = cfg.amt.color;
-          ctx.font = `bold ${cfg.amt.size}px sans-serif`;
+          ctx.fillStyle = cfg.amt.color; ctx.font = `bold ${cfg.amt.size}px sans-serif`;
           ctx.fillText(`₹ ${Number(data.amount).toLocaleString('en-IN')} /-`, (canvas.width * cfg.amt.x) / 100, (canvas.height * cfg.amt.y) / 100);
 
-          ctx.fillStyle = cfg.words.color;
-          ctx.font = `bold ${cfg.words.size}px sans-serif`;
+          ctx.fillStyle = cfg.words.color; ctx.font = `bold ${cfg.words.size}px sans-serif`;
           ctx.fillText(wordsText, (canvas.width * cfg.words.x) / 100, (canvas.height * cfg.words.y) / 100);
+
+          if (customFields && data.customValues) {
+            customFields.forEach(f => {
+              const fCfg = customConfigs[f.id] || { x: 25, y: 75, size: 18, color: '#334155' };
+              const val = data.customValues[f.id] || '';
+              if (val) {
+                ctx.fillStyle = fCfg.color;
+                ctx.font = `bold ${fCfg.size}px sans-serif`;
+                ctx.fillText(`${f.label}: ${val}`, (canvas.width * fCfg.x) / 100, (canvas.height * fCfg.y) / 100);
+              }
+            });
+          }
 
           if (onDone) onDone();
         };
@@ -697,39 +725,41 @@
         canvas.height = 420;
         ctx.fillStyle = "#fffaf0";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.lineWidth = 6;
-        ctx.strokeStyle = "#ea580c";
+        ctx.lineWidth = 6; ctx.strokeStyle = "#ea580c";
         ctx.strokeRect(12, 12, canvas.width - 24, canvas.height - 24);
 
-        ctx.fillStyle = "#9a3412";
-        ctx.font = "bold 30px serif";
-        ctx.textAlign = "center";
+        ctx.fillStyle = "#9a3412"; ctx.font = "bold 30px serif"; ctx.textAlign = "center";
         ctx.fillText("॥ श्री गणेशाय नमः ॥", canvas.width / 2, 55);
 
-        ctx.fillStyle = "#ea580c";
-        ctx.font = "bold 26px sans-serif";
+        ctx.fillStyle = "#ea580c"; ctx.font = "bold 26px sans-serif";
         ctx.fillText("सार्वजनिक गणेशोत्सव मंडळ २०२६", canvas.width / 2, 95);
 
         ctx.textAlign = "left";
-        ctx.fillStyle = cfg.rec.color || "#1e293b";
-        ctx.font = `bold ${cfg.rec.size || 18}px sans-serif`;
+        ctx.fillStyle = cfg.rec.color || "#1e293b"; ctx.font = `bold ${cfg.rec.size || 18}px sans-serif`;
         ctx.fillText(`पावती क्र. : ${data.receipt}`, 40, 150);
 
-        ctx.fillStyle = cfg.date.color || "#1e293b";
-        ctx.font = `bold ${cfg.date.size || 18}px sans-serif`;
+        ctx.fillStyle = cfg.date.color || "#1e293b"; ctx.font = `bold ${cfg.date.size || 18}px sans-serif`;
         ctx.fillText(`दिनांक : ${data.date}`, 500, 150);
 
-        ctx.fillStyle = cfg.name.color || "#0f172a";
-        ctx.font = `bold ${cfg.name.size || 22}px sans-serif`;
+        ctx.fillStyle = cfg.name.color || "#0f172a"; ctx.font = `bold ${cfg.name.size || 22}px sans-serif`;
         ctx.fillText(`नाव : ${data.name}`, 40, 205);
 
-        ctx.fillStyle = cfg.words.color || "#475569";
-        ctx.font = `bold ${cfg.words.size || 18}px sans-serif`;
+        ctx.fillStyle = cfg.words.color || "#475569"; ctx.font = `bold ${cfg.words.size || 18}px sans-serif`;
         ctx.fillText(`अक्षरी रक्कम : ${wordsText}`, 40, 250);
 
-        ctx.fillStyle = cfg.amt.color || "#065f46";
-        ctx.font = `bold ${cfg.amt.size || 26}px sans-serif`;
-        ctx.fillText(`रक्कम अंकी : ₹ ${Number(data.amount).toLocaleString('en-IN')} /-`, 40, 340);
+        if (customFields && data.customValues) {
+          let yPos = 290;
+          customFields.forEach(f => {
+            const val = data.customValues[f.id] || '';
+            if (val) {
+              ctx.fillText(`${f.label} : ${val}`, 40, yPos);
+              yPos += 30;
+            }
+          });
+        }
+
+        ctx.fillStyle = cfg.amt.color || "#065f46"; ctx.font = `bold ${cfg.amt.size || 26}px sans-serif`;
+        ctx.fillText(`रक्कम अंकी : ₹ ${Number(data.amount).toLocaleString('en-IN')} /-`, 40, 370);
 
         if (onDone) onDone();
       }
@@ -741,11 +771,8 @@
       activeReceiptData = data;
       document.getElementById("receiptModal").classList.remove("hidden");
       
-      const btnText = document.getElementById("btnSmartText");
-      btnText.innerText = "Send to WhatsApp";
-
       const canvas = document.getElementById("receiptCanvas");
-      drawCanvasWithData(canvas, data, appData.receiptConfig);
+      drawCanvasWithData(canvas, data, appData.receiptConfig, appData.customConfigs, appData.customFields);
     }
 
     function closeReceiptModal() {
@@ -753,9 +780,6 @@
       activeReceiptData = null;
     }
 
-    // ========================================================
-    // SEND TO WHATSAPP ACTION (COPY & OPEN)
-    // ========================================================
     async function smartCopyAndOpenWhatsApp() {
       if (!activeReceiptData) return;
       const canvas = document.getElementById("receiptCanvas");
@@ -767,7 +791,6 @@
       const words = activeReceiptData.amountWords || numberToMarathiWords(activeReceiptData.amount);
       const messageText = `नमस्कार ${activeReceiptData.name} जी, गणेशोत्सवासाठी आपल्या ₹${activeReceiptData.amount}/- (${words}) देणगीची अधिकृत डिजिटल पावती (पावती क्र. ${activeReceiptData.receipt}) जोडली आहे. धन्यवाद! बाप्पा आपल्या कुटुंबावर सदैव कृपा ठेवो. 🙏✨`;
 
-      // Copy image to clipboard
       try {
         if (navigator.clipboard && window.ClipboardItem) {
           const blobPromise = new Promise(resolve => canvas.toBlob(resolve, "image/png"));
@@ -779,7 +802,6 @@
         console.warn("Clipboard copy:", err);
       }
 
-      // Open WhatsApp chat directly
       setTimeout(() => {
         const waUrl = phone 
           ? `https://wa.me/${phone}?text=${encodeURIComponent(messageText)}`
@@ -788,6 +810,35 @@
         window.open(waUrl, "_blank");
         btnText.innerText = "Send to WhatsApp";
       }, 350);
+    }
+
+    // Helper to generate Slider Card with live Size indicator
+    function generateSliderFieldHTML(title, idPrefix, colorVal, xVal, yVal, sizeVal) {
+      return `
+        <div class="p-2.5 bg-orange-50/70 rounded-lg border border-orange-200 space-y-1.5">
+          <div class="flex justify-between items-center font-bold text-orange-950">
+            <span>${title}</span>
+            <div class="flex items-center gap-2">
+              <span class="text-[11px] font-normal text-slate-500 bg-white px-1.5 py-0.5 rounded border" id="${idPrefix}_size_display">${sizeVal}px</span>
+              <input type="color" id="${idPrefix}_color" value="${colorVal}" onchange="onConfigChange()" class="w-6 h-6 rounded border cursor-pointer">
+            </div>
+          </div>
+          <div class="grid grid-cols-3 gap-2">
+            <label>X (आडवे): <input type="range" min="0" max="100" id="${idPrefix}_x" value="${xVal}" oninput="onConfigChange()" class="w-full"></label>
+            <label>Y (उभे): <input type="range" min="0" max="100" id="${idPrefix}_y" value="${yVal}" oninput="onConfigChange()" class="w-full"></label>
+            <label>साईज (Size): <input type="range" min="10" max="80" id="${idPrefix}_size" value="${sizeVal}" oninput="onSizeSliderMove('${idPrefix}')" class="w-full"></label>
+          </div>
+        </div>
+      `;
+    }
+
+    function onSizeSliderMove(prefix) {
+      const slider = document.getElementById(`${prefix}_size`);
+      const display = document.getElementById(`${prefix}_size_display`);
+      if (slider && display) {
+        display.innerText = `${slider.value}px`;
+      }
+      onConfigChange();
     }
 
     // Settings Modal
@@ -799,31 +850,21 @@
       document.getElementById("settingsModal").classList.remove("hidden");
 
       const cfg = appData.receiptConfig;
-      document.getElementById("cfg_rec_x").value = cfg.rec.x;
-      document.getElementById("cfg_rec_y").value = cfg.rec.y;
-      document.getElementById("cfg_rec_size").value = cfg.rec.size;
-      document.getElementById("cfg_rec_color").value = cfg.rec.color;
+      let html = "";
 
-      document.getElementById("cfg_date_x").value = cfg.date.x;
-      document.getElementById("cfg_date_y").value = cfg.date.y;
-      document.getElementById("cfg_date_size").value = cfg.date.size;
-      document.getElementById("cfg_date_color").value = cfg.date.color;
+      html += generateSliderFieldHTML("१. पावती क्र. (Receipt No)", "cfg_rec", cfg.rec.color, cfg.rec.x, cfg.rec.y, cfg.rec.size);
+      html += generateSliderFieldHTML("२. दिनांक (Date)", "cfg_date", cfg.date.color, cfg.date.x, cfg.date.y, cfg.date.size);
+      html += generateSliderFieldHTML("३. नाव (Name)", "cfg_name", cfg.name.color, cfg.name.x, cfg.name.y, cfg.name.size);
+      html += generateSliderFieldHTML("४. रक्कम अंकी (Amount ₹)", "cfg_amt", cfg.amt.color, cfg.amt.x, cfg.amt.y, cfg.amt.size);
+      html += generateSliderFieldHTML("५. अक्षरी रक्कम (Amount Words)", "cfg_words", cfg.words.color, cfg.words.x, cfg.words.y, cfg.words.size);
 
-      document.getElementById("cfg_name_x").value = cfg.name.x;
-      document.getElementById("cfg_name_y").value = cfg.name.y;
-      document.getElementById("cfg_name_size").value = cfg.name.size;
-      document.getElementById("cfg_name_color").value = cfg.name.color;
+      // Custom Fields Sliders
+      appData.customFields.forEach((f, idx) => {
+        const cCfg = appData.customConfigs[f.id] || { x: 25, y: 75, size: 18, color: '#334155' };
+        html += generateSliderFieldHTML(`${idx+6}. ${f.label}`, `cfg_custom_${f.id}`, cCfg.color, cCfg.x, cCfg.y, cCfg.size);
+      });
 
-      document.getElementById("cfg_amt_x").value = cfg.amt.x;
-      document.getElementById("cfg_amt_y").value = cfg.amt.y;
-      document.getElementById("cfg_amt_size").value = cfg.amt.size;
-      document.getElementById("cfg_amt_color").value = cfg.amt.color;
-
-      document.getElementById("cfg_words_x").value = cfg.words.x;
-      document.getElementById("cfg_words_y").value = cfg.words.y;
-      document.getElementById("cfg_words_size").value = cfg.words.size;
-      document.getElementById("cfg_words_color").value = cfg.words.color;
-
+      document.getElementById("settingsSlidersContainer").innerHTML = html;
       renderConfigPreview();
     }
 
@@ -836,38 +877,50 @@
     }
 
     function getCurrentSliderConfig() {
-      return {
-        rec: {
-          x: parseFloat(document.getElementById("cfg_rec_x").value),
-          y: parseFloat(document.getElementById("cfg_rec_y").value),
-          size: parseInt(document.getElementById("cfg_rec_size").value, 10),
-          color: document.getElementById("cfg_rec_color").value
+      const receiptConfig = {
+        rec: { 
+          x: parseFloat(document.getElementById("cfg_rec_x").value), 
+          y: parseFloat(document.getElementById("cfg_rec_y").value), 
+          size: parseInt(document.getElementById("cfg_rec_size").value, 10), 
+          color: document.getElementById("cfg_rec_color").value 
         },
-        date: {
-          x: parseFloat(document.getElementById("cfg_date_x").value),
-          y: parseFloat(document.getElementById("cfg_date_y").value),
-          size: parseInt(document.getElementById("cfg_date_size").value, 10),
-          color: document.getElementById("cfg_date_color").value
+        date: { 
+          x: parseFloat(document.getElementById("cfg_date_x").value), 
+          y: parseFloat(document.getElementById("cfg_date_y").value), 
+          size: parseInt(document.getElementById("cfg_date_size").value, 10), 
+          color: document.getElementById("cfg_date_color").value 
         },
-        name: {
-          x: parseFloat(document.getElementById("cfg_name_x").value),
-          y: parseFloat(document.getElementById("cfg_name_y").value),
-          size: parseInt(document.getElementById("cfg_name_size").value, 10),
-          color: document.getElementById("cfg_name_color").value
+        name: { 
+          x: parseFloat(document.getElementById("cfg_name_x").value), 
+          y: parseFloat(document.getElementById("cfg_name_y").value), 
+          size: parseInt(document.getElementById("cfg_name_size").value, 10), 
+          color: document.getElementById("cfg_name_color").value 
         },
-        amt: {
-          x: parseFloat(document.getElementById("cfg_amt_x").value),
-          y: parseFloat(document.getElementById("cfg_amt_y").value),
-          size: parseInt(document.getElementById("cfg_amt_size").value, 10),
-          color: document.getElementById("cfg_amt_color").value
+        amt: { 
+          x: parseFloat(document.getElementById("cfg_amt_x").value), 
+          y: parseFloat(document.getElementById("cfg_amt_y").value), 
+          size: parseInt(document.getElementById("cfg_amt_size").value, 10), 
+          color: document.getElementById("cfg_amt_color").value 
         },
-        words: {
-          x: parseFloat(document.getElementById("cfg_words_x").value),
-          y: parseFloat(document.getElementById("cfg_words_y").value),
-          size: parseInt(document.getElementById("cfg_words_size").value, 10),
-          color: document.getElementById("cfg_words_color").value
+        words: { 
+          x: parseFloat(document.getElementById("cfg_words_x").value), 
+          y: parseFloat(document.getElementById("cfg_words_y").value), 
+          size: parseInt(document.getElementById("cfg_words_size").value, 10), 
+          color: document.getElementById("cfg_words_color").value 
         }
       };
+
+      const customConfigs = {};
+      appData.customFields.forEach(f => {
+        customConfigs[f.id] = {
+          x: parseFloat(document.getElementById(`cfg_custom_${f.id}_x`).value),
+          y: parseFloat(document.getElementById(`cfg_custom_${f.id}_y`).value),
+          size: parseInt(document.getElementById(`cfg_custom_${f.id}_size`).value, 10),
+          color: document.getElementById(`cfg_custom_${f.id}_color`).value
+        };
+      });
+
+      return { receiptConfig, customConfigs };
     }
 
     function renderConfigPreview() {
@@ -875,66 +928,57 @@
       const dummyData = {
         receipt: "GF2026-0001",
         date: "14/09/2026",
-        name: "सचिन पाटील (डेमो नाव)",
+        name: "सचिन पाटील (डेमो)",
         amount: 5001,
-        amountWords: "पाच हजार एक रुपये फक्त"
+        amountWords: "पाच हजार एक रुपये फक्त",
+        customValues: {}
       };
-      drawCanvasWithData(canvas, dummyData, getCurrentSliderConfig());
+      appData.customFields.forEach(f => { dummyData.customValues[f.id] = f.label + " (डेमो)"; });
+
+      const configs = getCurrentSliderConfig();
+      drawCanvasWithData(canvas, dummyData, configs.receiptConfig, configs.customConfigs, appData.customFields);
     }
 
     function savePositions() {
-      appData.receiptConfig = getCurrentSliderConfig();
+      const configs = getCurrentSliderConfig();
+      appData.receiptConfig = configs.receiptConfig;
+      appData.customConfigs = configs.customConfigs;
       saveData();
       closeSettingsModal();
-      alert("सर्व मजकुराची जागा, साईज व रंग यशस्वी सेव्ह झाले!");
+      alert("सर्व सेटिंग्ज सेव्ह झाल्या!");
     }
 
     function resetPositionDefaults() {
       appData.receiptConfig = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+      appData.customConfigs = {};
       openSettingsModal();
     }
 
-    // Excel Export
     function exportToExcel() {
       const wb = XLSX.utils.book_new();
-      const donData = appData.donations.map(d => ({
-        "पावती क्र.": d.receipt,
-        "नाव": d.name,
-        "रक्कम (₹)": d.amount,
-        "अक्षरी रक्कम (मराठी)": d.amountWords || numberToMarathiWords(d.amount),
-        "मोबाईल": d.mobile,
-        "तारीख": d.date
-      }));
+      const donData = appData.donations.map(d => {
+        let row = {
+          "पावती क्र.": d.receipt,
+          "नाव": d.name,
+          "रक्कम (₹)": d.amount,
+          "अक्षरी रक्कम": d.amountWords,
+          "मोबाईल": d.mobile,
+          "तारीख": d.date
+        };
+        if (d.customValues) {
+          appData.customFields.forEach(f => { row[f.label] = d.customValues[f.id] || ''; });
+        }
+        return row;
+      });
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(donData), "Donations");
-
-      const memData = appData.members.map(m => ({
-        "सदस्य नाव": m.name,
-        "कबूली": m.pledged,
-        "जमा": m.paid,
-        "बाकी": Math.max(0, m.pledged - m.paid)
-      }));
-      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(memData), "Members");
-
-      const expData = appData.expenses.map(e => ({
-        "तारीख": e.date,
-        "तपशील": e.title,
-        "वर्गवारी": e.category,
-        "रक्कम (₹)": e.amount
-      }));
-      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(expData), "Expenses");
-
-      XLSX.writeFile(wb, "Ganesh_Mandal_2026_Report.xlsx");
+      XLSX.writeFile(wb, "Ganesh_Mandal_Report.xlsx");
     }
 
-    // Backup & Restore
     function exportBackup() {
       const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData, null, 2));
       const a = document.createElement("a");
-      a.href = dataStr;
-      a.download = `Ganesh_2026_Backup_${new Date().toISOString().slice(0,10)}.json`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
+      a.href = dataStr; a.download = `Ganesh_Backup_${new Date().toISOString().slice(0,10)}.json`;
+      document.body.appendChild(a); a.click(); a.remove();
     }
 
     function importBackup(event) {
@@ -943,15 +987,10 @@
       const reader = new FileReader();
       reader.onload = function(e) {
         try {
-          const imported = JSON.parse(e.target.result);
-          if (imported && Array.isArray(imported.donations)) {
-            appData = imported;
-            saveData();
-            alert("बॅकअप लोड झाला!");
-          }
-        } catch (err) {
-          alert("फाईल वाचण्यात त्रुटी: " + err.message);
-        }
+          appData = JSON.parse(e.target.result);
+          saveData();
+          alert("बॅकअप लोड झाला!");
+        } catch (err) { alert("त्रुटी: " + err.message); }
       };
       reader.readAsText(file);
     }
