@@ -10,7 +10,7 @@
 </head>
 <body class="bg-amber-50 min-h-screen text-slate-800 font-sans pb-16">
 
-  <!-- Header -->
+  <!-- Clean Header with Single Settings Gear -->
   <header class="bg-gradient-to-r from-orange-600 to-amber-600 text-white px-4 py-3.5 shadow-md sticky top-0 z-40">
     <div class="max-w-6xl mx-auto flex justify-between items-center">
       <div class="flex items-center space-x-2.5">
@@ -389,7 +389,7 @@
     </div>
   </div>
 
-  <!-- SETTINGS MODAL (SLIDERS FOR ALL TEXT POSITIONS & SIZES) -->
+  <!-- SETTINGS MODAL -->
   <div id="settingsModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-2 md:p-4">
     <div class="bg-white rounded-3xl max-w-6xl w-full p-4 md:p-5 shadow-2xl relative space-y-3 max-h-[96vh] flex flex-col">
       <div class="flex justify-between items-center border-b pb-2">
@@ -475,13 +475,16 @@
       }
     }
 
+    // PERMANENT STORAGE KEY (NEVER TO BE CHANGED)
+    const MASTER_STORAGE_KEY = "GANESH_UTSAV_MASTER_STORAGE";
+
     const DEFAULT_CONFIG = {
       rec:       { x: 75, y: 18, size: 22, color: "#9a3412" },
       date:      { x: 75, y: 24, size: 20, color: "#334155" },
       name:      { x: 25, y: 40, size: 28, color: "#0f172a" },
       amt:       { x: 25, y: 52, size: 30, color: "#065f46" },
       words:     { x: 25, y: 63, size: 20, color: "#475569" },
-      memberDue: { x: 25, y: 73, size: 19, color: "#b45309" } // Special Member Due Status Slider
+      memberDue: { x: 25, y: 73, size: 19, color: "#b45309" }
     };
 
     let appData = {
@@ -497,22 +500,50 @@
 
     let activeReceiptData = null;
 
+    // INTELLIGENT DATA LOADER WITH AUTO OLD-KEY RECOVERY
     function loadData() {
-      const saved = localStorage.getItem("ganesh_festival_data_2026_mseries");
+      let saved = localStorage.getItem(MASTER_STORAGE_KEY);
+
+      // Auto-migrate from any previous code versions if master key is not yet formed
+      if (!saved) {
+        const legacyKeys = [
+          "ganesh_festival_data_2026_mseries",
+          "ganesh_festival_data_2026_final",
+          "ganesh_festival_data_2026_pro",
+          "ganesh_festival_data_2026",
+          "ganesh_festival_data"
+        ];
+        for (let key of legacyKeys) {
+          const oldData = localStorage.getItem(key);
+          if (oldData) {
+            saved = oldData;
+            localStorage.setItem(MASTER_STORAGE_KEY, saved); // lock into master key permanently
+            break;
+          }
+        }
+      }
+
       if (saved) {
         try {
-          appData = JSON.parse(saved);
-          if (!appData.receiptConfig) appData.receiptConfig = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
-          if (!appData.receiptConfig.memberDue) appData.receiptConfig.memberDue = { ...DEFAULT_CONFIG.memberDue };
+          const parsed = JSON.parse(saved);
+          appData = {
+            ...appData,
+            ...parsed,
+            receiptConfig: {
+              ...DEFAULT_CONFIG,
+              ...(parsed.receiptConfig || {})
+            }
+          };
           if (!appData.customFields) appData.customFields = [];
           if (!appData.customConfigs) appData.customConfigs = {};
           if (!appData.expenseCategories || appData.expenseCategories.length === 0) {
             appData.expenseCategories = ["मंडप & डेकोरेशन", "साउंड & लाईट", "प्रसाद & जेवण", "पूजा & विसर्जन", "गणपती मूर्ती"];
           }
         } catch (e) {
-          console.error("Parse Error", e);
+          console.error("Storage migration / parse error", e);
         }
       }
+
       renderCategoryDropdown();
       renderDynamicFormFields();
       renderAll();
@@ -520,7 +551,7 @@
     }
 
     function saveData() {
-      localStorage.setItem("ganesh_festival_data_2026_mseries", JSON.stringify(appData));
+      localStorage.setItem(MASTER_STORAGE_KEY, JSON.stringify(appData));
       renderDynamicFormFields();
       renderAll();
       updateNextReceiptNumber();
@@ -599,7 +630,7 @@
       }
     }
 
-    // ISOLATED SERIAL COUNTERS (NORMAL VS MEMBERS)
+    // ISOLATED SERIAL COUNTERS
     function generateNextReceiptNumber(isMember = false) {
       const prefix = isMember ? "GF2026-M" : "GF2026-";
       let maxNum = 0;
@@ -640,7 +671,7 @@
         appData.templateBase64 = e.target.result;
         saveData();
         closeMainSettingsDrawer();
-        alert("पावती फोटो यशस्वी सेव्ह झाला!");
+        alert("पावती फोटो यशस्वीरित्या सेव्ह झाला! आता कोड अपडेट केल्यावरही तो निघणार नाही.");
       };
       reader.readAsDataURL(file);
     }
@@ -687,7 +718,7 @@
       }
     }
 
-    // MEMBERS (M-SERIES RECEIPT CREATION)
+    // MEMBERS
     function addMember(e) {
       e.preventDefault();
       const name = document.getElementById("memName").value.trim();
@@ -835,7 +866,7 @@
         </tr>
       `).join("");
 
-      // Members Table with M-series Receipts
+      // Members Table
       document.getElementById("memCount").innerText = `एकूण: ${appData.members.length}`;
       document.getElementById("memberList").innerHTML = appData.members.map(m => {
         const due = Math.max(0, m.pledged - m.paid);
@@ -872,7 +903,7 @@
       `).join("");
     }
 
-    // CANVAS DRAW ENGINE (EXACT SAME TEMPLATE FOR BOTH; ADDS DUE SUMMARY FOR MEMBERS)
+    // CANVAS DRAW ENGINE
     function drawCanvasWithData(canvas, data, cfg, customConfigs, customFields, onDone) {
       const ctx = canvas.getContext("2d");
       const amt = data.isMember ? data.paid : data.amount;
@@ -887,27 +918,21 @@
           canvas.height = img.height;
           ctx.drawImage(img, 0, 0);
 
-          // 1. Receipt No (GF2026-0001 or GF2026-M0001)
           ctx.fillStyle = cfg.rec.color; ctx.font = `bold ${cfg.rec.size}px sans-serif`;
           ctx.fillText(data.receipt, (canvas.width * cfg.rec.x) / 100, (canvas.height * cfg.rec.y) / 100);
 
-          // 2. Date
           ctx.fillStyle = cfg.date.color; ctx.font = `bold ${cfg.date.size}px sans-serif`;
           ctx.fillText(data.date, (canvas.width * cfg.date.x) / 100, (canvas.height * cfg.date.y) / 100);
 
-          // 3. Name (Same position)
           ctx.fillStyle = cfg.name.color; ctx.font = `bold ${cfg.name.size}px sans-serif`;
           ctx.fillText(data.name, (canvas.width * cfg.name.x) / 100, (canvas.height * cfg.name.y) / 100);
 
-          // 4. Amount
           ctx.fillStyle = cfg.amt.color; ctx.font = `bold ${cfg.amt.size}px sans-serif`;
           ctx.fillText(`₹ ${Number(amt).toLocaleString('en-IN')} /-`, (canvas.width * cfg.amt.x) / 100, (canvas.height * cfg.amt.y) / 100);
 
-          // 5. Amount Words
           ctx.fillStyle = cfg.words.color; ctx.font = `bold ${cfg.words.size}px sans-serif`;
           ctx.fillText(wordsText, (canvas.width * cfg.words.x) / 100, (canvas.height * cfg.words.y) / 100);
 
-          // 6. Member Special: Remaining / Due Summary Line (Only on Member Receipt)
           if (data.isMember && cfg.memberDue) {
             ctx.fillStyle = cfg.memberDue.color || "#b45309";
             ctx.font = `bold ${cfg.memberDue.size || 19}px sans-serif`;
@@ -915,7 +940,6 @@
             ctx.fillText(memberStatusText, (canvas.width * cfg.memberDue.x) / 100, (canvas.height * cfg.memberDue.y) / 100);
           }
 
-          // Custom Fields (If any)
           if (customFields && data.customValues) {
             customFields.forEach(f => {
               const fCfg = customConfigs[f.id] || { x: 25, y: 78, size: 18, color: '#334155' };
@@ -931,7 +955,6 @@
           if (onDone) onDone();
         };
       } else {
-        // Built-in Clean Template Fallback
         canvas.width = 750;
         canvas.height = 420;
         ctx.fillStyle = "#fffaf0";
@@ -943,7 +966,7 @@
         ctx.fillText("॥ श्री गणेशाय नमः ॥", canvas.width / 2, 55);
 
         ctx.fillStyle = "#ea580c"; ctx.font = "bold 26px sans-serif";
-        ctx.fillText("सार्वजनिक गणेशोत्सव मंडळ २०२६", canvas.width / 2, 95);
+        ctx.fillText(data.isMember ? "सार्वजनिक गणेशोत्सव मंडळ (सदस्य पावती)" : "सार्वजनिक गणेशोत्सव मंडळ २०२६", canvas.width / 2, 95);
 
         ctx.textAlign = "left";
         ctx.fillStyle = cfg.rec.color || "#1e293b"; ctx.font = `bold ${cfg.rec.size || 18}px sans-serif`;
@@ -953,7 +976,7 @@
         ctx.fillText(`दिनांक : ${data.date}`, 500, 150);
 
         ctx.fillStyle = cfg.name.color || "#0f172a"; ctx.font = `bold ${cfg.name.size || 22}px sans-serif`;
-        ctx.fillText(`नाव : ${data.name}`, 40, 205);
+        ctx.fillText(`नाव : ${data.name} ${data.isMember ? '(मंडळ सदस्य)' : ''}`, 40, 205);
 
         ctx.fillStyle = cfg.words.color || "#475569"; ctx.font = `bold ${cfg.words.size || 18}px sans-serif`;
         ctx.fillText(`अक्षरी रक्कम : ${wordsText}`, 40, 250);
@@ -988,7 +1011,6 @@
       activeReceiptData = null;
     }
 
-    // SEND TO WHATSAPP WITH TAILORED MEMBER AUDIT MESSAGE
     async function smartCopyAndOpenWhatsApp() {
       if (!activeReceiptData) return;
       const canvas = document.getElementById("receiptCanvas");
@@ -1029,7 +1051,6 @@
       }, 350);
     }
 
-    // Helper for Settings Sliders (X, Y, and Live Size)
     function generateSliderFieldHTML(title, idPrefix, colorVal, xVal, yVal, sizeVal) {
       return `
         <div class="p-2.5 bg-orange-50/70 rounded-2xl border border-orange-200 space-y-1.5">
@@ -1071,7 +1092,6 @@
       html += generateSliderFieldHTML("४. रक्कम अंकी (Amount ₹)", "cfg_amt", cfg.amt.color, cfg.amt.x, cfg.amt.y, cfg.amt.size);
       html += generateSliderFieldHTML("५. अक्षरी रक्कम (Amount Words)", "cfg_words", cfg.words.color, cfg.words.x, cfg.words.y, cfg.words.size);
       
-      // Member Due Status Line Positioner
       const memDueCfg = cfg.memberDue || DEFAULT_CONFIG.memberDue;
       html += generateSliderFieldHTML("६. सदस्य हिशोब बाकी (Member Due Line)", "cfg_memberDue", memDueCfg.color, memDueCfg.x, memDueCfg.y, memDueCfg.size);
 
@@ -1140,7 +1160,7 @@
       appData.customConfigs = configs.customConfigs;
       saveData();
       closeSettingsModal();
-      alert("सर्व सेटिंग्ज सेव्ह झाल्या!");
+      alert("सर्व सेटिंग्ज कायमस्वरूपी सेव्ह झाल्या!");
     }
 
     function resetPositionDefaults() {
@@ -1191,12 +1211,13 @@
       XLSX.writeFile(wb, "Ganesh_Mandal_2026_Accounts.xlsx");
     }
 
-    // BACKUP & RESTORE
+    // COMPLETE ALL-IN-ONE BACKUP & RESTORE
     function exportBackup() {
+      // Includes receipt image (base64), slider positions, categories & all ledger data
       const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData, null, 2));
       const a = document.createElement("a");
       a.href = dataStr; 
-      a.download = `Ganesh_Festival_Backup_${new Date().toISOString().slice(0,10)}.json`;
+      a.download = `Ganesh_Festival_Full_Backup_${new Date().toISOString().slice(0,10)}.json`;
       document.body.appendChild(a); 
       a.click(); 
       a.remove();
@@ -1208,16 +1229,25 @@
       const reader = new FileReader();
       reader.onload = function(e) {
         try {
-          appData = JSON.parse(e.target.result);
-          saveData();
-          renderCategoryDropdown();
-          closeMainSettingsDrawer();
-          alert("बॅकअप यशस्वीरीत्या लोड झाला!");
+          const imported = JSON.parse(e.target.result);
+          if (imported && (Array.isArray(imported.donations) || Array.isArray(imported.members))) {
+            appData = {
+              ...appData,
+              ...imported
+            };
+            saveData();
+            renderCategoryDropdown();
+            closeMainSettingsDrawer();
+            alert("संपूर्ण बॅकअप (पावती फोटो, सेटिंग्ज व हिशोब) १००% यशस्वीरीत्या रीस्टोर झाला!");
+          } else {
+            alert("अवैध बॅकअप फाईल!");
+          }
         } catch (err) { alert("त्रुटी: " + err.message); }
       };
       reader.readAsText(file);
     }
 
+    // Always run on startup
     window.onload = loadData;
   </script>
 </body>
