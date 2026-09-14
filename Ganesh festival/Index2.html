@@ -10,7 +10,7 @@
 </head>
 <body class="bg-amber-50 min-h-screen text-slate-800 font-sans pb-16">
 
-  <!-- Clean Header with Single Settings Gear -->
+  <!-- Header -->
   <header class="bg-gradient-to-r from-orange-600 to-amber-600 text-white px-4 py-3.5 shadow-md sticky top-0 z-40">
     <div class="max-w-6xl mx-auto flex justify-between items-center">
       <div class="flex items-center space-x-2.5">
@@ -18,7 +18,6 @@
         <h1 class="text-lg md:text-xl font-bold tracking-wide">गणेशोत्सव व्यवस्थापक २०२६</h1>
       </div>
       
-      <!-- Single Modern Settings Button -->
       <button onclick="openMainSettingsDrawer()" class="bg-white/15 hover:bg-white/25 active:scale-95 text-white w-9 h-9 rounded-full flex items-center justify-center shadow transition" title="सेटिंग्ज व बॅकअप">
         <i class="fa-solid fa-gear text-lg"></i>
       </button>
@@ -47,7 +46,7 @@
       </div>
     </div>
 
-    <!-- Clean Navigation Tabs -->
+    <!-- Navigation Tabs -->
     <div class="flex border-b border-orange-200 bg-white rounded-2xl overflow-hidden shadow-sm">
       <button onclick="switchTab('donations')" id="tabBtn-donations" class="tab-btn flex-1 py-3 text-center font-semibold text-orange-600 border-b-2 border-orange-600 flex items-center justify-center gap-2">
         <i class="fa-solid fa-hand-holding-dollar"></i> घर-घर वर्गणी (Donations)
@@ -94,7 +93,6 @@
             <input type="text" id="donAmountWords" readonly class="w-full mt-1 border bg-slate-50 font-medium text-slate-700 rounded-lg p-2 text-sm outline-none cursor-not-allowed" placeholder="रक्कम टाकल्यावर येथे अक्षरी रक्कम दिसेल" />
           </div>
 
-          <!-- Dynamic Custom Fields Container -->
           <div id="dynamicFormFieldsContainer" class="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
 
           <div class="md:col-span-4 flex justify-end pt-2">
@@ -161,13 +159,14 @@
 
       <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
         <div class="p-3.5 bg-slate-50 border-b flex justify-between items-center">
-          <h3 class="font-bold text-slate-700 text-sm">मंडळ सदस्य यादी</h3>
+          <h3 class="font-bold text-slate-700 text-sm">मंडळ सदस्य यादी (M-Series Receipts)</h3>
           <span id="memCount" class="text-xs text-slate-500 font-medium">एकूण: 0</span>
         </div>
         <div class="overflow-x-auto max-h-96">
           <table class="w-full text-left border-collapse text-xs md:text-sm">
             <thead>
               <tr class="bg-slate-100 text-slate-600 border-b">
+                <th class="p-2.5">सदस्य पावती क्र.</th>
                 <th class="p-2.5">सदस्य नाव</th>
                 <th class="p-2.5">मोबाईल</th>
                 <th class="p-2.5 text-right">कबूली</th>
@@ -240,7 +239,7 @@
 
   </main>
 
-  <!-- ALL-IN-ONE SETTINGS & BACKUP DRAWER / MODAL -->
+  <!-- ALL-IN-ONE SETTINGS DRAWER -->
   <div id="mainSettingsModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3">
     <div class="bg-white rounded-3xl max-w-md w-full p-5 shadow-2xl relative space-y-4">
       <div class="flex justify-between items-center border-b pb-3">
@@ -259,7 +258,6 @@
       </div>
 
       <div class="space-y-2.5 text-sm">
-        <!-- 1. Receipt Position Settings -->
         <button onclick="openSettingsModalFromDrawer()" class="w-full p-3 bg-amber-50/80 hover:bg-amber-100/80 border border-amber-200 rounded-2xl flex items-center justify-between transition group">
           <div class="flex items-center gap-3">
             <div class="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-700 flex items-center justify-center text-base">
@@ -273,7 +271,6 @@
           <i class="fa-solid fa-chevron-right text-slate-400 group-hover:translate-x-0.5 transition"></i>
         </button>
 
-        <!-- 2. Change Template Image -->
         <label class="w-full p-3 bg-orange-50/80 hover:bg-orange-100/80 border border-orange-200 rounded-2xl flex items-center justify-between cursor-pointer transition group">
           <div class="flex items-center gap-3">
             <div class="w-9 h-9 rounded-xl bg-orange-500/10 text-orange-700 flex items-center justify-center text-base">
@@ -288,7 +285,6 @@
           <input type="file" id="templateInput" class="hidden" accept="image/*" onchange="uploadReceiptTemplate(event)">
         </label>
 
-        <!-- 3. Export Excel -->
         <button onclick="exportToExcel(); closeMainSettingsDrawer();" class="w-full p-3 bg-emerald-50/80 hover:bg-emerald-100/80 border border-emerald-200 rounded-2xl flex items-center justify-between transition group">
           <div class="flex items-center gap-3">
             <div class="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-700 flex items-center justify-center text-base">
@@ -302,7 +298,6 @@
           <i class="fa-solid fa-chevron-right text-slate-400 group-hover:translate-x-0.5 transition"></i>
         </button>
 
-        <!-- 4. Backup & Restore Grid -->
         <div class="grid grid-cols-2 gap-2.5 pt-1">
           <button onclick="exportBackup(); closeMainSettingsDrawer();" class="p-3 bg-blue-50/80 hover:bg-blue-100/80 border border-blue-200 rounded-2xl flex flex-col items-center justify-center gap-1.5 transition text-center">
             <div class="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-700 flex items-center justify-center text-sm">
@@ -394,7 +389,7 @@
     </div>
   </div>
 
-  <!-- SETTINGS MODAL (LIVE SLIDERS FOR X, Y, AND SIZE) -->
+  <!-- SETTINGS MODAL (SLIDERS FOR ALL TEXT POSITIONS & SIZES) -->
   <div id="settingsModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-2 md:p-4">
     <div class="bg-white rounded-3xl max-w-6xl w-full p-4 md:p-5 shadow-2xl relative space-y-3 max-h-[96vh] flex flex-col">
       <div class="flex justify-between items-center border-b pb-2">
@@ -481,11 +476,12 @@
     }
 
     const DEFAULT_CONFIG = {
-      rec:   { x: 75, y: 18, size: 22, color: "#9a3412" },
-      date:  { x: 75, y: 24, size: 20, color: "#334155" },
-      name:  { x: 25, y: 40, size: 28, color: "#0f172a" },
-      amt:   { x: 25, y: 52, size: 30, color: "#065f46" },
-      words: { x: 25, y: 63, size: 20, color: "#475569" }
+      rec:       { x: 75, y: 18, size: 22, color: "#9a3412" },
+      date:      { x: 75, y: 24, size: 20, color: "#334155" },
+      name:      { x: 25, y: 40, size: 28, color: "#0f172a" },
+      amt:       { x: 25, y: 52, size: 30, color: "#065f46" },
+      words:     { x: 25, y: 63, size: 20, color: "#475569" },
+      memberDue: { x: 25, y: 73, size: 19, color: "#b45309" } // Special Member Due Status Slider
     };
 
     let appData = {
@@ -502,11 +498,12 @@
     let activeReceiptData = null;
 
     function loadData() {
-      const saved = localStorage.getItem("ganesh_festival_data_2026_final");
+      const saved = localStorage.getItem("ganesh_festival_data_2026_mseries");
       if (saved) {
         try {
           appData = JSON.parse(saved);
           if (!appData.receiptConfig) appData.receiptConfig = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+          if (!appData.receiptConfig.memberDue) appData.receiptConfig.memberDue = { ...DEFAULT_CONFIG.memberDue };
           if (!appData.customFields) appData.customFields = [];
           if (!appData.customConfigs) appData.customConfigs = {};
           if (!appData.expenseCategories || appData.expenseCategories.length === 0) {
@@ -523,7 +520,7 @@
     }
 
     function saveData() {
-      localStorage.setItem("ganesh_festival_data_2026_final", JSON.stringify(appData));
+      localStorage.setItem("ganesh_festival_data_2026_mseries", JSON.stringify(appData));
       renderDynamicFormFields();
       renderAll();
       updateNextReceiptNumber();
@@ -586,7 +583,7 @@
 
       const fieldId = 'field_' + Date.now();
       appData.customFields.push({ id: fieldId, label: val });
-      appData.customConfigs[fieldId] = { x: 25, y: 72 + (appData.customFields.length * 8), size: 18, color: "#334155" };
+      appData.customConfigs[fieldId] = { x: 25, y: 78 + (appData.customFields.length * 7), size: 18, color: "#334155" };
 
       input.value = "";
       renderCustomFieldsList();
@@ -602,6 +599,7 @@
       }
     }
 
+    // ISOLATED SERIAL COUNTERS (NORMAL VS MEMBERS)
     function generateNextReceiptNumber(isMember = false) {
       const prefix = isMember ? "GF2026-M" : "GF2026-";
       let maxNum = 0;
@@ -689,7 +687,7 @@
       }
     }
 
-    // MEMBERS
+    // MEMBERS (M-SERIES RECEIPT CREATION)
     function addMember(e) {
       e.preventDefault();
       const name = document.getElementById("memName").value.trim();
@@ -739,7 +737,7 @@
       }
     }
 
-    // EXPENSES & OTHER
+    // EXPENSES & "OTHER" MODAL
     function renderCategoryDropdown() {
       const select = document.getElementById("expCategory");
       if (!select) return;
@@ -817,7 +815,7 @@
       document.getElementById("statNetBalance").innerText = `₹${netBalance.toLocaleString("en-IN")}`;
       document.getElementById("statMemberDue").innerText = `₹${totalDue.toLocaleString("en-IN")}`;
 
-      // Donations
+      // Donations Table
       document.getElementById("donCount").innerText = `एकूण: ${appData.donations.length}`;
       document.getElementById("donationList").innerHTML = appData.donations.map(d => `
         <tr class="hover:bg-amber-50/50">
@@ -827,7 +825,7 @@
           <td class="p-2.5 text-slate-600">${d.mobile || '-'}</td>
           <td class="p-2.5 text-right font-bold text-emerald-700">₹${Number(d.amount).toLocaleString("en-IN")}</td>
           <td class="p-2.5 text-center space-x-1 whitespace-nowrap">
-            <button onclick="openReceiptModal(${d.id}, false)" class="bg-orange-100 hover:bg-orange-200 text-orange-700 px-2 py-1 rounded-lg text-xs">
+            <button onclick="openReceiptModal(${d.id}, false)" class="bg-orange-100 hover:bg-orange-200 text-orange-700 px-2.5 py-1 rounded-lg text-xs font-medium">
               <i class="fa-solid fa-receipt"></i> पावती
             </button>
             <button onclick="deleteDonation(${d.id})" class="text-rose-500 hover:text-rose-700 px-1.5 py-1 text-xs">
@@ -837,19 +835,20 @@
         </tr>
       `).join("");
 
-      // Members
+      // Members Table with M-series Receipts
       document.getElementById("memCount").innerText = `एकूण: ${appData.members.length}`;
       document.getElementById("memberList").innerHTML = appData.members.map(m => {
         const due = Math.max(0, m.pledged - m.paid);
         return `
         <tr class="hover:bg-amber-50/50">
+          <td class="p-2.5 font-bold text-amber-800">${m.receipt}</td>
           <td class="p-2.5 font-semibold text-slate-800">${m.name}</td>
           <td class="p-2.5 text-slate-600">${m.mobile || '-'}</td>
           <td class="p-2.5 text-right text-slate-600">₹${Number(m.pledged).toLocaleString("en-IN")}</td>
           <td class="p-2.5 text-right font-bold text-emerald-700">₹${Number(m.paid).toLocaleString("en-IN")}</td>
           <td class="p-2.5 text-right font-bold ${due > 0 ? 'text-amber-600' : 'text-slate-400'}">₹${due.toLocaleString("en-IN")}</td>
           <td class="p-2.5 text-center space-x-1 whitespace-nowrap">
-            <button onclick="openReceiptModal(${m.id}, true)" class="bg-orange-100 hover:bg-orange-200 text-orange-700 px-2 py-1 rounded-lg text-xs font-medium">
+            <button onclick="openReceiptModal(${m.id}, true)" class="bg-orange-100 hover:bg-orange-200 text-orange-700 px-2.5 py-1 rounded-lg text-xs font-medium">
               <i class="fa-solid fa-receipt"></i> पावती
             </button>
             <button onclick="addPaymentToMember(${m.id})" class="bg-amber-100 hover:bg-amber-200 text-amber-800 text-xs px-2 py-1 rounded-lg"><i class="fa-solid fa-plus"></i> जमा</button>
@@ -858,7 +857,7 @@
         </tr>
       `}).join("");
 
-      // Expenses
+      // Expenses Table
       document.getElementById("expCount").innerText = `एकूण: ${appData.expenses.length}`;
       document.getElementById("expenseList").innerHTML = appData.expenses.map(x => `
         <tr class="hover:bg-amber-50/50">
@@ -873,11 +872,12 @@
       `).join("");
     }
 
-    // CANVAS DRAW ENGINE
+    // CANVAS DRAW ENGINE (EXACT SAME TEMPLATE FOR BOTH; ADDS DUE SUMMARY FOR MEMBERS)
     function drawCanvasWithData(canvas, data, cfg, customConfigs, customFields, onDone) {
       const ctx = canvas.getContext("2d");
       const amt = data.isMember ? data.paid : data.amount;
       const wordsText = data.amountWords || numberToMarathiWords(amt);
+      const due = data.isMember ? Math.max(0, (data.pledged || 0) - (data.paid || 0)) : 0;
 
       if (appData.templateBase64) {
         const img = new Image();
@@ -887,24 +887,38 @@
           canvas.height = img.height;
           ctx.drawImage(img, 0, 0);
 
+          // 1. Receipt No (GF2026-0001 or GF2026-M0001)
           ctx.fillStyle = cfg.rec.color; ctx.font = `bold ${cfg.rec.size}px sans-serif`;
           ctx.fillText(data.receipt, (canvas.width * cfg.rec.x) / 100, (canvas.height * cfg.rec.y) / 100);
 
+          // 2. Date
           ctx.fillStyle = cfg.date.color; ctx.font = `bold ${cfg.date.size}px sans-serif`;
           ctx.fillText(data.date, (canvas.width * cfg.date.x) / 100, (canvas.height * cfg.date.y) / 100);
 
+          // 3. Name (Same position)
           ctx.fillStyle = cfg.name.color; ctx.font = `bold ${cfg.name.size}px sans-serif`;
           ctx.fillText(data.name, (canvas.width * cfg.name.x) / 100, (canvas.height * cfg.name.y) / 100);
 
+          // 4. Amount
           ctx.fillStyle = cfg.amt.color; ctx.font = `bold ${cfg.amt.size}px sans-serif`;
           ctx.fillText(`₹ ${Number(amt).toLocaleString('en-IN')} /-`, (canvas.width * cfg.amt.x) / 100, (canvas.height * cfg.amt.y) / 100);
 
+          // 5. Amount Words
           ctx.fillStyle = cfg.words.color; ctx.font = `bold ${cfg.words.size}px sans-serif`;
           ctx.fillText(wordsText, (canvas.width * cfg.words.x) / 100, (canvas.height * cfg.words.y) / 100);
 
+          // 6. Member Special: Remaining / Due Summary Line (Only on Member Receipt)
+          if (data.isMember && cfg.memberDue) {
+            ctx.fillStyle = cfg.memberDue.color || "#b45309";
+            ctx.font = `bold ${cfg.memberDue.size || 19}px sans-serif`;
+            const memberStatusText = `कबूली: ₹${Number(data.pledged).toLocaleString('en-IN')} | जमा: ₹${Number(data.paid).toLocaleString('en-IN')} | बाकी: ₹${Number(due).toLocaleString('en-IN')}`;
+            ctx.fillText(memberStatusText, (canvas.width * cfg.memberDue.x) / 100, (canvas.height * cfg.memberDue.y) / 100);
+          }
+
+          // Custom Fields (If any)
           if (customFields && data.customValues) {
             customFields.forEach(f => {
-              const fCfg = customConfigs[f.id] || { x: 25, y: 75, size: 18, color: '#334155' };
+              const fCfg = customConfigs[f.id] || { x: 25, y: 78, size: 18, color: '#334155' };
               const val = data.customValues[f.id] || '';
               if (val) {
                 ctx.fillStyle = fCfg.color;
@@ -917,6 +931,7 @@
           if (onDone) onDone();
         };
       } else {
+        // Built-in Clean Template Fallback
         canvas.width = 750;
         canvas.height = 420;
         ctx.fillStyle = "#fffaf0";
@@ -928,7 +943,7 @@
         ctx.fillText("॥ श्री गणेशाय नमः ॥", canvas.width / 2, 55);
 
         ctx.fillStyle = "#ea580c"; ctx.font = "bold 26px sans-serif";
-        ctx.fillText(data.isMember ? "सार्वजनिक गणेशोत्सव मंडळ (सदस्य पावती)" : "सार्वजनिक गणेशोत्सव मंडळ २०२६", canvas.width / 2, 95);
+        ctx.fillText("सार्वजनिक गणेशोत्सव मंडळ २०२६", canvas.width / 2, 95);
 
         ctx.textAlign = "left";
         ctx.fillStyle = cfg.rec.color || "#1e293b"; ctx.font = `bold ${cfg.rec.size || 18}px sans-serif`;
@@ -938,24 +953,19 @@
         ctx.fillText(`दिनांक : ${data.date}`, 500, 150);
 
         ctx.fillStyle = cfg.name.color || "#0f172a"; ctx.font = `bold ${cfg.name.size || 22}px sans-serif`;
-        ctx.fillText(`नाव : ${data.name} ${data.isMember ? '(मंडळ सदस्य)' : ''}`, 40, 205);
+        ctx.fillText(`नाव : ${data.name}`, 40, 205);
 
         ctx.fillStyle = cfg.words.color || "#475569"; ctx.font = `bold ${cfg.words.size || 18}px sans-serif`;
         ctx.fillText(`अक्षरी रक्कम : ${wordsText}`, 40, 250);
 
-        if (customFields && data.customValues) {
-          let yPos = 290;
-          customFields.forEach(f => {
-            const val = data.customValues[f.id] || '';
-            if (val) {
-              ctx.fillText(`${f.label} : ${val}`, 40, yPos);
-              yPos += 30;
-            }
-          });
+        if (data.isMember) {
+          ctx.fillStyle = cfg.memberDue.color || "#b45309";
+          ctx.font = `bold ${cfg.memberDue.size || 18}px sans-serif`;
+          ctx.fillText(`कबूली रक्कम: ₹${Number(data.pledged).toLocaleString('en-IN')} | बाकी रक्कम: ₹${Number(due).toLocaleString('en-IN')}`, 40, 290);
         }
 
         ctx.fillStyle = cfg.amt.color || "#065f46"; ctx.font = `bold ${cfg.amt.size || 26}px sans-serif`;
-        ctx.fillText(`रक्कम : ₹ ${Number(amt).toLocaleString('en-IN')} /-`, 40, 370);
+        ctx.fillText(`जमा रक्कम : ₹ ${Number(amt).toLocaleString('en-IN')} /-`, 40, 370);
 
         if (onDone) onDone();
       }
@@ -978,6 +988,7 @@
       activeReceiptData = null;
     }
 
+    // SEND TO WHATSAPP WITH TAILORED MEMBER AUDIT MESSAGE
     async function smartCopyAndOpenWhatsApp() {
       if (!activeReceiptData) return;
       const canvas = document.getElementById("receiptCanvas");
@@ -989,7 +1000,13 @@
       const amt = activeReceiptData.isMember ? activeReceiptData.paid : activeReceiptData.amount;
       const words = activeReceiptData.amountWords || numberToMarathiWords(amt);
       
-      const messageText = `नमस्कार ${activeReceiptData.name} जी, गणेशोत्सवासाठी आपल्या ₹${amt}/- (${words}) देणगीची अधिकृत डिजिटल पावती (पावती क्र. ${activeReceiptData.receipt}) जोडली आहे. धन्यवाद! बाप्पा आपल्या कुटुंबावर सदैव कृपा ठेवो. 🙏✨`;
+      let messageText = "";
+      if (activeReceiptData.isMember) {
+        const due = Math.max(0, (activeReceiptData.pledged || 0) - (activeReceiptData.paid || 0));
+        messageText = `नमस्कार ${activeReceiptData.name} जी (मंडळ सदस्य), गणेशोत्सवासाठी आपल्या कबूली रकमेपैकी ₹${amt}/- जमा झाले असून, आपली अधिकृत डिजिटल पावती (क्र. ${activeReceiptData.receipt}) जोडली आहे.\n\n📊 *आपला वर्गणी तपशील:*\n• कबूली रक्कम: ₹${activeReceiptData.pledged}/-\n• आतापर्यंत जमा: ₹${activeReceiptData.paid}/-\n• येणे बाकी रक्कम: ₹${due}/-\n\nबाप्पाचा आशीर्वाद आपल्या पाठीशी राहो! धन्यवाद. 🙏✨`;
+      } else {
+        messageText = `नमस्कार ${activeReceiptData.name} जी, गणेशोत्सवासाठी आपल्या ₹${amt}/- (${words}) देणगीची अधिकृत डिजिटल पावती (पावती क्र. ${activeReceiptData.receipt}) जोडली आहे. धन्यवाद! बाप्पा आपल्या कुटुंबावर सदैव कृपा ठेवो. 🙏✨`;
+      }
 
       try {
         if (navigator.clipboard && window.ClipboardItem) {
@@ -1053,10 +1070,14 @@
       html += generateSliderFieldHTML("३. नाव (Name)", "cfg_name", cfg.name.color, cfg.name.x, cfg.name.y, cfg.name.size);
       html += generateSliderFieldHTML("४. रक्कम अंकी (Amount ₹)", "cfg_amt", cfg.amt.color, cfg.amt.x, cfg.amt.y, cfg.amt.size);
       html += generateSliderFieldHTML("५. अक्षरी रक्कम (Amount Words)", "cfg_words", cfg.words.color, cfg.words.x, cfg.words.y, cfg.words.size);
+      
+      // Member Due Status Line Positioner
+      const memDueCfg = cfg.memberDue || DEFAULT_CONFIG.memberDue;
+      html += generateSliderFieldHTML("६. सदस्य हिशोब बाकी (Member Due Line)", "cfg_memberDue", memDueCfg.color, memDueCfg.x, memDueCfg.y, memDueCfg.size);
 
       appData.customFields.forEach((f, idx) => {
-        const cCfg = appData.customConfigs[f.id] || { x: 25, y: 75, size: 18, color: '#334155' };
-        html += generateSliderFieldHTML(`${idx+6}. ${f.label}`, `cfg_custom_${f.id}`, cCfg.color, cCfg.x, cCfg.y, cCfg.size);
+        const cCfg = appData.customConfigs[f.id] || { x: 25, y: 78, size: 18, color: '#334155' };
+        html += generateSliderFieldHTML(`${idx+7}. ${f.label}`, `cfg_custom_${f.id}`, cCfg.color, cCfg.x, cCfg.y, cCfg.size);
       });
 
       document.getElementById("settingsSlidersContainer").innerHTML = html;
@@ -1073,11 +1094,12 @@
 
     function getCurrentSliderConfig() {
       const receiptConfig = {
-        rec: { x: parseFloat(document.getElementById("cfg_rec_x").value), y: parseFloat(document.getElementById("cfg_rec_y").value), size: parseInt(document.getElementById("cfg_rec_size").value, 10), color: document.getElementById("cfg_rec_color").value },
-        date: { x: parseFloat(document.getElementById("cfg_date_x").value), y: parseFloat(document.getElementById("cfg_date_y").value), size: parseInt(document.getElementById("cfg_date_size").value, 10), color: document.getElementById("cfg_date_color").value },
-        name: { x: parseFloat(document.getElementById("cfg_name_x").value), y: parseFloat(document.getElementById("cfg_name_y").value), size: parseInt(document.getElementById("cfg_name_size").value, 10), color: document.getElementById("cfg_name_color").value },
-        amt: { x: parseFloat(document.getElementById("cfg_amt_x").value), y: parseFloat(document.getElementById("cfg_amt_y").value), size: parseInt(document.getElementById("cfg_amt_size").value, 10), color: document.getElementById("cfg_amt_color").value },
-        words: { x: parseFloat(document.getElementById("cfg_words_x").value), y: parseFloat(document.getElementById("cfg_words_y").value), size: parseInt(document.getElementById("cfg_words_size").value, 10), color: document.getElementById("cfg_words_color").value }
+        rec:       { x: parseFloat(document.getElementById("cfg_rec_x").value), y: parseFloat(document.getElementById("cfg_rec_y").value), size: parseInt(document.getElementById("cfg_rec_size").value, 10), color: document.getElementById("cfg_rec_color").value },
+        date:      { x: parseFloat(document.getElementById("cfg_date_x").value), y: parseFloat(document.getElementById("cfg_date_y").value), size: parseInt(document.getElementById("cfg_date_size").value, 10), color: document.getElementById("cfg_date_color").value },
+        name:      { x: parseFloat(document.getElementById("cfg_name_x").value), y: parseFloat(document.getElementById("cfg_name_y").value), size: parseInt(document.getElementById("cfg_name_size").value, 10), color: document.getElementById("cfg_name_color").value },
+        amt:       { x: parseFloat(document.getElementById("cfg_amt_x").value), y: parseFloat(document.getElementById("cfg_amt_y").value), size: parseInt(document.getElementById("cfg_amt_size").value, 10), color: document.getElementById("cfg_amt_color").value },
+        words:     { x: parseFloat(document.getElementById("cfg_words_x").value), y: parseFloat(document.getElementById("cfg_words_y").value), size: parseInt(document.getElementById("cfg_words_size").value, 10), color: document.getElementById("cfg_words_color").value },
+        memberDue: { x: parseFloat(document.getElementById("cfg_memberDue_x").value), y: parseFloat(document.getElementById("cfg_memberDue_y").value), size: parseInt(document.getElementById("cfg_memberDue_size").value, 10), color: document.getElementById("cfg_memberDue_color").value }
       };
 
       const customConfigs = {};
@@ -1096,11 +1118,14 @@
     function renderConfigPreview() {
       const canvas = document.getElementById("previewConfigCanvas");
       const dummyData = {
-        receipt: "GF2026-0001",
+        receipt: "GF2026-M0001",
         date: "14/09/2026",
-        name: "सचिन पाटील (डेमो)",
-        amount: 5001,
-        amountWords: "पाच हजार एक रुपये फक्त",
+        name: "सचिन पाटील (मंडळ सदस्य डेमो)",
+        amount: 2000,
+        pledged: 5000,
+        paid: 2000,
+        amountWords: "दोन हजार रुपये फक्त",
+        isMember: true,
         customValues: {}
       };
       appData.customFields.forEach(f => { dummyData.customValues[f.id] = f.label + " (डेमो)"; });
@@ -1145,12 +1170,12 @@
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(donData), "घर-घर वर्गणी");
 
       const memData = appData.members.map(m => ({
-        "पावती क्र.": m.receipt,
+        "सदस्य पावती क्र.": m.receipt,
         "सदस्य नाव": m.name,
         "मोबाईल": m.mobile,
-        "कबूली रक्कम": m.pledged,
-        "जमा रक्कम": m.paid,
-        "बाकी रक्कम": Math.max(0, m.pledged - m.paid),
+        "कबूली रक्कम (₹)": m.pledged,
+        "जमा रक्कम (₹)": m.paid,
+        "बाकी रक्कम (₹)": Math.max(0, m.pledged - m.paid),
         "दिनांक": m.date
       }));
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(memData), "मंडळ सदस्य");
