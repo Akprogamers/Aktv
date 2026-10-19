@@ -60,7 +60,6 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
 .login-btn { width: 100%; justify-content: center; }
 .login-note { margin-top: 0.9rem; font-size: 0.72rem; color: var(--gray); line-height: 1.5; }
 
-/* Cloud sync status pill */
 .cloud-status { font-size: 0.78rem; font-weight: 700; padding: 0.35rem 0.8rem; border-radius: 20px; background: rgba(255,255,255,0.18); color: #fff; border: 1px solid rgba(255,255,255,0.4); white-space: nowrap; cursor: default; }
 .cloud-status.ok { background: rgba(16,185,129,0.25); border-color: rgba(16,185,129,0.6); }
 .cloud-status.err { background: rgba(239,68,68,0.25); border-color: rgba(239,68,68,0.6); }
@@ -612,7 +611,7 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
                 <p class="login-error" id="loginError"></p>
                 <button type="submit" class="btn btn-primary login-btn" id="loginBtn">🔓 Login</button>
             </form>
-            <p class="login-note">Credentials are managed by the Administrator and synced via Firebase.</p>
+            <p class="login-note">Works online (Firebase sync) & offline (local data). Credentials are managed by the Administrator.</p>
         </div>
     </div>
 
@@ -649,7 +648,7 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
     <main class="container page" id="homePage">
         <section class="welcome-section">
             <h2 class="section-title">🏠 Welcome to Fee Receipt Generator</h2>
-            <p class="welcome-intro">Logged-in branch: <strong id="homeBranchLabel">—</strong>. Data is synced across devices through <strong>Firebase</strong> (with offline localStorage fallback).</p>
+            <p class="welcome-intro">Logged-in branch: <strong id="homeBranchLabel">—</strong>. Data syncs through <strong>Firebase Realtime Database</strong> when online, and always works offline via local storage.</p>
             <div class="module-cards">
                 <div class="module-card" data-goto="board"><div class="module-icon">📋</div><h3>Board Fees</h3><p>Year-wise receipts, auto-saved & cloud-synced. Class options & amounts configured by Admin.</p><button type="button" class="btn btn-primary">Open Board Fees →</button></div>
                 <div class="module-card" data-goto="fee"><div class="module-icon">🧾</div><h3>Fee Receipt</h3><p>Branch-wise Fee Particulars & numbering. Auto-saved & synced. 2 copies per A4 page.</p><button type="button" class="btn btn-primary">Open Fee Receipt →</button></div>
@@ -945,7 +944,7 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
                     <div class="admin-row"><div class="form-group"><label>Username</label><input id="alAdminUser"></div><div class="form-group"><label>Password</label><input id="alAdminPass"></div></div>
                     <button type="button" class="btn btn-success btn-sm" id="saveAdminLoginBtn">💾 Save Admin Login</button>
                 </div>
-                <p class="admin-note">Usernames must remain unique across SGOS / SGIMA / Admin. Credentials are synced to Firebase.</p>
+                <p class="admin-note">Usernames must remain unique across SGOS / SGIMA / Admin. Credentials are synced to Firebase when online.</p>
             </div>
 
             <div class="admin-pane" id="apane-branch">
@@ -1042,7 +1041,7 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
         </section>
     </main>
 
-    <footer class="footer"><p>© 2026 Sanjay Ghodawat Group — Multi-Branch Fee Receipt System · Synced with Firebase. All rights reserved.</p></footer>
+    <footer class="footer"><p>© 2026 Sanjay Ghodawat Group — Multi-Branch Fee Receipt System · Synced with Firebase Realtime Database. All rights reserved.</p></footer>
 
     <!-- Print Preview Modal -->
     <div class="print-preview-overlay" id="printPreviewOverlay">
@@ -1084,7 +1083,7 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
                     <button type="button" class="btn btn-success" id="ieSaveBtn">💾 Apply & Save</button>
                     <button type="button" class="btn btn-warning" id="ieCancelBtn">Cancel</button>
                 </div>
-                <p class="modal-hint">Edits are applied to a compressed copy and synced to Firebase.</p>
+                <p class="modal-hint">Edits are applied to a compressed copy and synced to Firebase when online.</p>
             </div>
         </div>
     </div>
@@ -1164,44 +1163,32 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
 
     <div class="toast" id="toast"></div>
 
-    <!-- ============ FIREBASE (your config) + app logic ============ -->
-    <script type="module" src="script.js"></script>
+    <!-- CLASSIC script (Firebase loaded dynamically inside, so login always works) -->
+    <script src="script.js"></script>
 </body>
 </html>
 
 
               <script>
-                              // script.js  (ES module — Firebase integrated)
-import { initializeApp } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-app.js";
-import { getAnalytics } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-analytics.js";
-import {
-    getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, enableIndexedDbPersistence
-} from "https://www.gstatic.com/firebasejs/13.0.0/firebase-firestore.js";
-
+                              // script.js  (CLASSIC script — Firebase loaded dynamically so login NEVER breaks)
 (function () {
     'use strict';
 
-    // ============ FIREBASE INIT (your config) ============
+    // ============ FIREBASE (your config: sgos-fb724) — lazy, fault-tolerant ============
     const firebaseConfig = {
-        apiKey: "AIzaSyB4GZZKs7JS2AzLIlHwK6zAoRS0SuSqlgI",
-        authDomain: "sgos-31514.firebaseapp.com",
-        projectId: "sgos-31514",
-        storageBucket: "sgos-31514.firebasestorage.app",
-        messagingSenderId: "8813657174",
-        appId: "1:8813657174:web:311909a0f6deab63724ff7",
-        measurementId: "G-SMJ2WBR5KY"
+        apiKey: "AIzaSyBNei_kYEP41zvfoN2dF_9eg5dOd80xP0E",
+        authDomain: "sgos-fb724.firebaseapp.com",
+        databaseURL: "https://sgos-fb724-default-rtdb.firebaseio.com",
+        projectId: "sgos-fb724",
+        storageBucket: "sgos-fb724.firebasestorage.app",
+        messagingSenderId: "740506273582",
+        appId: "1:740506273582:web:f3fe37042db6e630ea1cbf",
+        measurementId: "G-L77ZJEZVFX"
     };
-    let fbApp = null, fbDb = null, fbAnalytics = null, fbReady = false;
-    try {
-        fbApp = initializeApp(firebaseConfig);
-        fbDb = getFirestore(fbApp);
-        try { fbAnalytics = getAnalytics(fbApp); } catch (e) { /* analytics optional / blocked */ }
-        // Offline persistence (best-effort; may reject if multiple tabs)
-        try { enableIndexedDbPersistence(fbDb).catch(() => {}); } catch (e) {}
-        fbReady = true;
-    } catch (e) { console.warn('Firebase init failed; running offline.', e); }
+    const FB_ROOT = 'sgos_data';
+    let fbDb = null, fbReady = false;
+    let rtRef = null, rtSet = null, rtGet = null, rtOnValue = null;
 
-    const FB_COLLECTION = 'sgos_data';
     const cloudStatusEl = document.getElementById('cloudStatus');
     function setCloudStatus(state, msg) {
         if (!cloudStatusEl) return;
@@ -1209,28 +1196,46 @@ import {
         cloudStatusEl.textContent = msg;
         cloudStatusEl.title = 'Firebase sync: ' + msg;
     }
-    if (fbReady) setCloudStatus('', '🟡 Connecting…'); else setCloudStatus('err', '🔴 Offline');
+    setCloudStatus('', '🟡 Connecting…');
 
-    // Debounced cloud write + realtime listeners
+    async function initFirebase() {
+        try {
+            const appMod = await import("https://www.gstatic.com/firebasejs/13.0.0/firebase-app.js");
+            const dbMod = await import("https://www.gstatic.com/firebasejs/13.0.0/firebase-database.js");
+            let anMod = null;
+            try { anMod = await import("https://www.gstatic.com/firebasejs/13.0.0/firebase-analytics.js"); } catch (e) { /* analytics optional */ }
+            const app = appMod.initializeApp(firebaseConfig);
+            fbDb = dbMod.getDatabase(app);
+            rtRef = dbMod.ref; rtSet = dbMod.set; rtGet = dbMod.get; rtOnValue = dbMod.onValue;
+            if (anMod && anMod.getAnalytics) { try { anMod.getAnalytics(app); } catch (e) {} }
+            fbReady = true;
+            setCloudStatus('', '🟡 Connecting…');
+            setupCloudSync();
+            setTimeout(pullAllFromCloud, 700);
+        } catch (e) {
+            fbReady = false;
+            setCloudStatus('err', '🔴 Offline');
+            console.warn('Firebase unavailable — running in local-only mode. Login still works.', e);
+        }
+    }
+
     const writeTimers = {};
-    const unsubscribers = [];
     function cloudSet(key, value) {
-        if (!fbReady || !fbDb) return;
+        if (!fbReady) return;
         clearTimeout(writeTimers[key]);
-        writeTimers[key] = setTimeout(async () => {
+        writeTimers[key] = setTimeout(() => {
             try {
-                await setDoc(doc(fbDb, FB_COLLECTION, key), { value, updatedAt: Date.now() }, { merge: true });
-            } catch (e) { console.warn('Cloud write failed:', key, e); setCloudStatus('err', '🔴 Sync error'); }
+                rtSet(rtRef(fbDb, `${FB_ROOT}/${key}`), value === undefined ? null : value)
+                    .catch(e => { console.warn('Cloud write failed:', key, e); setCloudStatus('err', '🔴 Sync error'); });
+            } catch (e) { setCloudStatus('err', '🔴 Sync error'); }
         }, 350);
     }
     function listenCloud(key, onChange) {
-        if (!fbReady || !fbDb) return null;
+        if (!fbReady) return null;
         try {
-            const un = onSnapshot(doc(fbDb, FB_COLLECTION, key), snap => {
-                if (snap.exists()) { const d = snap.data(); onChange(d && d.value); setCloudStatus('ok', '🟢 Synced'); }
-            }, err => { console.warn('Listener error:', key, err); setCloudStatus('err', '🔴 Sync error'); });
-            unsubscribers.push(un);
-            return un;
+            return rtOnValue(rtRef(fbDb, `${FB_ROOT}/${key}`), snap => {
+                if (snap.exists()) { onChange(snap.val()); setCloudStatus('ok', '🟢 Synced'); }
+            }, () => setCloudStatus('err', '🔴 Sync error'));
         } catch (e) { return null; }
     }
 
@@ -1297,7 +1302,7 @@ import {
     }
     function readSchoolInfo(branch) { const s = safeParse(localStorage.getItem(branchKey(branch, 'school_info'))); return s ? { ...defaultSchoolInfo(branch), ...s } : { ...defaultSchoolInfo(branch) }; }
 
-    const APP_VERSION = '20.0-firebase';
+    const APP_VERSION = '21.1-login-fix';
     let schoolInfo = null;
 
     const RECEIPT_STYLE = `
@@ -1900,8 +1905,6 @@ import {
         if (legacyTp) { localStorage.setItem(branchKey('sgos', 'target_percent'), legacyTp); localStorage.setItem(branchKey('sgima', 'target_percent'), legacyTp); }
         ['sgos_fee_receipts', 'sgos_board_receipts', 'sgos_student_master', 'sgos_custom_logo', 'sgos_school_info', 'sgos_print_orientation', 'sgos_thresholds', 'sgos_target_percent'].forEach(k => localStorage.removeItem(k));
         localStorage.setItem('sgos_migration_done', '1');
-        // Push migrated data to cloud once
-        pushAllToCloud();
     }
     function migrateFeeReceipt(r) {
         if (!r || r.feesVersion === 2 || !r.fees) return r;
@@ -1913,7 +1916,7 @@ import {
         nf.other += unmapped; r.fees = nf; r.feesVersion = 2; return r;
     }
 
-    // ============ CREDENTIALS ============
+    // ============ CREDENTIALS & LOGIN (works offline; cloud merges later) ============
     function getLoginFor(branch) { const s = safeParse(localStorage.getItem(branchKey(branch, 'login'))); if (s && s.user) return { user: s.user, pass: dec(s.pass || '') }; return { ...DEFAULT_LOGIN[branch] }; }
     function setLoginFor(branch, user, pass) { const v = { user, pass: enc(pass) }; localStorage.setItem(branchKey(branch, 'login'), JSON.stringify(v)); cloudSet(branchKey(branch, 'login'), v); }
     function attemptLogin(user, pass) {
@@ -1973,7 +1976,7 @@ import {
     navTabs.forEach(t => t.addEventListener('click', () => { if (loggedIn && currentRole === 'branch') switchPage(t.dataset.page); }));
     document.querySelectorAll('.module-card').forEach(c => c.addEventListener('click', () => { const g = c.dataset.goto; if (g && loggedIn && currentRole === 'branch') switchPage(g); }));
 
-    // ============ STORAGE & NUMBERING (local + cloud) ============
+    // ============ STORAGE & NUMBERING ============
     function loadBoardReceipts() { boardReceipts = safeParse(localStorage.getItem(bkey('board_receipts'))) || []; }
     function saveBoardReceipts() { localStorage.setItem(bkey('board_receipts'), JSON.stringify(boardReceipts)); cloudSet(bkey('board_receipts'), boardReceipts); }
     function loadFeeReceipts() { let list = safeParse(localStorage.getItem(bkey('fee_receipts'))) || []; list = list.map(r => { const m = migrateFeeReceipt(r); if (m.feesSchema !== BRANCH_SCHEMA[currentBranch]) { m.fees = normalizeFeesForBranch(m.fees, currentBranch); m.feesSchema = BRANCH_SCHEMA[currentBranch]; } return m; }); feeReceipts = list; saveFeeReceipts(); }
@@ -2329,21 +2332,23 @@ import {
         switchPage('home');
     }
 
-    // ============ FIREBASE: push local -> cloud & subscribe cloud -> local ============
-    function pushAllToCloud() {
-        if (!fbReady) return;
+    // ============ CLOUD SYNC HELPERS ============
+    function allCloudKeys() {
         const keys = [];
         ['sgos', 'sgima'].forEach(b => {
             ['board_receipts', 'fee_receipts', 'student_master', 'custom_logo', 'school_info', 'print_orientation', 'thresholds', 'target_percent', 'login', 'prefixes', 'particulars'].forEach(k => keys.push(branchKey(b, k)));
         });
         keys.push(BOARD_CONFIG_KEY, ADMIN_LOGIN_KEY, LOGIN_BG_KEY, LOGIN_BOX_KEY);
-        keys.forEach(k => { const raw = localStorage.getItem(k); if (raw !== null) { try { cloudSet(k, JSON.parse(raw)); } catch (e) { cloudSet(k, raw); } } });
+        return keys;
+    }
+    function pushAllToCloud() {
+        if (!fbReady) return;
+        allCloudKeys().forEach(k => { const raw = localStorage.getItem(k); if (raw !== null) { try { cloudSet(k, JSON.parse(raw)); } catch (e) { cloudSet(k, raw); } } });
     }
     function applyCloudValue(key, value) {
-        if (value === undefined) return;
+        if (value === undefined || value === null) return;
         const str = (typeof value === 'string') ? value : JSON.stringify(value);
         try { localStorage.setItem(key, str); } catch (e) {}
-        // Refresh relevant UI if this branch is active
         if (currentRole === 'branch' && currentBranch) {
             if (key === bkey('board_receipts')) { loadBoardReceipts(); refreshBoardHistory(); refreshBoardYearFilter(); updateDashboard(); }
             else if (key === bkey('fee_receipts')) { loadFeeReceipts(); renderFeeHistory(feeSearchInput.value); updateDashboard(); }
@@ -2365,27 +2370,21 @@ import {
             if (key === ADMIN_LOGIN_KEY || key.endsWith('_login')) populateAdminLogins();
         }
     }
-    function setupCloudSync() {
-        if (!fbReady) return;
-        const keys = [];
-        ['sgos', 'sgima'].forEach(b => {
-            ['board_receipts', 'fee_receipts', 'student_master', 'custom_logo', 'school_info', 'print_orientation', 'thresholds', 'target_percent', 'login', 'prefixes', 'particulars'].forEach(k => keys.push(branchKey(b, k)));
-        });
-        keys.push(BOARD_CONFIG_KEY, ADMIN_LOGIN_KEY, LOGIN_BG_KEY, LOGIN_BOX_KEY);
-        keys.forEach(k => listenCloud(k, v => applyCloudValue(k, v)));
-    }
+    function setupCloudSync() { allCloudKeys().forEach(k => listenCloud(k, v => applyCloudValue(k, v))); }
     async function pullAllFromCloud() {
         if (!fbReady || !fbDb) { showToast('Firebase unavailable; using local data.', 'error'); return; }
         setCloudStatus('', '🟡 Pulling from cloud…');
-        const keys = [];
-        ['sgos', 'sgima'].forEach(b => { ['board_receipts', 'fee_receipts', 'student_master', 'custom_logo', 'school_info', 'print_orientation', 'thresholds', 'target_percent', 'login', 'prefixes', 'particulars'].forEach(k => keys.push(branchKey(b, k))); });
-        keys.push(BOARD_CONFIG_KEY, ADMIN_LOGIN_KEY, LOGIN_BG_KEY, LOGIN_BOX_KEY);
-        let pulled = 0;
+        const keys = allCloudKeys();
+        let pulled = 0, pushed = 0;
         for (const k of keys) {
-            try { const snap = await getDoc(doc(fbDb, FB_COLLECTION, k)); if (snap.exists()) { applyCloudValue(k, snap.data().value); pulled++; } } catch (e) {}
+            try {
+                const snap = await rtGet(rtRef(fbDb, `${FB_ROOT}/${k}`));
+                if (snap.exists()) { applyCloudValue(k, snap.val()); pulled++; }
+                else { const raw = localStorage.getItem(k); if (raw !== null) { try { cloudSet(k, JSON.parse(raw)); } catch (e) { cloudSet(k, raw); } pushed++; } }
+            } catch (e) {}
         }
         setCloudStatus('ok', '🟢 Synced');
-        showToast(`Re-synced ${pulled} item(s) from Firebase.`);
+        showToast(`Cloud sync complete (${pulled} pulled, ${pushed} uploaded).`);
         if (currentRole === 'branch') { refreshBoardHistory(); refreshBoardYearFilter(); renderFeeHistory(feeSearchInput.value); updateDashboard(); }
     }
 
@@ -2398,7 +2397,6 @@ import {
     saveLoginBtn.addEventListener('click', saveLoginSettings);
     loginSettingsModal.addEventListener('click', e => { if (e.target === loginSettingsModal) closeLoginSettingsModal(); });
 
-    // Login Box designer events
     [lbX, lbY, lbW, lbMaxH, lbRadius, lbBorderW].forEach(inp => inp.addEventListener('input', () => { renderLoginBoxPreview(); applyLoginBoxStyle(readLoginBoxFromInputs()); }));
     [lbBg, lbBorder].forEach(inp => inp.addEventListener('input', () => { renderLoginBoxPreview(); applyLoginBoxStyle(readLoginBoxFromInputs()); }));
     lbOpacity.addEventListener('input', () => { renderLoginBoxPreview(); applyLoginBoxStyle(readLoginBoxFromInputs()); });
@@ -2420,7 +2418,6 @@ import {
     });
     document.addEventListener('mouseup', () => { lbDrag = null; });
 
-    // Image editor events
     ieCloseBtn.addEventListener('click', closeImageEditor);
     ieCancelBtn.addEventListener('click', closeImageEditor);
     imageEditorModal.addEventListener('click', e => { if (e.target === imageEditorModal) closeImageEditor(); });
@@ -2441,7 +2438,6 @@ import {
     document.addEventListener('mouseup', () => { if (ieDrag) { if (ieCrop && (ieCrop.w < 6 || ieCrop.h < 6)) { ieCrop = null; ieUpdateCropBox(); } ieDrag = null; } });
     window.addEventListener('resize', () => { if (imageEditorModal.classList.contains('show')) renderImageEditor(); });
 
-    // Admin
     document.querySelectorAll('.admin-tab').forEach(t => t.addEventListener('click', () => setAdminTab(t.dataset.atab)));
     saveSgosLoginBtn.addEventListener('click', () => { const u = alSgosUser.value.trim(), p = alSgosPass.value; if (!u || p.length < 4) { showToast('Username required & password min 4 chars.', 'error'); return; } if (!uniqueUserCheck(u, 'sgos')) { showToast('Username already used by another login.', 'error'); return; } setLoginFor('sgos', u, p); showToast('SGOS login saved & synced.'); });
     saveSgimaLoginBtn.addEventListener('click', () => { const u = alSgimaUser.value.trim(), p = alSgimaPass.value; if (!u || p.length < 4) { showToast('Username required & password min 4 chars.', 'error'); return; } if (!uniqueUserCheck(u, 'sgima')) { showToast('Username already used by another login.', 'error'); return; } setLoginFor('sgima', u, p); showToast('SGIMA login saved & synced.'); });
@@ -2461,7 +2457,6 @@ import {
     adminBgEditBtn.addEventListener('click', () => openImageEditor({ type: 'loginbg' }, localStorage.getItem(LOGIN_BG_KEY) || null));
     adminBgResetBtn.addEventListener('click', resetLoginBg);
 
-    // Branch events
     boardStudentClass.addEventListener('change', updateBoardAmount);
     boardYear.addEventListener('change', () => { if (!editingBoardId) setNextBoardReceiptNumber(); });
     boardGenerateBtn.addEventListener('click', generateBoardReceipt);
@@ -2543,41 +2538,42 @@ import {
         if (e.key === 'Enter' && !loginOverlay.classList.contains('hidden') && document.activeElement && (document.activeElement === loginUser || document.activeElement === loginPass)) { e.preventDefault(); doLogin(); }
     });
 
-    // ============ INIT ============
+    // ============ INIT (login works immediately; Firebase connects in background) ============
     function init() {
         migrateLegacyIfNeeded();
         applyLoginBg();
         applyLoginBoxStyle();
-        setupCloudSync();
-        // Pull latest from cloud on startup (non-blocking)
-        if (fbReady) setTimeout(pullAllFromCloud, 600);
         let sess = null;
         try { sess = sessionStorage.getItem(SESSION_KEY); } catch (e) {}
         if (sess === 'admin') { hideLogin(); enterAdmin(); }
         else if (sess && BRANCHES[sess]) { hideLogin(); enterBranch(sess); }
         else showLogin();
+        initFirebase(); // background; never blocks login
     }
     init();
 })();
 
 /* ============================================================
    DEFAULT LOGIN CREDENTIALS  (changeable in Admin Panel,
-   synced across devices via Firebase Firestore)
+   synced across devices via Firebase Realtime Database)
    ------------------------------------------------------------
    SGOS  branch login :  username = sgos    password = sgos@123
    SGIMA branch login :  username = sgima   password = sgima@123
    ADMIN panel login  :  username = admin   password = admin@123
    ------------------------------------------------------------
-   Firebase project: sgos-31514  ·  Collection: sgos_data
-   Each setting/receipt-list is one document keyed like:
-     sgos_fee_receipts, sgima_school_info, admin_login,
-     login_bg, login_box, sgos_board_config, ...
+   Firebase project : sgos-fb724
+   Realtime DB root : /sgos_data/<key>
    ------------------------------------------------------------
-   ⚠️ SECURITY: The web API key in this file is public by design.
-   Protect your data with Firestore Security Rules, e.g. allow
-   read/write only for authenticated admins, or lock the whole
-   collection to a service account. Do NOT leave the collection
-   publicly writable in production.
+   LOGIN FIX NOTES:
+   • script.js is a CLASSIC script (works from file:// or any host).
+   • Firebase SDKs load via dynamic import() in try/catch — if the
+     network/CDN is down, the app runs local-only and LOGIN STILL WORKS.
+   • Credentials are validated from localStorage first; cloud values
+     merge in automatically once Firebase connects.
+   ⚠️ SECURITY: set Realtime Database Rules to authenticated/admin-only
+   before production, e.g.:
+     { "rules": { "sgos_data": { ".read": "auth != null",
+                                  ".write": "auth != null" } } }
    ============================================================ */
 
 
