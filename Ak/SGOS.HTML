@@ -60,11 +60,9 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
 .login-btn { width: 100%; justify-content: center; }
 .login-note { margin-top: 0.9rem; font-size: 0.72rem; color: var(--gray); line-height: 1.5; }
 
-/* Sync status badge */
-.sync-badge { font-size: 0.78rem; font-weight: 700; padding: 0.35rem 0.7rem; border-radius: 20px; background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.4); white-space: nowrap; }
-.sync-badge.ok { background: rgba(16,185,129,0.25); border-color: rgba(16,185,129,0.6); }
-.sync-badge.busy { background: rgba(59,130,246,0.25); border-color: rgba(59,130,246,0.6); }
-.sync-badge.off { background: rgba(245,158,11,0.25); border-color: rgba(245,158,11,0.6); }
+.cloud-status { font-size: 0.78rem; font-weight: 700; padding: 0.35rem 0.8rem; border-radius: 20px; background: rgba(255,255,255,0.18); color: #fff; border: 1px solid rgba(255,255,255,0.4); white-space: nowrap; cursor: default; }
+.cloud-status.ok { background: rgba(16,185,129,0.25); border-color: rgba(16,185,129,0.6); }
+.cloud-status.err { background: rgba(239,68,68,0.25); border-color: rgba(239,68,68,0.6); }
 
 /* ============ LOGIN BOX PREVIEW (admin) ============ */
 .lb-preview { position: relative; width: 100%; max-width: 680px; aspect-ratio: 16 / 9; background: #0f172a center/cover no-repeat; border-radius: 10px; overflow: hidden; margin-bottom: 1rem; border: 1px solid var(--border); }
@@ -597,32 +595,6 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
     <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
-
-    <!-- ============ FIREBASE (module) ============ -->
-    <script type="module">
-      import { initializeApp } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-app.js";
-      import { getAnalytics } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-analytics.js";
-      import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-firestore.js";
-
-      const firebaseConfig = {
-        apiKey: "AIzaSyB4GZZKs7JS2AzLIlHwK6zAoRS0SuSqlgI",
-        authDomain: "sgos-31514.firebaseapp.com",
-        projectId: "sgos-31514",
-        storageBucket: "sgos-31514.firebasestorage.app",
-        messagingSenderId: "8813657174",
-        appId: "1:8813657174:web:311909a0f6deab63724ff7",
-        measurementId: "G-SMJ2WBR5KY"
-      };
-
-      const app = initializeApp(firebaseConfig);
-      try { getAnalytics(app); } catch (e) { /* analytics optional (localhost may warn) */ }
-      const db = getFirestore(app);
-
-      // Expose a tiny Firestore helper to the classic script.js
-      window.fb = { db, doc, getDoc, setDoc };
-      window.firebaseReady = Promise.resolve(true);
-      console.log('[Firebase] connected → project', firebaseConfig.projectId);
-    </script>
 </head>
 <body>
     <!-- ============ LOGIN ============ -->
@@ -639,7 +611,7 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
                 <p class="login-error" id="loginError"></p>
                 <button type="submit" class="btn btn-primary login-btn" id="loginBtn">🔓 Login</button>
             </form>
-            <p class="login-note">Credentials are managed by the Administrator. Data syncs via Firebase.</p>
+            <p class="login-note">Credentials are managed by the Administrator and synced via Firebase.</p>
         </div>
     </div>
 
@@ -655,8 +627,8 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
                 <h2 id="headerShortName">SGOS</h2>
                 <p class="tagline">Fee Receipt Generator</p>
             </div>
+            <span class="cloud-status" id="cloudStatus" title="Firebase sync status">🟡 Sync…</span>
             <span class="branch-badge" id="branchBadge">—</span>
-            <span class="sync-badge" id="syncBadge" title="Cloud sync status">☁️ Sync</span>
             <button type="button" class="school-edit-btn" id="loginSettingsBtn" title="Change this branch's login">🔑 Login Settings</button>
             <button type="button" class="school-edit-btn" id="editSchoolInfoBtn" title="Edit School Information">⚙️ Edit School Info</button>
             <button type="button" class="school-edit-btn" id="logoutBtn" title="Logout">🚪 Logout</button>
@@ -676,10 +648,10 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
     <main class="container page" id="homePage">
         <section class="welcome-section">
             <h2 class="section-title">🏠 Welcome to Fee Receipt Generator</h2>
-            <p class="welcome-intro">Logged-in branch: <strong id="homeBranchLabel">—</strong>. Each branch has its own login, data, particulars and receipt numbering — synced across devices via Firebase.</p>
+            <p class="welcome-intro">Logged-in branch: <strong id="homeBranchLabel">—</strong>. Data is synced across devices through <strong>Firebase Realtime Database</strong> (with offline localStorage fallback).</p>
             <div class="module-cards">
-                <div class="module-card" data-goto="board"><div class="module-icon">📋</div><h3>Board Fees</h3><p>Year-wise receipts, auto-saved. Class options & amounts configured by Admin.</p><button type="button" class="btn btn-primary">Open Board Fees →</button></div>
-                <div class="module-card" data-goto="fee"><div class="module-icon">🧾</div><h3>Fee Receipt</h3><p>Branch-wise Fee Particulars & numbering. Auto-saved. 2 copies per A4 page.</p><button type="button" class="btn btn-primary">Open Fee Receipt →</button></div>
+                <div class="module-card" data-goto="board"><div class="module-icon">📋</div><h3>Board Fees</h3><p>Year-wise receipts, auto-saved & cloud-synced. Class options & amounts configured by Admin.</p><button type="button" class="btn btn-primary">Open Board Fees →</button></div>
+                <div class="module-card" data-goto="fee"><div class="module-icon">🧾</div><h3>Fee Receipt</h3><p>Branch-wise Fee Particulars & numbering. Auto-saved & synced. 2 copies per A4 page.</p><button type="button" class="btn btn-primary">Open Fee Receipt →</button></div>
                 <div class="module-card" data-goto="analysis"><div class="module-icon">📊</div><h3>Fees Analysis</h3><p>Upload Excel, analyze payments, set target percentages.</p><button type="button" class="btn btn-primary">Open Analysis →</button></div>
             </div>
             <div class="dashboard">
@@ -691,12 +663,12 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
                 <div class="dashboard-card"><div class="card-icon">👥</div><div class="card-info"><div class="card-value" id="studentsMaster">0</div><div class="card-label">Students in Master DB</div></div></div>
             </div>
             <div class="data-management">
-                <h3 class="subsection-title">🗄️ Data Management (Current Branch)</h3>
+                <h3 class="subsection-title">🗄️ Data Management (Current Branch · Cloud Synced)</h3>
                 <div class="data-actions">
                     <button type="button" class="btn btn-success btn-sm" id="homeExcelBtn">📊 Export All to Excel</button>
                     <button type="button" class="btn btn-primary btn-sm" id="homeBackupBtn">📥 Backup Branch Data</button>
                     <button type="button" class="btn btn-warning btn-sm" id="homeRestoreBtn">📤 Restore from Backup</button>
-                    <button type="button" class="btn btn-info btn-sm" id="homeSyncBtn">☁️ Sync from Cloud Now</button>
+                    <button type="button" class="btn btn-info btn-sm" id="homeResyncBtn">🔄 Re-sync from Cloud</button>
                     <input type="file" id="homeRestoreFileInput" accept=".json,application/json" style="display:none;">
                 </div>
             </div>
@@ -708,7 +680,7 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
         <section class="board-section">
             <h2 class="section-title">📋 Board Fees Management</h2>
             <div class="section-description">
-                <p>Generate Board Fee receipts. Receipts are <strong>saved automatically</strong> (locally + cloud) and maintained <strong>year-wise</strong> for the logged-in branch.</p>
+                <p>Generate Board Fee receipts. Receipts are <strong>saved automatically</strong>, maintained <strong>year-wise</strong>, and <strong>synced to Firebase</strong>.</p>
                 <div class="board-fee-info" id="boardFeeBadges"></div>
             </div>
             <div class="form-section">
@@ -773,7 +745,7 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
         <section class="fee-section">
             <h2 class="section-title">🧾 Fee Receipt</h2>
             <div class="section-description">
-                <p>Generate detailed fee receipts. <strong>Fee Particulars list is branch-specific</strong> and editable from the Admin Panel. Receipts are <strong>saved automatically</strong> (locally + cloud) and print 2 identical copies on one A4 page.</p>
+                <p>Generate detailed fee receipts. <strong>Fee Particulars list is branch-specific</strong> and editable from the Admin Panel. Receipts are <strong>saved automatically</strong> and <strong>synced to Firebase</strong>.</p>
                 <p style="margin-top:0.4rem; font-size:0.88rem;" id="feePrefixNote">Receipt numbers: SGOS/0001, SGOS/0002 ... (branch-wise, sequential, persistent)</p>
             </div>
             <div class="form-section">
@@ -950,7 +922,7 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
     <!-- ============ ADMIN PANEL ============ -->
     <main class="container page" id="adminPage" style="display:none;">
         <section class="admin-section">
-            <h2 class="section-title">🛠️ Admin Panel — Manual Configuration</h2>
+            <h2 class="section-title">🛠️ Admin Panel — Manual Configuration (Cloud Synced)</h2>
             <div class="admin-tabs">
                 <button type="button" class="admin-tab active" data-atab="logins">🔑 Logins</button>
                 <button type="button" class="admin-tab" data-atab="branch">🏫 Branch Settings</button>
@@ -972,7 +944,7 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
                     <div class="admin-row"><div class="form-group"><label>Username</label><input id="alAdminUser"></div><div class="form-group"><label>Password</label><input id="alAdminPass"></div></div>
                     <button type="button" class="btn btn-success btn-sm" id="saveAdminLoginBtn">💾 Save Admin Login</button>
                 </div>
-                <p class="admin-note">Usernames must remain unique across SGOS / SGIMA / Admin. Logins sync across devices via Firebase.</p>
+                <p class="admin-note">Usernames must remain unique across SGOS / SGIMA / Admin. Credentials are synced to Firebase.</p>
             </div>
 
             <div class="admin-pane" id="apane-branch">
@@ -994,7 +966,7 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
                         <button type="button" class="btn btn-warning btn-sm" id="abLogoResetBtn">🔄 Reset Logo</button>
                         <input type="file" id="abLogoFile" accept="image/*" style="display:none;">
                     </div>
-                    <p class="admin-note">Logos are compressed automatically and synced to the cloud. Use <strong>Edit</strong> to crop / rotate / adjust before saving.</p>
+                    <p class="admin-note">Logos are compressed and synced to Firebase (shared across devices).</p>
                 </div>
             </div>
 
@@ -1025,7 +997,7 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
                         <button type="button" class="btn btn-warning btn-sm" id="adminBgResetBtn">🔄 Reset (use login-bg.jpg)</button>
                         <input type="file" id="adminBgFile" accept="image/*" style="display:none;">
                     </div>
-                    <p class="admin-note">The background is displayed <strong>fully opaque</strong> and synced to all devices. A local file named <code>login-bg.jpg</code> beside index.html is the offline fallback.</p>
+                    <p class="admin-note">The background is displayed <strong>fully opaque</strong> and synced to Firebase. A local file named <code>login-bg.jpg</code> beside index.html is the offline fallback.</p>
                 </div>
             </div>
 
@@ -1064,12 +1036,12 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
                     <button type="button" class="btn btn-success" id="lbSave">💾 Save & Apply Login Box</button>
                     <button type="button" class="btn btn-warning" id="lbReset">↩️ Reset to Default</button>
                 </div>
-                <p class="admin-note">Drag the box in the preview or type values, then Save. Changes persist and sync to every device. On phones (&lt;768px) the box auto-centres for usability.</p>
+                <p class="admin-note">Drag the box in the preview or type values, then Save. Synced to Firebase; applies on every device. On phones (&lt;768px) the box auto-centres.</p>
             </div>
         </section>
     </main>
 
-    <footer class="footer"><p>© 2026 Sanjay Ghodawat Group — Multi-Branch Fee Receipt System · Synced with Firebase. All rights reserved.</p></footer>
+    <footer class="footer"><p>© 2026 Sanjay Ghodawat Group — Multi-Branch Fee Receipt System · Synced with Firebase Realtime Database. All rights reserved.</p></footer>
 
     <!-- Print Preview Modal -->
     <div class="print-preview-overlay" id="printPreviewOverlay">
@@ -1111,7 +1083,7 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
                     <button type="button" class="btn btn-success" id="ieSaveBtn">💾 Apply & Save</button>
                     <button type="button" class="btn btn-warning" id="ieCancelBtn">Cancel</button>
                 </div>
-                <p class="modal-hint">Edits are applied to a compressed copy and synced to the cloud.</p>
+                <p class="modal-hint">Edits are applied to a compressed copy and synced to Firebase.</p>
             </div>
         </div>
     </div>
@@ -1128,7 +1100,7 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
                     <div class="form-group"><label>Confirm Password *</label><input type="password" id="lsConfirmPass" placeholder="Re-enter new password"></div>
                 </form>
                 <div class="modal-actions row"><button type="button" class="btn btn-success" id="saveLoginBtn">💾 Save Login</button></div>
-                <p class="modal-hint">Changes apply to the CURRENT branch login only (synced via cloud).</p>
+                <p class="modal-hint">Changes apply to the CURRENT branch login only and sync to Firebase.</p>
             </div>
         </div>
     </div>
@@ -1151,7 +1123,7 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
                     <button type="button" class="btn btn-success" id="saveSchoolInfoBtn">💾 Save Changes</button>
                     <button type="button" class="btn btn-warning" id="resetSchoolInfoBtn">🔄 Reset to Branch Default</button>
                 </div>
-                <p class="modal-hint">These details apply to the CURRENT branch only (synced via cloud).</p>
+                <p class="modal-hint">These details apply to the CURRENT branch only and sync to Firebase.</p>
             </div>
         </div>
     </div>
@@ -1166,7 +1138,7 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
                     <button type="button" class="btn btn-primary" id="uploadLogoBtn">📤 Upload New Logo</button>
                     <button type="button" class="btn btn-warning" id="resetLogoBtn">🔄 Reset to Default</button>
                 </div>
-                <p class="modal-hint">Logo is compressed automatically, stored per branch & synced to the cloud.</p>
+                <p class="modal-hint">Logo is compressed automatically, stored per branch & synced to Firebase.</p>
             </div>
         </div>
     </div>
@@ -1179,7 +1151,7 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
                 <div class="restore-info">
                     <p id="restoreInfoText">You are about to restore data into the CURRENT branch only.</p>
                     <div class="restore-details" id="restoreDetails" style="display:none;"><p><strong>Backup Info:</strong></p><ul id="restoreDetailsList"></ul></div>
-                    <p class="restore-warning">⚠️ This will <strong>replace</strong> current branch data (local + cloud). Other branch is unaffected.</p>
+                    <p class="restore-warning">⚠️ This will <strong>replace</strong> current branch data (locally and in the cloud). Other branch is unaffected.</p>
                 </div>
                 <div class="modal-actions">
                     <button type="button" class="btn btn-success" id="confirmRestoreBtn">✅ Yes, Restore</button>
@@ -1190,15 +1162,72 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
     </div>
 
     <div class="toast" id="toast"></div>
-    <script src="script.js"></script>
+
+    <!-- ============ FIREBASE (your NEW config) + app logic ============ -->
+    <script type="module" src="script.js"></script>
 </body>
 </html>
 
 
               <script>
-                              // script.js
+                              // script.js  (ES module — Firebase Realtime Database integrated)
+import { initializeApp } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-app.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-analytics.js";
+import {
+    getDatabase, ref, set, get, onValue
+} from "https://www.gstatic.com/firebasejs/13.0.0/firebase-database.js";
+
 (function () {
     'use strict';
+
+    // ============ FIREBASE INIT (your NEW config: sgos-fb724) ============
+    const firebaseConfig = {
+        apiKey: "AIzaSyBNei_kYEP41zvfoN2dF_9eg5dOd80xP0E",
+        authDomain: "sgos-fb724.firebaseapp.com",
+        databaseURL: "https://sgos-fb724-default-rtdb.firebaseio.com",
+        projectId: "sgos-fb724",
+        storageBucket: "sgos-fb724.firebasestorage.app",
+        messagingSenderId: "740506273582",
+        appId: "1:740506273582:web:f3fe37042db6e630ea1cbf",
+        measurementId: "G-L77ZJEZVFX"
+    };
+    let fbApp = null, fbDb = null, fbAnalytics = null, fbReady = false;
+    try {
+        fbApp = initializeApp(firebaseConfig);
+        fbDb = getDatabase(fbApp);
+        try { fbAnalytics = getAnalytics(fbApp); } catch (e) { /* analytics optional / blocked */ }
+        fbReady = true;
+    } catch (e) { console.warn('Firebase init failed; running offline.', e); }
+
+    const FB_ROOT = 'sgos_data';
+    const cloudStatusEl = document.getElementById('cloudStatus');
+    function setCloudStatus(state, msg) {
+        if (!cloudStatusEl) return;
+        cloudStatusEl.className = 'cloud-status' + (state === 'ok' ? ' ok' : state === 'err' ? ' err' : '');
+        cloudStatusEl.textContent = msg;
+        cloudStatusEl.title = 'Firebase sync: ' + msg;
+    }
+    if (fbReady) setCloudStatus('', '🟡 Connecting…'); else setCloudStatus('err', '🔴 Offline');
+
+    const writeTimers = {};
+    function dbRef(key) { return ref(fbDb, `${FB_ROOT}/${key}`); }
+    function cloudSet(key, value) {
+        if (!fbReady || !fbDb) return;
+        clearTimeout(writeTimers[key]);
+        writeTimers[key] = setTimeout(async () => {
+            try { await set(dbRef(key), value === undefined ? null : value); }
+            catch (e) { console.warn('Cloud write failed:', key, e); setCloudStatus('err', '🔴 Sync error'); }
+        }, 350);
+    }
+    function listenCloud(key, onChange) {
+        if (!fbReady || !fbDb) return null;
+        try {
+            const un = onValue(dbRef(key), snap => {
+                if (snap.exists()) { onChange(snap.val()); setCloudStatus('ok', '🟢 Synced'); }
+            }, err => { console.warn('Listener error:', key, err); setCloudStatus('err', '🔴 Sync error'); });
+            return un;
+        } catch (e) { return null; }
+    }
 
     // ============ BRANCH CONFIG ============
     const BRANCHES = {
@@ -1239,19 +1268,19 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
     const BRANCH_SCHEMA = { sgos: 'sgos-img13', sgima: 'sgima-13' };
 
     function getParticulars(branch) { const s = safeParse(localStorage.getItem(branchKey(branch, 'particulars'))); if (Array.isArray(s) && s.length) return s; return (branch === 'sgos' ? SGOS_PARTICULARS : SGIMA_PARTICULARS).map(x => ({ ...x })); }
-    function setParticulars(branch, list) { localStorage.setItem(branchKey(branch, 'particulars'), JSON.stringify(list)); }
+    function setParticulars(branch, list) { localStorage.setItem(branchKey(branch, 'particulars'), JSON.stringify(list)); cloudSet(branchKey(branch, 'particulars'), list); }
     function catchAllId(branch) { const l = getParticulars(branch); return l[l.length - 1].id; }
     function particulars() { return getParticulars(currentBranch); }
     function getPrefixes(branch) { const s = safeParse(localStorage.getItem(branchKey(branch, 'prefixes'))); return s || { fee: BRANCHES[branch].feePrefix, board: BRANCHES[branch].boardPrefix }; }
-    function setPrefixes(branch, p) { localStorage.setItem(branchKey(branch, 'prefixes'), JSON.stringify(p)); }
+    function setPrefixes(branch, p) { localStorage.setItem(branchKey(branch, 'prefixes'), JSON.stringify(p)); cloudSet(branchKey(branch, 'prefixes'), p); }
     function feePrefix() { return getPrefixes(currentBranch).fee; }
     function boardPrefix() { return getPrefixes(currentBranch).board; }
     function getBoardConfig() { const s = safeParse(localStorage.getItem(BOARD_CONFIG_KEY)); return s || { c10: 700, c12b: 1000, c12j: 600 }; }
-    function setBoardConfig(c) { localStorage.setItem(BOARD_CONFIG_KEY, JSON.stringify(c)); }
+    function setBoardConfig(c) { localStorage.setItem(BOARD_CONFIG_KEY, JSON.stringify(c)); cloudSet(BOARD_CONFIG_KEY, c); }
     function boardAmountsMap() { const c = getBoardConfig(); return { '10th': Number(c.c10) || 0, '12th': (Number(c.c12b) || 0) + (Number(c.c12j) || 0) }; }
     function boardBreakdownMap() { const c = getBoardConfig(); return { '10th': { board: Number(c.c10) || 0, journal: 0 }, '12th': { board: Number(c.c12b) || 0, journal: Number(c.c12j) || 0 } }; }
     function getAdminLogin() { const s = safeParse(localStorage.getItem(ADMIN_LOGIN_KEY)); if (s && s.user) return { user: s.user, pass: dec(s.pass || '') }; return { ...DEFAULT_ADMIN_LOGIN }; }
-    function setAdminLogin(u, p) { localStorage.setItem(ADMIN_LOGIN_KEY, JSON.stringify({ user: u, pass: enc(p) })); }
+    function setAdminLogin(u, p) { const v = { user: u, pass: enc(p) }; localStorage.setItem(ADMIN_LOGIN_KEY, JSON.stringify(v)); cloudSet(ADMIN_LOGIN_KEY, v); }
 
     function bkey(name) { return `sgos_${currentBranch}_${name}`; }
     function branchKey(branch, name) { return `sgos_${branch}_${name}`; }
@@ -1263,70 +1292,8 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
     }
     function readSchoolInfo(branch) { const s = safeParse(localStorage.getItem(branchKey(branch, 'school_info'))); return s ? { ...defaultSchoolInfo(branch), ...s } : { ...defaultSchoolInfo(branch) }; }
 
-    const APP_VERSION = '20.0-firebase';
+    const APP_VERSION = '21.0-firebase-rtdb';
     let schoolInfo = null;
-
-    // ============ FIREBASE CLOUD SYNC ============
-    const syncBadge = document.getElementById('syncBadge');
-    function setSync(state) {
-        if (!syncBadge) return;
-        syncBadge.className = 'sync-badge ' + state;
-        syncBadge.textContent = state === 'ok' ? '☁️ Synced' : (state === 'busy' ? '☁️ Syncing…' : '☁️ Offline');
-    }
-    async function fbGet(path) {
-        try {
-            await (window.firebaseReady || Promise.resolve());
-            if (!window.fb) return null;
-            const snap = await window.fb.getDoc(window.fb.doc(window.fb.db, path));
-            return snap.exists() ? snap.data() : null;
-        } catch (e) { console.warn('[FB] get failed', path, e); setSync('off'); return null; }
-    }
-    async function fbSet(path, obj) {
-        try {
-            await (window.firebaseReady || Promise.resolve());
-            if (!window.fb) return false;
-            setSync('busy');
-            await window.fb.setDoc(window.fb.doc(window.fb.db, path), Object.assign({ updatedAt: Date.now() }, obj), { merge: true });
-            setSync('ok');
-            return true;
-        } catch (e) { console.warn('[FB] set failed', path, e); setSync('off'); return false; }
-    }
-    function newer(a, b) { return (Number(a && a.updatedAt) || 0) >= (Number(b && b.updatedAt) || 0) ? a : b; }
-    async function loadLocalThenMerge(localKey, cloudPath, transform) {
-        const local = safeParse(localStorage.getItem(localKey));
-        const cloud = await fbGet(cloudPath);
-        const pick = newer(cloud, { updatedAt: Number(localStorage.getItem(localKey + '_ts') || 0) });
-        let val = pick === cloud && cloud ? (cloud.value !== undefined ? cloud.value : cloud) : local;
-        if (transform) val = transform(val);
-        if (val !== null && val !== undefined) localStorage.setItem(localKey, JSON.stringify(val));
-        return val;
-    }
-    function saveLocalAndCloud(localKey, cloudPath, value) {
-        localStorage.setItem(localKey, JSON.stringify(value));
-        localStorage.setItem(localKey + '_ts', String(Date.now()));
-        fbSet(cloudPath, { value });
-    }
-    async function pullAllFromCloud() {
-        setSync('busy');
-        // globals
-        const adminL = await fbGet('meta/admin_login'); if (adminL && adminL.value) localStorage.setItem(ADMIN_LOGIN_KEY, JSON.stringify(adminL.value));
-        const bg = await fbGet('meta/login_bg'); if (bg && bg.value) localStorage.setItem(LOGIN_BG_KEY, bg.value);
-        const lb = await fbGet('meta/login_box'); if (lb && lb.value) localStorage.setItem(LOGIN_BOX_KEY, JSON.stringify(lb.value));
-        const bc = await fbGet('meta/board_config'); if (bc && bc.value) localStorage.setItem(BOARD_CONFIG_KEY, JSON.stringify(bc.value));
-        // per branch
-        for (const b of ['sgos', 'sgima']) {
-            const d = await fbGet('branches/' + b);
-            if (!d) continue;
-            const map = {
-                board_receipts: 'boardReceipts', fee_receipts: 'feeReceipts', student_master: 'studentMaster',
-                custom_logo: 'customLogo', school_info: 'schoolInfo', print_orientation: 'printOrientation',
-                thresholds: 'thresholds', target_percent: 'targetPercent', login: 'login',
-                prefixes: 'prefixes', particulars: 'particulars'
-            };
-            Object.keys(map).forEach(k => { if (d[k] !== undefined) localStorage.setItem(branchKey(b, k), JSON.stringify(d[k])); });
-        }
-        setSync('ok');
-    }
 
     const RECEIPT_STYLE = `
         .receipt { display: flex; flex-direction: column; text-align: left; }
@@ -1471,7 +1438,6 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
     const feePrefixNote = document.getElementById('feePrefixNote');
     const particularsBranchTag = document.getElementById('particularsBranchTag');
     const boardFeeBadges = document.getElementById('boardFeeBadges');
-    const homeSyncBtn = document.getElementById('homeSyncBtn');
 
     const boardForm = document.getElementById('boardForm');
     const boardReceiptNumber = document.getElementById('boardReceiptNumber');
@@ -1566,6 +1532,7 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
     const homeBackupBtn = document.getElementById('homeBackupBtn');
     const homeRestoreBtn = document.getElementById('homeRestoreBtn');
     const homeRestoreFileInput = document.getElementById('homeRestoreFileInput');
+    const homeResyncBtn = document.getElementById('homeResyncBtn');
     const restoreModal = document.getElementById('restoreModal');
     const closeRestoreModal = document.getElementById('closeRestoreModal');
     const confirmRestoreBtn = document.getElementById('confirmRestoreBtn');
@@ -1731,10 +1698,10 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, w, h);
                 let quality = 0.82, data = canvas.toDataURL('image/jpeg', quality), guard = 0;
-                while (data.length > 2400000 && guard < 5) {
-                    quality = Math.max(0.45, quality - 0.12);
+                while (data.length > 900000 && guard < 6) {
+                    quality = Math.max(0.4, quality - 0.1);
                     data = canvas.toDataURL('image/jpeg', quality);
-                    if (data.length > 2400000) { w = Math.max(320, Math.round(w * 0.8)); h = Math.max(200, Math.round(h * 0.8)); canvas.width = w; canvas.height = h; ctx.drawImage(img, 0, 0, w, h); data = canvas.toDataURL('image/jpeg', quality); }
+                    if (data.length > 900000) { w = Math.max(280, Math.round(w * 0.8)); h = Math.max(180, Math.round(h * 0.8)); canvas.width = w; canvas.height = h; ctx.drawImage(img, 0, 0, w, h); data = canvas.toDataURL('image/jpeg', quality); }
                     guard++;
                 }
                 cb(data);
@@ -1754,7 +1721,7 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
         return out;
     }
 
-    // ============ LOGIN BACKGROUND ============
+    // ============ LOGIN BACKGROUND (opaque) ============
     function applyLoginBg() {
         const saved = localStorage.getItem(LOGIN_BG_KEY);
         if (saved) loginOverlay.style.backgroundImage = `url("${saved}")`;
@@ -1765,13 +1732,13 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
     function setLoginBgFromFile(file) {
         if (!file) return;
         if (!file.type.startsWith('image/')) { showToast('Please choose an image file.', 'error'); return; }
-        compressImageFile(file, data => { if (tryStore(LOGIN_BG_KEY, data)) { fbSet('meta/login_bg', { value: data }); applyLoginBg(); showToast('Login background updated & synced.'); } else showToast('Still too large after compression. Use the Edit tool to crop it smaller.', 'error'); });
+        compressImageFile(file, data => { if (tryStore(LOGIN_BG_KEY, data)) { cloudSet(LOGIN_BG_KEY, data); applyLoginBg(); showToast('Login background updated & synced.'); } else showToast('Still too large after compression. Use the Edit tool to crop it smaller.', 'error'); });
     }
-    function resetLoginBg() { localStorage.removeItem(LOGIN_BG_KEY); fbSet('meta/login_bg', { value: '' }); applyLoginBg(); showToast('Login background reset (uses login-bg.jpg if present).'); }
+    function resetLoginBg() { localStorage.removeItem(LOGIN_BG_KEY); cloudSet(LOGIN_BG_KEY, null); applyLoginBg(); showToast('Login background reset (uses login-bg.jpg if present).'); }
 
     // ============ LOGIN BOX ============
     function getLoginBoxCfg() { const s = safeParse(localStorage.getItem(LOGIN_BOX_KEY)); return s ? { ...DEFAULT_LOGIN_BOX, ...s } : { ...DEFAULT_LOGIN_BOX }; }
-    function saveLoginBoxCfg(c) { localStorage.setItem(LOGIN_BOX_KEY, JSON.stringify(c)); fbSet('meta/login_box', { value: c }); }
+    function saveLoginBoxCfg(c) { localStorage.setItem(LOGIN_BOX_KEY, JSON.stringify(c)); cloudSet(LOGIN_BOX_KEY, c); }
     function applyLoginBoxStyle(cfg) {
         const c = cfg || getLoginBoxCfg();
         if (!loginCard) return;
@@ -1822,7 +1789,7 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
     function lbPreviewPos(e) { const r = lbPreview.getBoundingClientRect(); return { x: ((e.clientX - r.left) / r.width) * 100, y: ((e.clientY - r.top) / r.height) * 100 }; }
 
     // ============ IMAGE EDITOR ============
-    let ieTarget = null, ieImg = null, ieState = null, ieCrop = null, ieCropMode = false, ieDragIE = null, ieScale = 1, ieTW = 0, ieTH = 0;
+    let ieTarget = null, ieImg = null, ieState = null, ieCrop = null, ieCropMode = false, ieDrag = null, ieScale = 1, ieTW = 0, ieTH = 0;
     function ieResetState() { ieState = { rot: 0, flipH: false, flipV: false, bright: 100, contrast: 100 }; ieCrop = null; ieCropMode = false; ieBright.value = 100; ieContrast.value = 100; ieCropBtn.classList.remove('on'); ieCropBox.style.display = 'none'; }
     function openImageEditor(target, srcDataUrl) {
         ieTarget = target;
@@ -1836,7 +1803,7 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
         }
         imageEditorModal.classList.add('show');
     }
-    function closeImageEditor() { imageEditorModal.classList.remove('show'); ieDragIE = null; }
+    function closeImageEditor() { imageEditorModal.classList.remove('show'); ieDrag = null; }
     function ieTransformedDims() { const swap = (ieState.rot % 180) !== 0; return swap ? { w: ieImg.height, h: ieImg.width } : { w: ieImg.width, h: ieImg.height }; }
     function ieDrawInto(ctx, w, h) {
         ctx.save();
@@ -1888,13 +1855,13 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
         const cap = 2000;
         if (w > cap || h > cap) { const f = Math.min(cap / w, cap / h); const sc = document.createElement('canvas'); sc.width = Math.round(w * f); sc.height = Math.round(h * f); sc.getContext('2d').drawImage(out, 0, 0, sc.width, sc.height); out = sc; w = out.width; h = out.height; }
         let quality = 0.85, data = out.toDataURL('image/jpeg', quality), guard = 0;
-        while (data.length > 2400000 && guard < 5) { quality = Math.max(0.45, quality - 0.1); data = out.toDataURL('image/jpeg', quality); guard++; }
+        while (data.length > 900000 && guard < 6) { quality = Math.max(0.4, quality - 0.1); data = out.toDataURL('image/jpeg', quality); guard++; }
         if (ieTarget.type === 'loginbg') {
-            if (tryStore(LOGIN_BG_KEY, data)) { fbSet('meta/login_bg', { value: data }); applyLoginBg(); closeImageEditor(); showToast('Login background saved & synced.'); }
+            if (tryStore(LOGIN_BG_KEY, data)) { cloudSet(LOGIN_BG_KEY, data); applyLoginBg(); closeImageEditor(); showToast('Login background saved & synced.'); }
             else showToast('Edited image still too large for storage.', 'error');
         } else {
             const b = ieTarget.branch;
-            if (tryStore(branchKey(b, 'custom_logo'), data)) { fbSet('branches/' + b, { customLogo: data }); abLogoPreview.src = data; if (currentRole === 'branch' && currentBranch === b) applyLogo(data); closeImageEditor(); showToast(`Logo saved & synced for ${BRANCHES[b].label}.`); }
+            if (tryStore(branchKey(b, 'custom_logo'), data)) { cloudSet(branchKey(b, 'custom_logo'), data); abLogoPreview.src = data; if (currentRole === 'branch' && currentBranch === b) applyLogo(data); closeImageEditor(); showToast(`Logo saved & synced for ${BRANCHES[b].label}.`); }
             else showToast('Edited image still too large for storage.', 'error');
         }
     }
@@ -1928,6 +1895,7 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
         if (legacyTp) { localStorage.setItem(branchKey('sgos', 'target_percent'), legacyTp); localStorage.setItem(branchKey('sgima', 'target_percent'), legacyTp); }
         ['sgos_fee_receipts', 'sgos_board_receipts', 'sgos_student_master', 'sgos_custom_logo', 'sgos_school_info', 'sgos_print_orientation', 'sgos_thresholds', 'sgos_target_percent'].forEach(k => localStorage.removeItem(k));
         localStorage.setItem('sgos_migration_done', '1');
+        pushAllToCloud();
     }
     function migrateFeeReceipt(r) {
         if (!r || r.feesVersion === 2 || !r.fees) return r;
@@ -1941,7 +1909,7 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
 
     // ============ CREDENTIALS ============
     function getLoginFor(branch) { const s = safeParse(localStorage.getItem(branchKey(branch, 'login'))); if (s && s.user) return { user: s.user, pass: dec(s.pass || '') }; return { ...DEFAULT_LOGIN[branch] }; }
-    function setLoginFor(branch, user, pass) { localStorage.setItem(branchKey(branch, 'login'), JSON.stringify({ user, pass: enc(pass) })); }
+    function setLoginFor(branch, user, pass) { const v = { user, pass: enc(pass) }; localStorage.setItem(branchKey(branch, 'login'), JSON.stringify(v)); cloudSet(branchKey(branch, 'login'), v); }
     function attemptLogin(user, pass) {
         const u = (user || '').trim().toLowerCase();
         const a = getAdminLogin();
@@ -1951,13 +1919,13 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
     }
     function showLogin() { loggedIn = false; currentRole = null; loginOverlay.classList.remove('hidden'); loginUser.value = ''; loginPass.value = ''; loginError.textContent = ''; applyLoginBg(); applyLoginBoxStyle(); setTimeout(() => loginUser.focus(), 100); }
     function hideLogin() { loginOverlay.classList.add('hidden'); }
-    async function doLogin() {
+    function doLogin() {
         const res = attemptLogin(loginUser.value, loginPass.value);
         if (!res) { loginError.textContent = '❌ Invalid username or password.'; loginPass.value = ''; loginPass.focus(); return; }
         try { sessionStorage.setItem(SESSION_KEY, res.role === 'admin' ? 'admin' : res.branch); } catch (e) {}
         hideLogin();
-        if (res.role === 'admin') { await enterAdmin(); showToast('Welcome, Administrator!'); }
-        else { await enterBranch(res.branch); showToast(`Welcome! Logged in as ${BRANCHES[res.branch].label}`); }
+        if (res.role === 'admin') { enterAdmin(); showToast('Welcome, Administrator!'); }
+        else { enterBranch(res.branch); showToast(`Welcome! Logged in as ${BRANCHES[res.branch].label}`); }
     }
     function doLogout() {
         try { sessionStorage.removeItem(SESSION_KEY); } catch (e) {}
@@ -1980,21 +1948,19 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
         if (nu.toLowerCase() === getLoginFor(other).user.toLowerCase() || nu.toLowerCase() === getAdminLogin().user.toLowerCase()) { showToast('That username is already used by another login.', 'error'); return; }
         const np = lsNewPass.value; if (np.length < 4) { showToast('Password must be at least 4 characters.', 'error'); return; }
         if (np !== lsConfirmPass.value) { showToast('Passwords do not match.', 'error'); return; }
-        setLoginFor(currentBranch, nu, np);
-        fbSet('branches/' + currentBranch, { login: { user: nu, pass: enc(np) } });
-        closeLoginSettingsModal(); showToast('Login updated & synced.');
+        setLoginFor(currentBranch, nu, np); closeLoginSettingsModal(); showToast('Login updated & synced.');
     }
 
     // ============ SCHOOL INFO ============
     function loadSchoolInfo() { schoolInfo = readSchoolInfo(currentBranch); applySchoolInfoToUI(); }
-    function saveSchoolInfoToStorage() { try { localStorage.setItem(bkey('school_info'), JSON.stringify(schoolInfo)); } catch (e) {} }
+    function saveSchoolInfoToStorage() { try { localStorage.setItem(bkey('school_info'), JSON.stringify(schoolInfo)); cloudSet(bkey('school_info'), schoolInfo); } catch (e) {} }
     function getSchoolInfo() { return schoolInfo || defaultSchoolInfo(currentBranch || 'sgos'); }
     function schoolContactLine() { const i = getSchoolInfo(); return `Mob.: ${i.mobile} | E-mail: ${i.email} | Website: ${i.website}`; }
     function applySchoolInfoToUI() { const i = getSchoolInfo(); if (headerSchoolName) headerSchoolName.textContent = i.name; if (headerShortName) headerShortName.textContent = i.shortName; }
     function openSchoolInfoModal() { const i = getSchoolInfo(); siName.value = i.name; siShort.value = i.shortName; siReceiptName.value = i.receiptName; siAddress.value = i.address; siMobile.value = i.mobile; siEmail.value = i.email; siWebsite.value = i.website; schoolInfoModal.classList.add('show'); }
     function closeSchoolInfoModal() { schoolInfoModal.classList.remove('show'); }
-    function saveSchoolInfo() { const d = defaultSchoolInfo(currentBranch); schoolInfo = { name: siName.value.trim() || d.name, shortName: siShort.value.trim() || d.shortName, receiptName: siReceiptName.value.trim() || d.receiptName, address: siAddress.value.trim() || d.address, mobile: siMobile.value.trim() || d.mobile, email: siEmail.value.trim() || d.email, website: siWebsite.value.trim() || d.website }; saveSchoolInfoToStorage(); fbSet('branches/' + currentBranch, { schoolInfo }); applySchoolInfoToUI(); if (generatedFeeData) displayFeeReceipt(generatedFeeData); if (generatedBoardData) displayBoardReceipt(generatedBoardData); closeSchoolInfoModal(); showToast('School information updated & synced!'); }
-    function resetSchoolInfo() { if (!confirm('Reset school information to this branch default?')) return; schoolInfo = { ...defaultSchoolInfo(currentBranch) }; saveSchoolInfoToStorage(); fbSet('branches/' + currentBranch, { schoolInfo }); applySchoolInfoToUI(); openSchoolInfoModal(); if (generatedFeeData) displayFeeReceipt(generatedFeeData); if (generatedBoardData) displayBoardReceipt(generatedBoardData); showToast('School information reset to branch default.'); }
+    function saveSchoolInfo() { const d = defaultSchoolInfo(currentBranch); schoolInfo = { name: siName.value.trim() || d.name, shortName: siShort.value.trim() || d.shortName, receiptName: siReceiptName.value.trim() || d.receiptName, address: siAddress.value.trim() || d.address, mobile: siMobile.value.trim() || d.mobile, email: siEmail.value.trim() || d.email, website: siWebsite.value.trim() || d.website }; saveSchoolInfoToStorage(); applySchoolInfoToUI(); if (generatedFeeData) displayFeeReceipt(generatedFeeData); if (generatedBoardData) displayBoardReceipt(generatedBoardData); closeSchoolInfoModal(); showToast('School information updated & synced!'); }
+    function resetSchoolInfo() { if (!confirm('Reset school information to this branch default?')) return; schoolInfo = { ...defaultSchoolInfo(currentBranch) }; saveSchoolInfoToStorage(); applySchoolInfoToUI(); openSchoolInfoModal(); if (generatedFeeData) displayFeeReceipt(generatedFeeData); if (generatedBoardData) displayBoardReceipt(generatedBoardData); showToast('School information reset to branch default.'); }
 
     // ============ NAV ============
     function switchPage(p) { navTabs.forEach(t => t.classList.toggle('active', t.dataset.page === p)); Object.keys(pages).forEach(k => { pages[k].style.display = k === p ? 'block' : 'none'; }); window.scrollTo({ top: 0, behavior: 'smooth' }); }
@@ -2002,20 +1968,10 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
     document.querySelectorAll('.module-card').forEach(c => c.addEventListener('click', () => { const g = c.dataset.goto; if (g && loggedIn && currentRole === 'branch') switchPage(g); }));
 
     // ============ STORAGE & NUMBERING (local + cloud) ============
-    function cloudPushBranch() {
-        if (!currentBranch) return;
-        fbSet('branches/' + currentBranch, {
-            boardReceipts, feeReceipts, studentMaster: studentMasterData,
-            customLogo: localStorage.getItem(bkey('custom_logo')) || null,
-            schoolInfo, printOrientation: currentPrintOrientation,
-            thresholds: currentThresholds, targetPercent: currentTargetPercent,
-            prefixes: getPrefixes(currentBranch), particulars: getParticulars(currentBranch)
-        });
-    }
     function loadBoardReceipts() { boardReceipts = safeParse(localStorage.getItem(bkey('board_receipts'))) || []; }
-    function saveBoardReceipts() { localStorage.setItem(bkey('board_receipts'), JSON.stringify(boardReceipts)); cloudPushBranch(); }
-    function loadFeeReceipts() { let list = safeParse(localStorage.getItem(bkey('fee_receipts'))) || []; list = list.map(r => { const m = migrateFeeReceipt(r); if (m.feesSchema !== BRANCH_SCHEMA[currentBranch]) { m.fees = normalizeFeesForBranch(m.fees, currentBranch); m.feesSchema = BRANCH_SCHEMA[currentBranch]; } return m; }); feeReceipts = list; localStorage.setItem(bkey('fee_receipts'), JSON.stringify(feeReceipts)); }
-    function saveFeeReceipts() { localStorage.setItem(bkey('fee_receipts'), JSON.stringify(feeReceipts)); cloudPushBranch(); }
+    function saveBoardReceipts() { localStorage.setItem(bkey('board_receipts'), JSON.stringify(boardReceipts)); cloudSet(bkey('board_receipts'), boardReceipts); }
+    function loadFeeReceipts() { let list = safeParse(localStorage.getItem(bkey('fee_receipts'))) || []; list = list.map(r => { const m = migrateFeeReceipt(r); if (m.feesSchema !== BRANCH_SCHEMA[currentBranch]) { m.fees = normalizeFeesForBranch(m.fees, currentBranch); m.feesSchema = BRANCH_SCHEMA[currentBranch]; } return m; }); feeReceipts = list; saveFeeReceipts(); }
+    function saveFeeReceipts() { localStorage.setItem(bkey('fee_receipts'), JSON.stringify(feeReceipts)); cloudSet(bkey('fee_receipts'), feeReceipts); }
     function getNextBoardReceiptNumber(year) { const pre = boardPrefix(); let max = 0; boardReceipts.forEach(r => { if ((r.year || '') !== year) return; const m = (r.receiptNumber || '').match(new RegExp(escapeRegex(pre) + '\\d{4}-\\d{2}\\/(\\d+)', 'i')); if (m) { const n = parseInt(m[1], 10); if (n > max) max = n; } }); return `${pre}${year}/${String(max + 1).padStart(3, '0')}`; }
     function setNextBoardReceiptNumber() { boardReceiptNumber.value = getNextBoardReceiptNumber(boardYear.value); boardReceiptDate.value = new Date().toISOString().split('T')[0]; }
     function getNextFeeReceiptNumber() { const pre = feePrefix(); let max = 0; feeReceipts.forEach(r => { const m = (r.receiptNumber || '').match(new RegExp(escapeRegex(pre) + '(\\d+)', 'i')); if (m) { const n = parseInt(m[1], 10); if (n > max) max = n; } }); return pre + String(max + 1).padStart(4, '0'); }
@@ -2023,7 +1979,7 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
 
     // ============ STUDENT MASTER ============
     function loadStudentMasterData() { studentMasterData = safeParse(localStorage.getItem(bkey('student_master'))) || []; updateAutocompleteHints(); updateAnalysisUI(); }
-    function saveStudentMasterData() { try { localStorage.setItem(bkey('student_master'), JSON.stringify(studentMasterData)); cloudPushBranch(); } catch (e) { if (e.name === 'QuotaExceededError') showToast('Storage full!', 'error'); } }
+    function saveStudentMasterData() { try { localStorage.setItem(bkey('student_master'), JSON.stringify(studentMasterData)); cloudSet(bkey('student_master'), studentMasterData); } catch (e) { if (e.name === 'QuotaExceededError') showToast('Storage full!', 'error'); } }
     function updateAutocompleteHints() { const c = studentMasterData.length; const html = c > 0 ? `✅ <strong>${c}</strong> students loaded (this branch). Start typing to search.` : '💡 Upload Fees Excel (in Fees Analysis page) to enable student search'; const col = c > 0 ? '#059669' : 'var(--gray)'; boardAutocompleteHint.innerHTML = html; boardAutocompleteHint.style.color = col; feeAutocompleteHint.innerHTML = html; feeAutocompleteHint.style.color = col; }
     function updateAnalysisUI() { const has = studentMasterData.length > 0; uploadActions.style.display = has ? 'flex' : 'none'; uploadDataInfo.textContent = `✅ ${studentMasterData.length} students loaded`; columnInfo.style.display = has ? 'block' : 'none'; thresholdSection.style.display = has ? 'block' : 'none'; targetSection.style.display = has ? 'block' : 'none'; analysisEmpty.style.display = has ? 'none' : 'block'; if (!has) { studentResult.style.display = 'none'; searchResults.classList.remove('show'); noResults.style.display = 'none'; } }
     function normalizeClass(raw) { const c = (raw || '').toString().trim().toLowerCase(); if (c.includes('12') || c === 'xii') return '12th'; if (c.includes('11') || c === 'xi') return '11th'; if (c.includes('10') || c === 'x') return '10th'; if (c.includes('9')) return '9th'; if (c.includes('8')) return '8th'; if (c.includes('7')) return '7th'; if (c.includes('6')) return '6th'; if (c.includes('5')) return '5th'; return raw || ''; }
@@ -2098,7 +2054,7 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
         if (!validateBoardForm()) { showToast('Please fill all required fields correctly.', 'error'); return; }
         const data = getBoardFormData();
         if (editingBoardId) { const i = boardReceipts.findIndex(r => r.id === editingBoardId); if (i !== -1) { boardReceipts[i] = { ...data, id: editingBoardId }; showToast('Board Fee receipt updated!'); } editingBoardId = null; }
-        else { if (boardReceipts.find(r => r.receiptNumber === data.receiptNumber)) { showToast('Receipt number already exists!', 'error'); return; } boardReceipts.push({ ...data, id: 'board_' + Date.now() }); showToast('Board Fee receipt saved automatically!'); }
+        else { if (boardReceipts.find(r => r.receiptNumber === data.receiptNumber)) { showToast('Receipt number already exists!', 'error'); return; } boardReceipts.push({ ...data, id: 'board_' + Date.now() }); showToast('Board Fee receipt saved & synced!'); }
         saveBoardReceipts(); generatedBoardData = data; displayBoardReceipt(data);
         refreshBoardHistory(); refreshBoardYearFilter(); updateDashboard(); clearBoardForm();
     }
@@ -2122,7 +2078,7 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
         w.document.write(`<!DOCTYPE html><html><head><title>Board Fee Receipt</title><style>@page { size: A4 portrait; margin: 12mm; } * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } body { font-family: 'Times New Roman', serif; margin: 0; padding: 0; } .receipt { max-width: 186mm; margin: 0 auto; padding: 6mm; border: 1.5px solid #000; } ${RECEIPT_STYLE} @media print { body { margin: 0; padding: 0; } }</style></head><body><div class="receipt">${html}</div><script>setTimeout(function(){window.print();},300);<\/script></body></html>`);
         w.document.close();
     }
-    function deleteBoardReceipt(id) { if (confirm('Delete this Board Fee receipt?')) { boardReceipts = boardReceipts.filter(r => r.id !== id); saveBoardReceipts(); refreshBoardHistory(); refreshBoardYearFilter(); updateDashboard(); showToast('Board Fee receipt deleted!'); } }
+    function deleteBoardReceipt(id) { if (confirm('Delete this Board Fee receipt?')) { boardReceipts = boardReceipts.filter(r => r.id !== id); saveBoardReceipts(); refreshBoardHistory(); refreshBoardYearFilter(); updateDashboard(); showToast('Board Fee receipt deleted & synced!'); } }
 
     // ============ AUTOCOMPLETE ============
     function searchStudents(q) { if (!q || q.trim().length < 1) return []; const nq = normalizeText(q); const res = []; for (let i = 0; i < studentMasterData.length; i++) { const s = studentMasterData[i]; if (normalizeText(s.studentName).includes(nq)) { res.push({ ...s, _index: i }); if (res.length >= 20) break; } } return res; }
@@ -2193,7 +2149,7 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
         if (!validateFeeForm()) { if (document.querySelector('#feeForm .error-message').textContent) showToast('Please fill all required fields correctly.', 'error'); return; }
         const data = getFeeFormData();
         if (editingFeeId) { const i = feeReceipts.findIndex(r => r.id === editingFeeId); if (i !== -1) { feeReceipts[i] = { ...data, id: editingFeeId }; showToast('Fee Receipt updated!'); } editingFeeId = null; }
-        else { if (feeReceipts.find(r => r.receiptNumber === data.receiptNumber)) { showToast('Receipt number already exists!', 'error'); return; } feeReceipts.push({ ...data, id: 'fee_' + Date.now() }); showToast('Fee Receipt saved automatically!'); }
+        else { if (feeReceipts.find(r => r.receiptNumber === data.receiptNumber)) { showToast('Receipt number already exists!', 'error'); return; } feeReceipts.push({ ...data, id: 'fee_' + Date.now() }); showToast('Fee Receipt saved & synced!'); }
         saveFeeReceipts(); generatedFeeData = data; displayFeeReceipt(data);
         renderFeeHistory(feeSearchInput.value); updateDashboard(); clearFeeForm();
     }
@@ -2208,7 +2164,7 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
     function viewFeeReceipt(id) { const r = feeReceipts.find(x => x.id === id); if (r) { displayFeeReceipt(r); generatedFeeData = r; editingFeeId = null; showToast('Fee receipt loaded for viewing.', 'info'); } }
     function editFeeReceipt(id) { const r = feeReceipts.find(x => x.id === id); if (r) { setFeeFormData(r); editingFeeId = id; generatedFeeData = r; feeForm.scrollIntoView({ behavior: 'smooth', block: 'start' }); showToast('Fee receipt loaded for editing. Click Generate & Save to update.', 'info'); } }
     function printFeeReceipt(id) { const r = feeReceipts.find(x => x.id === id); if (r) { displayFeeReceipt(r); generatedFeeData = r; } }
-    function deleteFeeReceipt(id) { if (confirm('Delete this Fee Receipt?')) { feeReceipts = feeReceipts.filter(r => r.id !== id); saveFeeReceipts(); renderFeeHistory(feeSearchInput.value); updateDashboard(); showToast('Fee Receipt deleted!'); } }
+    function deleteFeeReceipt(id) { if (confirm('Delete this Fee Receipt?')) { feeReceipts = feeReceipts.filter(r => r.id !== id); saveFeeReceipts(); renderFeeHistory(feeSearchInput.value); updateDashboard(); showToast('Fee Receipt deleted & synced!'); } }
 
     const handleFeeNameInput = debounce(function () { const q = feeStudentName.value.trim(); if (!studentMasterData.length || q.length < 1) { hideFeeAutocomplete(); return; } const res = searchStudents(q); showAutocompleteIn(feeAutocompleteDropdown, res, q); feeAutocompleteDropdown.querySelectorAll('.autocomplete-item').forEach(it => it.addEventListener('click', () => { const i = parseInt(it.dataset.index, 10); const rs = searchStudents(q); if (rs[i]) selectFeeStudent(rs[i]); })); }, 150);
     function selectFeeStudent(s) { feeStudentName.value = s.studentName || ''; feeDivision.value = s.division || ''; feeRollNumber.value = s.rollNumber || ''; feeStudentClass.value = normalizeClass(s.class); hideFeeAutocomplete(); clearFeeErrors(); showToast(`Student "${s.studentName}" selected`, 'info'); }
@@ -2236,13 +2192,13 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
     function applyLogo(src) { [headerLogo, boardReceiptLogo, currentLogoPreview].forEach(i => { if (i) { i.style.display = ''; i.src = src; } }); }
     function openLogoModal() { logoModal.classList.add('show'); }
     function closeLogoModalFn() { logoModal.classList.remove('show'); logoFileInput.value = ''; }
-    function handleLogoUpload(f) { if (!f) return; if (!f.type.startsWith('image/')) { showToast('Invalid file type.', 'error'); return; } compressImageFile(f, data => { if (tryStore(bkey('custom_logo'), data)) { fbSet('branches/' + currentBranch, { customLogo: data }); applyLogo(data); showToast('Logo updated & synced.'); closeLogoModalFn(); } else showToast('Logo too large even after compression. Use Admin image editor to crop it.', 'error'); }); }
-    function resetLogo() { if (confirm('Reset logo to default for this branch?')) { localStorage.removeItem(bkey('custom_logo')); fbSet('branches/' + currentBranch, { customLogo: '' }); applyLogo('sgos-logo.png'); showToast('Logo reset.'); closeLogoModalFn(); } }
+    function handleLogoUpload(f) { if (!f) return; if (!f.type.startsWith('image/')) { showToast('Invalid file type.', 'error'); return; } compressImageFile(f, data => { if (tryStore(bkey('custom_logo'), data)) { cloudSet(bkey('custom_logo'), data); applyLogo(data); showToast('Logo updated & synced.'); closeLogoModalFn(); } else showToast('Logo too large even after compression. Use Admin image editor to crop it.', 'error'); }); }
+    function resetLogo() { if (confirm('Reset logo to default for this branch?')) { localStorage.removeItem(bkey('custom_logo')); cloudSet(bkey('custom_logo'), null); applyLogo('sgos-logo.png'); showToast('Logo reset.'); closeLogoModalFn(); } }
 
     // ============ ORIENTATION ============
     function loadPrintOrientation() { const s = localStorage.getItem(bkey('print_orientation')); currentPrintOrientation = (s === 'landscape') ? 'landscape' : 'portrait'; document.querySelectorAll('input[name="printOrientation"]').forEach(r => { r.checked = (r.value === currentPrintOrientation); }); }
-    function savePrintOrientation() { try { localStorage.setItem(bkey('print_orientation'), currentPrintOrientation); } catch (e) {} }
-    function setPrintOrientation(o) { currentPrintOrientation = o; savePrintOrientation(); fbSet('branches/' + currentBranch, { printOrientation: o }); updateDualContainerLayout(); document.querySelectorAll('input[name="printOrientation"]').forEach(r => { r.checked = (r.value === o); }); }
+    function savePrintOrientation() { try { localStorage.setItem(bkey('print_orientation'), currentPrintOrientation); cloudSet(bkey('print_orientation'), currentPrintOrientation); } catch (e) {} }
+    function setPrintOrientation(o) { currentPrintOrientation = o; savePrintOrientation(); updateDualContainerLayout(); document.querySelectorAll('input[name="printOrientation"]').forEach(r => { r.checked = (r.value === o); }); }
 
     // ============ PREVIEW / PRINT / PDF ============
     function openPrintPreview() { if (!generatedFeeData) { showToast('Please generate a receipt first.', 'error'); return; } const html = renderFeeReceiptHTML(generatedFeeData); const o = currentPrintOrientation; const spec = getPrintPageSpec(o); previewOrientationLabel.textContent = o === 'portrait' ? 'Portrait' : 'Landscape'; printPreviewPage.className = 'print-preview-page ' + o; printPreviewContent.innerHTML = `<style>${getReceiptPrintCSS(o)}</style><div style="${spec.containerStyle}"><div class="receipt-copy" style="${spec.copyStyle}">${html}</div><div class="receipt-copy" style="${spec.copyStyle}">${html}</div></div>`; printPreviewOverlay.classList.add('show'); }
@@ -2270,7 +2226,7 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
     function backupData() { try { const p = { app: 'SGOS Receipt Generator (Multi-Branch)', version: APP_VERSION, branch: currentBranch, exportDate: new Date().toISOString(), boardReceipts, feeReceipts, customLogo: localStorage.getItem(bkey('custom_logo')) || null, printOrientation: currentPrintOrientation, schoolInfo }; const b = new Blob([JSON.stringify(p, null, 2)], { type: 'application/json' }); const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = `SGOS_Backup_${BRANCHES[currentBranch].label}_${new Date().toISOString().split('T')[0]}.json`; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(u); showToast('Branch backup downloaded'); } catch (e) { showToast('Error creating backup.', 'error'); } }
     function triggerRestore() { homeRestoreFileInput.value = ''; homeRestoreFileInput.click(); }
     function handleRestoreFile(f) { if (!f) return; const r = new FileReader(); r.onload = e => { try { const d = JSON.parse(e.target.result); if (!d || (!Array.isArray(d.boardReceipts) && !Array.isArray(d.feeReceipts))) { showToast('Invalid backup file format.', 'error'); return; } pendingRestoreData = d; restoreInfoText.textContent = `You are about to restore data into branch ${BRANCHES[currentBranch].label} only.`; restoreDetailsList.innerHTML = `<li> App: ${d.app || 'SGOS Receipt Generator'}</li><li>🏷️ Backup Branch: ${d.branch ? (BRANCHES[d.branch] ? BRANCHES[d.branch].label : d.branch) : 'N/A'}</li><li>📅 Backup Date: ${d.exportDate ? new Date(d.exportDate).toLocaleString('en-IN') : 'Unknown'}</li><li>📋 Board Fee Receipts: ${(d.boardReceipts || []).length}</li><li>🧾 Fee Receipts: ${(d.feeReceipts || []).length}</li><li>🖼️ Custom Logo: ${d.customLogo ? 'Yes' : 'No'}</li>`; restoreDetails.style.display = 'block'; restoreModal.classList.add('show'); } catch (err) { showToast('Error reading backup file.', 'error'); } }; r.readAsText(f); }
-    function confirmRestore() { if (!pendingRestoreData) return; try { if (Array.isArray(pendingRestoreData.boardReceipts)) { boardReceipts = pendingRestoreData.boardReceipts; saveBoardReceipts(); } if (Array.isArray(pendingRestoreData.feeReceipts)) { feeReceipts = pendingRestoreData.feeReceipts.map(r => { const m = migrateFeeReceipt(r); m.fees = normalizeFeesForBranch(m.fees, currentBranch); m.feesSchema = BRANCH_SCHEMA[currentBranch]; return m; }); saveFeeReceipts(); } if (pendingRestoreData.customLogo) { localStorage.setItem(bkey('custom_logo'), pendingRestoreData.customLogo); fbSet('branches/' + currentBranch, { customLogo: pendingRestoreData.customLogo }); applyLogo(pendingRestoreData.customLogo); } if (pendingRestoreData.printOrientation) setPrintOrientation(pendingRestoreData.printOrientation); if (pendingRestoreData.schoolInfo) { schoolInfo = { ...defaultSchoolInfo(currentBranch), ...pendingRestoreData.schoolInfo }; saveSchoolInfoToStorage(); fbSet('branches/' + currentBranch, { schoolInfo }); applySchoolInfoToUI(); } refreshBoardHistory(); refreshBoardYearFilter(); renderFeeHistory(''); setNextBoardReceiptNumber(); setNextFeeReceiptNumber(); updateDashboard(); cloudPushBranch(); showToast('Branch data restored & synced!'); closeRestoreModalFn(); } catch (e) { showToast('Error restoring data.', 'error'); } pendingRestoreData = null; }
+    function confirmRestore() { if (!pendingRestoreData) return; try { if (Array.isArray(pendingRestoreData.boardReceipts)) { boardReceipts = pendingRestoreData.boardReceipts; saveBoardReceipts(); } if (Array.isArray(pendingRestoreData.feeReceipts)) { feeReceipts = pendingRestoreData.feeReceipts.map(r => { const m = migrateFeeReceipt(r); m.fees = normalizeFeesForBranch(m.fees, currentBranch); m.feesSchema = BRANCH_SCHEMA[currentBranch]; return m; }); saveFeeReceipts(); } if (pendingRestoreData.customLogo) { localStorage.setItem(bkey('custom_logo'), pendingRestoreData.customLogo); cloudSet(bkey('custom_logo'), pendingRestoreData.customLogo); applyLogo(pendingRestoreData.customLogo); } if (pendingRestoreData.printOrientation) setPrintOrientation(pendingRestoreData.printOrientation); if (pendingRestoreData.schoolInfo) { schoolInfo = { ...defaultSchoolInfo(currentBranch), ...pendingRestoreData.schoolInfo }; saveSchoolInfoToStorage(); applySchoolInfoToUI(); } refreshBoardHistory(); refreshBoardYearFilter(); renderFeeHistory(''); setNextBoardReceiptNumber(); setNextFeeReceiptNumber(); updateDashboard(); showToast('Branch data restored & synced!'); closeRestoreModalFn(); } catch (e) { showToast('Error restoring data.', 'error'); } pendingRestoreData = null; }
     function closeRestoreModalFn() { restoreModal.classList.remove('show'); pendingRestoreData = null; homeRestoreFileInput.value = ''; }
 
     // ============ EXCEL ============
@@ -2285,8 +2241,8 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
     function parseFeesExcel(file) { return new Promise((resolve, reject) => { const r = new FileReader(); r.onload = e => { try { const data = new Uint8Array(e.target.result); const wb = XLSX.read(data, { type: 'array' }); const ws = wb.Sheets[wb.SheetNames[0]]; const jd = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' }); if (jd.length < 2) { reject(new Error('Excel file is empty.')); return; } let hri = 0; for (let i = 0; i < Math.min(10, jd.length); i++) { const row = jd[i]; if (row && row.some(c => c && c.toString().trim().length > 0)) { hri = i; break; } } const headers = jd[hri].map(h => (h || '').toString().trim()); const rows = jd.slice(hri + 1); const ci = { studentName: findColumnIndex(headers, 'studentName'), class: findColumnIndex(headers, 'class'), division: findColumnIndex(headers, 'division'), rollNumber: findColumnIndex(headers, 'rollNumber'), totalFees: findColumnIndex(headers, 'totalFees'), feesPaid: findColumnIndex(headers, 'feesPaid') }; const req = ['studentName', 'totalFees', 'feesPaid']; const miss = req.filter(c => ci[c] === -1); if (miss.length) { const nm = { studentName: 'Student Name', totalFees: 'Total Fees', feesPaid: 'Fees Paid' }; reject(new Error(`Required columns missing: ${miss.map(c => nm[c]).join(', ')}`)); return; } const students = []; let skipped = 0; for (const row of rows) { if (!row || row.every(c => !c || c.toString().trim() === '')) { skipped++; continue; } const name = ci.studentName >= 0 ? (row[ci.studentName] || '').toString().trim() : ''; if (!name) { skipped++; continue; } const tf = parseFloat(String(ci.totalFees >= 0 ? row[ci.totalFees] : 0).replace(/[^0-9.\-]/g, '')) || 0; const fp = parseFloat(String(ci.feesPaid >= 0 ? row[ci.feesPaid] : 0).replace(/[^0-9.\-]/g, '')) || 0; if (tf <= 0) { skipped++; continue; } students.push({ studentName: name, class: ci.class >= 0 ? (row[ci.class] || '').toString().trim() : '', division: ci.division >= 0 ? (row[ci.division] || '').toString().trim() : '', rollNumber: ci.rollNumber >= 0 ? (row[ci.rollNumber] || '').toString().trim() : '', totalFees: tf, feesPaid: fp }); } if (!students.length) { reject(new Error('No valid student records found.')); return; } resolve({ students, headers, colIdx: ci, skippedRows: skipped }); } catch (err) { reject(err); } }; r.onerror = () => reject(new Error('Failed to read file.')); r.readAsArrayBuffer(file); }); }
     function showUploadStatus(m, t) { uploadStatus.innerHTML = m; uploadStatus.className = 'upload-status show ' + t; }
     function displayColumnInfo(headers, ci) { const labels = { studentName: 'Student Name', class: 'Class', division: 'Division', rollNumber: 'Roll Number', totalFees: 'Total Fees', feesPaid: 'Fees Paid' }; columnMapping.innerHTML = ''; for (const [k, l] of Object.entries(labels)) { const i = ci[k]; const d = document.createElement('div'); d.className = 'column-mapping-item'; d.innerHTML = `<strong>${l}:</strong> <span>${escapeHtml(i >= 0 ? headers[i] : '(not found)')}</span>`; columnMapping.appendChild(d); } columnInfo.style.display = 'block'; }
-    async function handleFeesExcelUpload(file) { if (!file) return; showUploadStatus('📂 Reading Excel file...', 'info'); try { const res = await parseFeesExcel(file); studentMasterData = res.students; saveStudentMasterData(); displayColumnInfo(res.headers, res.colIdx); let msg = `✅ Loaded <strong>${res.students.length}</strong> student(s) into branch ${BRANCHES[currentBranch].label}`; if (res.skippedRows > 0) msg += ` <br>⚠️ ${res.skippedRows} blank/invalid row(s) skipped.`; showUploadStatus(msg, 'success'); updateAnalysisUI(); updateAutocompleteHints(); analysisSearchInput.value = ''; searchResults.classList.remove('show'); noResults.style.display = 'none'; studentResult.style.display = 'none'; selectedStudent = null; runFullAnalysis(); updateDashboard(); showToast(`${res.students.length} students imported into ${BRANCHES[currentBranch].label}.`); } catch (err) { showUploadStatus('❌ ' + err.message, 'error'); showToast(err.message, 'error'); } }
-    function clearAnalysisData() { if (!studentMasterData.length) return; if (!confirm('Clear student master data for this branch?')) return; studentMasterData = []; try { localStorage.removeItem(bkey('student_master')); } catch (e) {} cloudPushBranch(); columnInfo.style.display = 'none'; uploadStatus.className = 'upload-status'; analysisSearchInput.value = ''; searchResults.classList.remove('show'); noResults.style.display = 'none'; studentResult.style.display = 'none'; selectedStudent = null; updateAnalysisUI(); updateAutocompleteHints(); updateDashboard(); showToast('Student master data cleared for this branch.'); }
+    async function handleFeesExcelUpload(file) { if (!file) return; showUploadStatus('📂 Reading Excel file...', 'info'); try { const res = await parseFeesExcel(file); studentMasterData = res.students; saveStudentMasterData(); displayColumnInfo(res.headers, res.colIdx); let msg = `✅ Loaded <strong>${res.students.length}</strong> student(s) into branch ${BRANCHES[currentBranch].label} (synced)`; if (res.skippedRows > 0) msg += ` <br>⚠️ ${res.skippedRows} blank/invalid row(s) skipped.`; showUploadStatus(msg, 'success'); updateAnalysisUI(); updateAutocompleteHints(); analysisSearchInput.value = ''; searchResults.classList.remove('show'); noResults.style.display = 'none'; studentResult.style.display = 'none'; selectedStudent = null; runFullAnalysis(); updateDashboard(); showToast(`${res.students.length} students imported & synced.`); } catch (err) { showUploadStatus('❌ ' + err.message, 'error'); showToast(err.message, 'error'); } }
+    function clearAnalysisData() { if (!studentMasterData.length) return; if (!confirm('Clear student master data for this branch?')) return; studentMasterData = []; try { localStorage.removeItem(bkey('student_master')); cloudSet(bkey('student_master'), []); } catch (e) {} columnInfo.style.display = 'none'; uploadStatus.className = 'upload-status'; analysisSearchInput.value = ''; searchResults.classList.remove('show'); noResults.style.display = 'none'; studentResult.style.display = 'none'; selectedStudent = null; updateAnalysisUI(); updateAutocompleteHints(); updateDashboard(); showToast('Student master data cleared & synced.'); }
 
     // ============ ANALYSIS ============
     function searchAnalysisStudents(q) { if (!q || q.trim().length < 2) return []; const nq = normalizeText(q); const res = []; for (let i = 0; i < studentMasterData.length; i++) { const s = studentMasterData[i]; if (normalizeText(s.studentName).includes(nq)) { res.push({ ...s, _index: i }); if (res.length >= 50) break; } } return res; }
@@ -2295,20 +2251,20 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
     function renderStudentResult(s) { const tf = Number(s.totalFees) || 0, fp = Number(s.feesPaid) || 0, rem = Math.max(0, tf - fp), pp = tf > 0 ? (fp / tf) * 100 : 0; document.getElementById('res-studentName').textContent = s.studentName || '—'; document.getElementById('res-class').textContent = s.class || '—'; document.getElementById('res-division').textContent = s.division || '—'; document.getElementById('res-rollNumber').textContent = s.rollNumber || '—'; document.getElementById('res-totalFees').textContent = formatCurrency(tf); document.getElementById('res-feesPaid').textContent = formatCurrency(fp); document.getElementById('res-remaining').textContent = formatCurrency(rem); document.getElementById('res-paidPercent').textContent = formatPercentDisplay(pp); const f = document.getElementById('progressFill'); f.style.width = Math.min(100, pp) + '%'; document.getElementById('progressPercent').textContent = formatPercentDisplay(pp); f.style.background = pp >= 75 ? 'linear-gradient(90deg,#10b981,#059669)' : (pp >= 40 ? 'linear-gradient(90deg,#f59e0b,#d97706)' : 'linear-gradient(90deg,#ef4444,#dc2626)'); }
     function renderStudentTargetAnalysis() { if (!selectedStudent) return; const tf = Number(selectedStudent.totalFees) || 0, fp = Number(selectedStudent.feesPaid) || 0; const cp = tf > 0 ? (fp / tf) * 100 : 0; const t = parseFloat(studentTargetInput.value) || 0; const ta = tf * (t / 100); document.getElementById('stgt-target').textContent = formatPercentDisplay(t); document.getElementById('stgt-targetLabel').textContent = formatPercentDisplay(t); document.getElementById('stgt-targetAmount').textContent = formatCurrencyRounded(ta); const diff = fp - ta; const el = document.getElementById('stgt-status'); el.classList.remove('below', 'achieved', 'above'); if (Math.abs(diff) < 0.005) { el.classList.add('achieved'); el.innerHTML = '<span class="status-icon">🎯</span><span class="status-text">Target Achieved</span>'; document.getElementById('stgt-additionalRow').style.display = 'flex'; document.getElementById('stgt-additional').textContent = '₹0'; document.getElementById('stgt-aboveRow').style.display = 'none'; } else if (diff > 0) { el.classList.add('above'); el.innerHTML = '<span class="status-icon">✅</span><span class="status-text">Above Target</span>'; document.getElementById('stgt-additionalRow').style.display = 'none'; document.getElementById('stgt-aboveRow').style.display = 'flex'; document.getElementById('stgt-above').textContent = `${formatCurrencyRounded(diff)} / ${formatPercentDisplay(cp - t)}`; } else { el.classList.add('below'); el.innerHTML = '<span class="status-icon">⚠️</span><span class="status-text">Below Target</span>'; document.getElementById('stgt-additionalRow').style.display = 'flex'; document.getElementById('stgt-additional').textContent = formatCurrencyRounded(Math.abs(diff)); document.getElementById('stgt-aboveRow').style.display = 'none'; } }
     function loadThresholds() { const s = safeParse(localStorage.getItem(bkey('thresholds'))); if (s) { currentThresholds = s; thresholdInput.value = currentThresholds.join(', '); } }
-    function saveThresholds() { localStorage.setItem(bkey('thresholds'), JSON.stringify(currentThresholds)); fbSet('branches/' + currentBranch, { thresholds: currentThresholds }); }
+    function saveThresholds() { localStorage.setItem(bkey('thresholds'), JSON.stringify(currentThresholds)); cloudSet(bkey('thresholds'), currentThresholds); }
     function renderThresholdDashboard() { if (!studentMasterData.length) { thresholdDashboard.innerHTML = ''; return; } const ps = studentMasterData.map(s => { const t = Number(s.totalFees) || 0, p = Number(s.feesPaid) || 0; return t > 0 ? (p / t) * 100 : 0; }); thresholdDashboard.innerHTML = ''; [...currentThresholds].sort((a, b) => b - a).forEach(th => { const c = ps.filter(p => p >= th).length; const card = document.createElement('div'); let lc = 'level-low'; if (th === 100) lc = 'level-100'; else if (th >= 75) lc = 'level-high'; else if (th >= 50) lc = 'level-medium'; card.className = `threshold-card ${lc}`; card.innerHTML = `<div class="threshold-percent">≥ ${th}%</div><div class="threshold-count">${c}</div><div class="threshold-label">student${c !== 1 ? 's' : ''}</div>`; thresholdDashboard.appendChild(card); }); }
     function loadTargetPercent() { const s = localStorage.getItem(bkey('target_percent')); if (s !== null) { const p = parseFloat(s); if (!isNaN(p) && p >= 0 && p <= 100) { currentTargetPercent = p; targetPercentageInput.value = currentTargetPercent; } } }
-    function saveTargetPercent() { try { localStorage.setItem(bkey('target_percent'), String(currentTargetPercent)); fbSet('branches/' + currentBranch, { targetPercent: currentTargetPercent }); } catch (e) {} }
+    function saveTargetPercent() { try { localStorage.setItem(bkey('target_percent'), String(currentTargetPercent)); cloudSet(bkey('target_percent'), String(currentTargetPercent)); } catch (e) {} }
     function renderTargetAnalysis() { if (!studentMasterData.length) return; const t = currentTargetPercent, tf = t / 100; const below = []; let above = 0, totalAdd = 0; for (const s of studentMasterData) { const tot = Number(s.totalFees) || 0, paid = Number(s.feesPaid) || 0; if (tot <= 0) continue; const cp = (paid / tot) * 100; if (cp < t) { const ta = tot * tf; const add = Math.max(0, ta - paid); below.push({ ...s, currentPercent: cp, targetAmount: ta, additionalRequired: add, remaining: Math.max(0, tot - paid) }); totalAdd += add; } else above++; } targetPercentDisplay.textContent = formatPercentDisplay(t); belowTargetCount.textContent = below.length; aboveTargetCount.textContent = above; totalAdditionalAmount.textContent = formatCurrencyRounded(totalAdd); const q = (targetSearchInput.value || '').toLowerCase().trim(); let f = below; if (q) f = below.filter(s => s.studentName.toLowerCase().includes(q) || (s.class || '').toLowerCase().includes(q) || (s.division || '').toLowerCase().includes(q) || (s.rollNumber || '').toLowerCase().includes(q)); if (!below.length) { targetTableWrapper.style.display = 'none'; targetSearch.style.display = 'none'; targetEmpty.style.display = 'block'; } else { targetEmpty.style.display = 'none'; targetSearch.style.display = 'block'; targetTableWrapper.style.display = 'block'; targetBody.innerHTML = ''; let ft = 0; f.forEach((s, i) => { ft += s.additionalRequired; const tr = document.createElement('tr'); tr.innerHTML = `<td>${i + 1}</td><td>${escapeHtml(s.studentName)}</td><td>${escapeHtml(s.class || '-')}</td><td>${escapeHtml(s.division || '-')}</td><td>${escapeHtml(s.rollNumber || '-')}</td><td>${formatCurrency(s.totalFees)}</td><td>${formatCurrency(s.feesPaid)}</td><td style="color:var(--danger-dark);font-weight:600;">${formatCurrency(s.remaining)}</td><td>${formatPercentDisplay(s.currentPercent)}</td><td style="color:var(--purple-dark);font-weight:700;">${formatPercentDisplay(t)}</td><td class="additional-cell">${formatCurrencyRounded(s.additionalRequired)}</td>`; targetBody.appendChild(tr); }); targetFoot.innerHTML = ''; if (f.length) { const tr = document.createElement('tr'); tr.innerHTML = `<td colspan="10" style="text-align:right; font-weight:700;">TOTAL (${f.length} student${f.length !== 1 ? 's' : ''}):</td><td style="color:var(--danger-dark); font-weight:800; font-size:1rem;">${formatCurrencyRounded(ft)}</td>`; targetFoot.appendChild(tr); } } }
     function runFullAnalysis() { renderThresholdDashboard(); renderTargetAnalysis(); }
-    function applyThresholdsFromInput() { const inp = thresholdInput.value.trim(); if (!inp) { showToast('Please enter at least one threshold.', 'error'); return; } const p = inp.split(',').map(s => parseFloat(s.trim())).filter(n => !isNaN(n) && n >= 0 && n <= 100); if (!p.length) { showToast('Invalid thresholds.', 'error'); return; } currentThresholds = [...new Set(p)].sort((a, b) => a - b); thresholdInput.value = currentThresholds.join(', '); saveThresholds(); renderThresholdDashboard(); showToast(`Thresholds applied: ${currentThresholds.join('%, ')}%`); }
+    function applyThresholdsFromInput() { const inp = thresholdInput.value.trim(); if (!inp) { showToast('Please enter at least one threshold.', 'error'); return; } const p = inp.split(',').map(s => parseFloat(s.trim())).filter(n => !isNaN(n) && n >= 0 && n <= 100); if (!p.length) { showToast('Invalid thresholds.', 'error'); return; } currentThresholds = [...new Set(p)].sort((a, b) => a - b); thresholdInput.value = currentThresholds.join(', '); saveThresholds(); renderThresholdDashboard(); showToast(`Thresholds applied & synced: ${currentThresholds.join('%, ')}%`); }
 
     // ============ ADMIN PANEL ============
     function setAdminTab(name) { document.querySelectorAll('.admin-tab').forEach(t => t.classList.toggle('active', t.dataset.atab === name)); document.querySelectorAll('.admin-pane').forEach(p => p.classList.toggle('active', p.id === 'apane-' + name)); if (name === 'loginbox') populateLoginBoxAdmin(); }
     function populateAdminLogins() { const s = getLoginFor('sgos'), m = getLoginFor('sgima'), a = getAdminLogin(); alSgosUser.value = s.user; alSgosPass.value = s.pass; alSgimaUser.value = m.user; alSgimaPass.value = m.pass; alAdminUser.value = a.user; alAdminPass.value = a.pass; }
     function uniqueUserCheck(candidate, excludeRole) { const u = candidate.trim().toLowerCase(); if (!u) return false; if (excludeRole !== 'sgos' && getLoginFor('sgos').user.toLowerCase() === u) return false; if (excludeRole !== 'sgima' && getLoginFor('sgima').user.toLowerCase() === u) return false; if (excludeRole !== 'admin' && getAdminLogin().user.toLowerCase() === u) return false; return true; }
     function populateAdminBranch() { const b = abBranch.value; const info = readSchoolInfo(b); const pre = getPrefixes(b); abName.value = info.name; abShort.value = info.shortName; abReceiptName.value = info.receiptName; abAddress.value = info.address; abMobile.value = info.mobile; abEmail.value = info.email; abWebsite.value = info.website; abFeePrefix.value = pre.fee; abBoardPrefix.value = pre.board; abLogoPreview.src = localStorage.getItem(branchKey(b, 'custom_logo')) || 'sgos-logo.png'; }
-    function saveAdminBranch() { const b = abBranch.value; const info = { name: abName.value.trim(), shortName: abShort.value.trim(), receiptName: abReceiptName.value.trim(), address: abAddress.value.trim(), mobile: abMobile.value.trim(), email: abEmail.value.trim(), website: abWebsite.value.trim() }; localStorage.setItem(branchKey(b, 'school_info'), JSON.stringify(info)); const prefixes = { fee: abFeePrefix.value.trim() || BRANCHES[b].feePrefix, board: abBoardPrefix.value.trim() || BRANCHES[b].boardPrefix }; setPrefixes(b, prefixes); fbSet('branches/' + b, { schoolInfo: info, prefixes }); showToast(`Branch settings saved & synced for ${BRANCHES[b].label}.`); }
+    function saveAdminBranch() { const b = abBranch.value; const info = { name: abName.value.trim(), shortName: abShort.value.trim(), receiptName: abReceiptName.value.trim(), address: abAddress.value.trim(), mobile: abMobile.value.trim(), email: abEmail.value.trim(), website: abWebsite.value.trim() }; localStorage.setItem(branchKey(b, 'school_info'), JSON.stringify(info)); cloudSet(branchKey(b, 'school_info'), info); setPrefixes(b, { fee: abFeePrefix.value.trim() || BRANCHES[b].feePrefix, board: abBoardPrefix.value.trim() || BRANCHES[b].boardPrefix }); showToast(`Branch settings saved & synced for ${BRANCHES[b].label}.`); }
     function populateAdminFormat() { const c = getBoardConfig(); afC10.value = c.c10; afC12B.value = c.c12b; afC12J.value = c.c12j; loadAdminParticulars(); }
     function loadAdminParticulars() { adminPartBranch = afBranch.value; adminPartList = getParticulars(adminPartBranch).map(x => ({ ...x })); renderParticularsEditor(); }
     function renderParticularsEditor() {
@@ -2329,7 +2285,7 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
             else if (act === 'del') { if (adminPartList.length <= 1) { showToast('At least one particular row is required.', 'error'); return; } adminPartList.splice(i, 1); renderParticularsEditor(); }
         }));
     }
-    async function enterAdmin() {
+    function enterAdmin() {
         currentRole = 'admin'; loggedIn = true; currentBranch = null;
         Object.keys(pages).forEach(k => { pages[k].style.display = 'none'; });
         adminPage.style.display = 'block';
@@ -2339,19 +2295,17 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
         editLogoBtn.style.display = 'none';
         branchBadge.textContent = '🛠️ ADMIN';
         document.title = 'Admin Panel - Fee Receipt Generator';
-        await pullAllFromCloud();
-        populateAdminLogins(); populateAdminBranch(); populateAdminFormat(); populateLoginBoxAdmin(); applyLoginBg(); applyLoginBoxStyle();
+        populateAdminLogins(); populateAdminBranch(); populateAdminFormat(); populateLoginBoxAdmin(); applyLoginBg();
         setAdminTab('logins');
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-    async function enterBranch(branch) {
+    function enterBranch(branch) {
         currentBranch = branch; currentRole = 'branch'; loggedIn = true;
         adminPage.style.display = 'none';
         mainNav.style.display = '';
         loginSettingsBtn.style.display = '';
         editSchoolInfoBtn.style.display = '';
         editLogoBtn.style.display = '';
-        await pullAllFromCloud();
         loadSchoolInfo(); loadBoardReceipts(); loadFeeReceipts();
         loadPrintOrientation(); loadThresholds(); loadTargetPercent();
         loadSavedLogo(); loadStudentMasterData();
@@ -2363,10 +2317,69 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
         const m = BRANCHES[branch];
         branchBadge.textContent = '🏷️ ' + m.label;
         homeBranchLabel.textContent = m.label + ' — ' + m.title;
-        feePrefixNote.innerHTML = `Receipt numbers: <strong>${feePrefix()}0001</strong>, <strong>${feePrefix()}0002</strong>, ... (branch-wise, sequential, persistent)`;
+        feePrefixNote.innerHTML = `Receipt numbers: <strong>${feePrefix()}0001</strong>, <strong>${feePrefix()}0002</strong>, ... (branch-wise, sequential, persistent · cloud synced)`;
         document.title = `${m.label} - Fee Receipt Generator`;
         populateBoardBadges(); updateDashboard(); updateDualContainerLayout(); updateFeeTotal();
         switchPage('home');
+    }
+
+    // ============ FIREBASE: push local -> cloud & subscribe cloud -> local ============
+    function pushAllToCloud() {
+        if (!fbReady) return;
+        const keys = [];
+        ['sgos', 'sgima'].forEach(b => {
+            ['board_receipts', 'fee_receipts', 'student_master', 'custom_logo', 'school_info', 'print_orientation', 'thresholds', 'target_percent', 'login', 'prefixes', 'particulars'].forEach(k => keys.push(branchKey(b, k)));
+        });
+        keys.push(BOARD_CONFIG_KEY, ADMIN_LOGIN_KEY, LOGIN_BG_KEY, LOGIN_BOX_KEY);
+        keys.forEach(k => { const raw = localStorage.getItem(k); if (raw !== null) { try { cloudSet(k, JSON.parse(raw)); } catch (e) { cloudSet(k, raw); } } });
+    }
+    function applyCloudValue(key, value) {
+        if (value === undefined || value === null) return;
+        const str = (typeof value === 'string') ? value : JSON.stringify(value);
+        try { localStorage.setItem(key, str); } catch (e) {}
+        if (currentRole === 'branch' && currentBranch) {
+            if (key === bkey('board_receipts')) { loadBoardReceipts(); refreshBoardHistory(); refreshBoardYearFilter(); updateDashboard(); }
+            else if (key === bkey('fee_receipts')) { loadFeeReceipts(); renderFeeHistory(feeSearchInput.value); updateDashboard(); }
+            else if (key === bkey('student_master')) { loadStudentMasterData(); }
+            else if (key === bkey('school_info')) { loadSchoolInfo(); if (generatedBoardData) displayBoardReceipt(generatedBoardData); if (generatedFeeData) displayFeeReceipt(generatedFeeData); }
+            else if (key === bkey('custom_logo')) { loadSavedLogo(); if (generatedBoardData) displayBoardReceipt(generatedBoardData); if (generatedFeeData) displayFeeReceipt(generatedFeeData); }
+            else if (key === bkey('print_orientation')) { loadPrintOrientation(); updateDualContainerLayout(); }
+            else if (key === bkey('thresholds')) { loadThresholds(); renderThresholdDashboard(); }
+            else if (key === bkey('target_percent')) { loadTargetPercent(); renderTargetAnalysis(); }
+            else if (key === bkey('particulars')) { buildFeeTable(); if (generatedFeeData) displayFeeReceipt(generatedFeeData); }
+            else if (key === bkey('prefixes')) { setNextBoardReceiptNumber(); setNextFeeReceiptNumber(); feePrefixNote.innerHTML = `Receipt numbers: <strong>${feePrefix()}0001</strong>, <strong>${feePrefix()}0002</strong>, ... (branch-wise, sequential, persistent · cloud synced)`; }
+        }
+        if (key === BOARD_CONFIG_KEY) { if (currentRole === 'branch') { populateBoardBadges(); updateBoardAmount(); if (generatedBoardData) displayBoardReceipt(generatedBoardData); } if (currentRole === 'admin') { const c = getBoardConfig(); afC10.value = c.c10; afC12B.value = c.c12b; afC12J.value = c.c12j; } }
+        if (key === LOGIN_BG_KEY) applyLoginBg();
+        if (key === LOGIN_BOX_KEY) applyLoginBoxStyle();
+        if (currentRole === 'admin') {
+            if (key === branchKey(abBranch.value, 'school_info') || key === branchKey(abBranch.value, 'prefixes') || key === branchKey(abBranch.value, 'custom_logo')) populateAdminBranch();
+            if (key === branchKey(adminPartBranch, 'particulars')) loadAdminParticulars();
+            if (key === ADMIN_LOGIN_KEY || key.endsWith('_login')) populateAdminLogins();
+        }
+    }
+    function setupCloudSync() {
+        if (!fbReady) return;
+        const keys = [];
+        ['sgos', 'sgima'].forEach(b => {
+            ['board_receipts', 'fee_receipts', 'student_master', 'custom_logo', 'school_info', 'print_orientation', 'thresholds', 'target_percent', 'login', 'prefixes', 'particulars'].forEach(k => keys.push(branchKey(b, k)));
+        });
+        keys.push(BOARD_CONFIG_KEY, ADMIN_LOGIN_KEY, LOGIN_BG_KEY, LOGIN_BOX_KEY);
+        keys.forEach(k => listenCloud(k, v => applyCloudValue(k, v)));
+    }
+    async function pullAllFromCloud() {
+        if (!fbReady || !fbDb) { showToast('Firebase unavailable; using local data.', 'error'); return; }
+        setCloudStatus('', '🟡 Pulling from cloud…');
+        const keys = [];
+        ['sgos', 'sgima'].forEach(b => { ['board_receipts', 'fee_receipts', 'student_master', 'custom_logo', 'school_info', 'print_orientation', 'thresholds', 'target_percent', 'login', 'prefixes', 'particulars'].forEach(k => keys.push(branchKey(b, k))); });
+        keys.push(BOARD_CONFIG_KEY, ADMIN_LOGIN_KEY, LOGIN_BG_KEY, LOGIN_BOX_KEY);
+        let pulled = 0;
+        for (const k of keys) {
+            try { const snap = await get(dbRef(k)); if (snap.exists()) { applyCloudValue(k, snap.val()); pulled++; } } catch (e) {}
+        }
+        setCloudStatus('ok', '🟢 Synced');
+        showToast(`Re-synced ${pulled} item(s) from Firebase.`);
+        if (currentRole === 'branch') { refreshBoardHistory(); refreshBoardYearFilter(); renderFeeHistory(feeSearchInput.value); updateDashboard(); }
     }
 
     // ============ EVENTS ============
@@ -2378,7 +2391,6 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
     saveLoginBtn.addEventListener('click', saveLoginSettings);
     loginSettingsModal.addEventListener('click', e => { if (e.target === loginSettingsModal) closeLoginSettingsModal(); });
 
-    // Login Box designer
     [lbX, lbY, lbW, lbMaxH, lbRadius, lbBorderW].forEach(inp => inp.addEventListener('input', () => { renderLoginBoxPreview(); applyLoginBoxStyle(readLoginBoxFromInputs()); }));
     [lbBg, lbBorder].forEach(inp => inp.addEventListener('input', () => { renderLoginBoxPreview(); applyLoginBoxStyle(readLoginBoxFromInputs()); }));
     lbOpacity.addEventListener('input', () => { renderLoginBoxPreview(); applyLoginBoxStyle(readLoginBoxFromInputs()); });
@@ -2387,7 +2399,7 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
     lbPresetCenter.addEventListener('click', () => { lbX.value = 38; lbY.value = 12; renderLoginBoxPreview(); applyLoginBoxStyle(readLoginBoxFromInputs()); });
     lbPresetRight.addEventListener('click', () => { lbX.value = 70; lbY.value = 5; renderLoginBoxPreview(); applyLoginBoxStyle(readLoginBoxFromInputs()); });
     lbSave.addEventListener('click', () => { const c = readLoginBoxFromInputs(); saveLoginBoxCfg(c); applyLoginBoxStyle(c); showToast('Login box saved & synced.'); });
-    lbReset.addEventListener('click', () => { if (!confirm('Reset login box to default (left zone, white opaque card)?')) return; localStorage.removeItem(LOGIN_BOX_KEY); fbSet('meta/login_box', { value: { ...DEFAULT_LOGIN_BOX } }); populateLoginBoxAdmin(); applyLoginBoxStyle(); showToast('Login box reset to default.'); });
+    lbReset.addEventListener('click', () => { if (!confirm('Reset login box to default (left zone, white opaque card)?')) return; localStorage.removeItem(LOGIN_BOX_KEY); cloudSet(LOGIN_BOX_KEY, null); populateLoginBoxAdmin(); applyLoginBoxStyle(); showToast('Login box reset to default.'); });
     lbPreviewCard.addEventListener('mousedown', e => { e.preventDefault(); const p = lbPreviewPos(e); const cardW = parseFloat(lbPreviewCard.style.width) || 20; lbDrag = { dx: p.x - parseFloat(lbX.value || 0), dy: p.y - parseFloat(lbY.value || 0), cardW }; });
     document.addEventListener('mousemove', e => {
         if (!lbDrag) return;
@@ -2400,7 +2412,6 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
     });
     document.addEventListener('mouseup', () => { lbDrag = null; });
 
-    // Image editor
     ieCloseBtn.addEventListener('click', closeImageEditor);
     ieCancelBtn.addEventListener('click', closeImageEditor);
     imageEditorModal.addEventListener('click', e => { if (e.target === imageEditorModal) closeImageEditor(); });
@@ -2416,33 +2427,30 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
     ieClearCropBtn.addEventListener('click', () => { ieCrop = null; ieUpdateCropBox(); });
     ieResetBtn.addEventListener('click', () => { if (!ieImg) return; ieResetState(); renderImageEditor(); });
     ieSaveBtn.addEventListener('click', ieSave);
-    ieCanvas.addEventListener('mousedown', e => { if (!ieCropMode || !ieImg) return; e.preventDefault(); const p = ieCanvasPos(e); ieDragIE = { x0: p.x, y0: p.y }; ieCrop = { x: p.x, y: p.y, w: 0, h: 0 }; ieUpdateCropBox(); });
-    document.addEventListener('mousemove', e => { if (!ieDragIE) return; const p = ieCanvasPos(e); ieCrop = { x: Math.min(ieDragIE.x0, p.x), y: Math.min(ieDragIE.y0, p.y), w: Math.abs(p.x - ieDragIE.x0), h: Math.abs(p.y - ieDragIE.y0) }; ieUpdateCropBox(); });
-    document.addEventListener('mouseup', () => { if (ieDragIE) { if (ieCrop && (ieCrop.w < 6 || ieCrop.h < 6)) { ieCrop = null; ieUpdateCropBox(); } ieDragIE = null; } });
+    ieCanvas.addEventListener('mousedown', e => { if (!ieCropMode || !ieImg) return; e.preventDefault(); const p = ieCanvasPos(e); ieDrag = { x0: p.x, y0: p.y }; ieCrop = { x: p.x, y: p.y, w: 0, h: 0 }; ieUpdateCropBox(); });
+    document.addEventListener('mousemove', e => { if (!ieDrag) return; const p = ieCanvasPos(e); ieCrop = { x: Math.min(ieDrag.x0, p.x), y: Math.min(ieDrag.y0, p.y), w: Math.abs(p.x - ieDrag.x0), h: Math.abs(p.y - ieDrag.y0) }; ieUpdateCropBox(); });
+    document.addEventListener('mouseup', () => { if (ieDrag) { if (ieCrop && (ieCrop.w < 6 || ieCrop.h < 6)) { ieCrop = null; ieUpdateCropBox(); } ieDrag = null; } });
     window.addEventListener('resize', () => { if (imageEditorModal.classList.contains('show')) renderImageEditor(); });
 
-    // Admin tabs & sections
     document.querySelectorAll('.admin-tab').forEach(t => t.addEventListener('click', () => setAdminTab(t.dataset.atab)));
-    saveSgosLoginBtn.addEventListener('click', () => { const u = alSgosUser.value.trim(), p = alSgosPass.value; if (!u || p.length < 4) { showToast('Username required & password min 4 chars.', 'error'); return; } if (!uniqueUserCheck(u, 'sgos')) { showToast('Username already used by another login.', 'error'); return; } setLoginFor('sgos', u, p); fbSet('branches/sgos', { login: { user: u, pass: enc(p) } }); showToast('SGOS login saved & synced.'); });
-    saveSgimaLoginBtn.addEventListener('click', () => { const u = alSgimaUser.value.trim(), p = alSgimaPass.value; if (!u || p.length < 4) { showToast('Username required & password min 4 chars.', 'error'); return; } if (!uniqueUserCheck(u, 'sgima')) { showToast('Username already used by another login.', 'error'); return; } setLoginFor('sgima', u, p); fbSet('branches/sgima', { login: { user: u, pass: enc(p) } }); showToast('SGIMA login saved & synced.'); });
-    saveAdminLoginBtn.addEventListener('click', () => { const u = alAdminUser.value.trim(), p = alAdminPass.value; if (!u || p.length < 4) { showToast('Username required & password min 4 chars.', 'error'); return; } if (!uniqueUserCheck(u, 'admin')) { showToast('Username already used by another login.', 'error'); return; } setAdminLogin(u, p); fbSet('meta/admin_login', { value: { user: u, pass: enc(p) } }); showToast('Admin login saved & synced.'); });
+    saveSgosLoginBtn.addEventListener('click', () => { const u = alSgosUser.value.trim(), p = alSgosPass.value; if (!u || p.length < 4) { showToast('Username required & password min 4 chars.', 'error'); return; } if (!uniqueUserCheck(u, 'sgos')) { showToast('Username already used by another login.', 'error'); return; } setLoginFor('sgos', u, p); showToast('SGOS login saved & synced.'); });
+    saveSgimaLoginBtn.addEventListener('click', () => { const u = alSgimaUser.value.trim(), p = alSgimaPass.value; if (!u || p.length < 4) { showToast('Username required & password min 4 chars.', 'error'); return; } if (!uniqueUserCheck(u, 'sgima')) { showToast('Username already used by another login.', 'error'); return; } setLoginFor('sgima', u, p); showToast('SGIMA login saved & synced.'); });
+    saveAdminLoginBtn.addEventListener('click', () => { const u = alAdminUser.value.trim(), p = alAdminPass.value; if (!u || p.length < 4) { showToast('Username required & password min 4 chars.', 'error'); return; } if (!uniqueUserCheck(u, 'admin')) { showToast('Username already used by another login.', 'error'); return; } setAdminLogin(u, p); showToast('Admin login saved & synced.'); });
     abBranch.addEventListener('change', populateAdminBranch);
     saveBranchInfoBtn.addEventListener('click', saveAdminBranch);
     abLogoUploadBtn.addEventListener('click', () => abLogoFile.click());
-    abLogoFile.addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; if (!f) return; const b = abBranch.value; compressImageFile(f, data => { if (tryStore(branchKey(b, 'custom_logo'), data)) { fbSet('branches/' + b, { customLogo: data }); abLogoPreview.src = data; showToast(`Logo saved & synced for ${BRANCHES[b].label}.`); } else showToast('Logo too large even after compression.', 'error'); }); });
+    abLogoFile.addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; if (!f) return; const b = abBranch.value; compressImageFile(f, data => { if (tryStore(branchKey(b, 'custom_logo'), data)) { cloudSet(branchKey(b, 'custom_logo'), data); abLogoPreview.src = data; showToast(`Logo saved & synced for ${BRANCHES[b].label}.`); } else showToast('Logo too large even after compression.', 'error'); }); });
     abLogoEditBtn.addEventListener('click', () => openImageEditor({ type: 'logo', branch: abBranch.value }, localStorage.getItem(branchKey(abBranch.value, 'custom_logo')) || null));
-    abLogoResetBtn.addEventListener('click', () => { const b = abBranch.value; localStorage.removeItem(branchKey(b, 'custom_logo')); fbSet('branches/' + b, { customLogo: '' }); abLogoPreview.src = 'sgos-logo.png'; showToast(`Logo reset for ${BRANCHES[b].label}.`); });
-    saveBoardConfigBtn.addEventListener('click', () => { const c = { c10: parseFloat(afC10.value) || 0, c12b: parseFloat(afC12B.value) || 0, c12j: parseFloat(afC12J.value) || 0 }; setBoardConfig(c); fbSet('meta/board_config', { value: c }); showToast('Board fee amounts saved & synced.'); });
+    abLogoResetBtn.addEventListener('click', () => { const b = abBranch.value; localStorage.removeItem(branchKey(b, 'custom_logo')); cloudSet(branchKey(b, 'custom_logo'), null); abLogoPreview.src = 'sgos-logo.png'; showToast(`Logo reset for ${BRANCHES[b].label}.`); });
+    saveBoardConfigBtn.addEventListener('click', () => { const c = { c10: parseFloat(afC10.value) || 0, c12b: parseFloat(afC12B.value) || 0, c12j: parseFloat(afC12J.value) || 0 }; setBoardConfig(c); showToast('Board fee amounts saved & synced.'); });
     afBranch.addEventListener('change', loadAdminParticulars);
     addParticularBtn.addEventListener('click', () => { const l = newPartLabel.value.trim(); if (!l) { showToast('Enter a label first.', 'error'); return; } adminPartList.push({ id: 'cust' + Date.now(), label: l }); newPartLabel.value = ''; renderParticularsEditor(); });
-    saveParticularsBtn.addEventListener('click', () => { setParticulars(adminPartBranch, adminPartList); fbSet('branches/' + adminPartBranch, { particulars: adminPartList }); showToast(`Particulars saved & synced for ${BRANCHES[adminPartBranch].label}.`); });
+    saveParticularsBtn.addEventListener('click', () => { setParticulars(adminPartBranch, adminPartList); showToast(`Particulars saved & synced for ${BRANCHES[adminPartBranch].label}.`); });
     adminBgUploadBtn.addEventListener('click', () => adminBgFile.click());
     adminBgFile.addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; if (f) setLoginBgFromFile(f); });
     adminBgEditBtn.addEventListener('click', () => openImageEditor({ type: 'loginbg' }, localStorage.getItem(LOGIN_BG_KEY) || null));
     adminBgResetBtn.addEventListener('click', resetLoginBg);
-    if (homeSyncBtn) homeSyncBtn.addEventListener('click', async () => { await pullAllFromCloud(); if (currentRole === 'branch') { loadSchoolInfo(); loadBoardReceipts(); loadFeeReceipts(); loadPrintOrientation(); loadThresholds(); loadTargetPercent(); loadSavedLogo(); loadStudentMasterData(); refreshBoardHistory(); refreshBoardYearFilter(); renderFeeHistory(feeSearchInput.value); updateDashboard(); updateAnalysisUI(); buildFeeTable(); populateBoardClassOptions(); populateBoardBadges(); } else if (currentRole === 'admin') { populateAdminLogins(); populateAdminBranch(); populateAdminFormat(); populateLoginBoxAdmin(); applyLoginBg(); applyLoginBoxStyle(); } showToast('Synced latest data from cloud.'); });
 
-    // Branch events
     boardStudentClass.addEventListener('change', updateBoardAmount);
     boardYear.addEventListener('change', () => { if (!editingBoardId) setNextBoardReceiptNumber(); });
     boardGenerateBtn.addEventListener('click', generateBoardReceipt);
@@ -2492,6 +2500,7 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
     homeExcelBtn.addEventListener('click', exportAllExcel);
     homeBackupBtn.addEventListener('click', backupData);
     homeRestoreBtn.addEventListener('click', triggerRestore);
+    if (homeResyncBtn) homeResyncBtn.addEventListener('click', pullAllFromCloud);
     homeRestoreFileInput.addEventListener('change', e => { if (e.target.files[0]) handleRestoreFile(e.target.files[0]); });
     closeRestoreModal.addEventListener('click', closeRestoreModalFn);
     confirmRestoreBtn.addEventListener('click', confirmRestore);
@@ -2524,60 +2533,42 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
     });
 
     // ============ INIT ============
-    async function init() {
+    function init() {
         migrateLegacyIfNeeded();
         applyLoginBg();
         applyLoginBoxStyle();
-        setSync('busy');
-        // Pull cloud data once at startup so the login screen reflects synced bg/box too
-        try { await pullAllFromCloud(); applyLoginBg(); applyLoginBoxStyle(); } catch (e) { setSync('off'); }
+        setupCloudSync();
+        if (fbReady) setTimeout(pullAllFromCloud, 600);
         let sess = null;
         try { sess = sessionStorage.getItem(SESSION_KEY); } catch (e) {}
-        if (sess === 'admin') { hideLogin(); await enterAdmin(); }
-        else if (sess && BRANCHES[sess]) { hideLogin(); await enterBranch(sess); }
+        if (sess === 'admin') { hideLogin(); enterAdmin(); }
+        else if (sess && BRANCHES[sess]) { hideLogin(); enterBranch(sess); }
         else showLogin();
     }
     init();
 })();
 
 /* ============================================================
-   DEFAULT LOGIN CREDENTIALS  (changeable in Admin Panel)
+   DEFAULT LOGIN CREDENTIALS  (changeable in Admin Panel,
+   synced across devices via Firebase Realtime Database)
    ------------------------------------------------------------
    SGOS  branch login :  username = sgos    password = sgos@123
    SGIMA branch login :  username = sgima   password = sgima@123
    ADMIN panel login  :  username = admin   password = admin@123
    ------------------------------------------------------------
-   Change any of these after login:
-     - Branch user  : header -> 🔑 Login Settings
-     - All logins   : Admin Panel -> 🔑 Logins tab
-   Login box position/style : Admin Panel -> 📍 Login Box tab
-
-   =====================  FIREBASE  ===========================
-   Project : sgos-31514  (Firestore)
-   Data is synced to Firestore and mirrored to localStorage
-   (offline fallback). Documents used:
-     meta/admin_login   { value: {user, pass} }
-     meta/login_bg      { value: "<dataURL>" }
-     meta/login_box     { value: {...box config} }
-     meta/board_config  { value: {c10,c12b,c12j} }
-     branches/sgos      { boardReceipts, feeReceipts, studentMaster,
-                          customLogo, schoolInfo, printOrientation,
-                          thresholds, targetPercent, login,
-                          prefixes, particulars }
-     branches/sgima     { ...same shape... }
-
-   IMPORTANT — Firestore security rules (set in Firebase console).
-   The rules below allow the app to read/write without per-user auth
-   (simplest setup). For production, tighten them:
-
-     rules_version = '2';
-     service cloud.firestore {
-       match /databases/{database}/documents {
-         match /{document=**} {
-           allow read, write: if true;   // <-- make restrictive later
-         }
-       }
-     }
+   Firebase project : sgos-fb724
+   Realtime DB root : /sgos_data/<key>
+   Example keys     : sgos_fee_receipts, sgima_school_info,
+                      admin_login, login_bg, login_box,
+                      sgos_board_config, sgos_login, ...
+   ------------------------------------------------------------
+   ⚠️ SECURITY: The web API key in this file is public by design.
+   Protect your data with Firebase Realtime Database Security
+   Rules — e.g. require authentication, or lock the whole tree
+   to admin-only. Do NOT leave "/sgos_data" publicly writable
+   in production. Example (authenticated users only):
+     { "rules": { "sgos_data": { ".read": "auth != null",
+                                  ".write": "auth != null" } } }
    ============================================================ */
 
 
